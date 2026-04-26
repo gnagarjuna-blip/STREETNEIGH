@@ -3,227 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roulette Section Tracker V8</title>
+    <title>Roulette Street Bet Tracker</title>
     <style>
         :root {
-            --bg: #0f172a; --card: #1e293b; --accent: #06b6d4;
-            --red: #ef4444; --black: #1a1a1a; --green: #10b981;
-            --tier: #f59e0b; --orph: #8b5cf6; --vois: #ec4899; --zero: #10b981;
+            --bg: #0f172a; --card: #1e293b; --accent: #3b82f6;
+            --red: #ef4444; --black: #1a1a1a; --green: #10b981; --text: #f8fafc;
         }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
         
-        /* Table Styles */
-        .roulette-board { display: grid; grid-template-columns: repeat(14, 1fr); gap: 2px; background: #334155; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
-        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.1); }
-        .cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px white; }
+        /* Betting Board */
+        .board-grid { 
+            display: grid; 
+            grid-template-columns: 50px repeat(12, 1fr); 
+            gap: 4px; 
+            background: #334155; 
+            padding: 10px; 
+            border-radius: 8px; 
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        .cell { 
+            height: 50px; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.15s; 
+            border: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;
+        }
+        .cell:hover { transform: scale(1.05); z-index: 5; box-shadow: 0 0 10px white; }
         .num-red { background: var(--red); }
         .num-black { background: var(--black); }
         .num-green { background: var(--green); }
-        .num-zero { grid-row: 1 / span 3; aspect-ratio: auto; }
+        .zero { grid-row: 1 / span 3; height: auto; }
 
-        /* Dashboard Styles */
-        .stats-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; }
-        .bet-chip { display: inline-block; padding: 5px 12px; border-radius: 20px; margin: 5px; font-weight: 800; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        /* Dashboard UI */
+        .main-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #475569; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
-        th, td { border: 1px solid #334155; padding: 8px; text-align: left; }
-        th { background: #0f172a; color: var(--accent); }
+        .street-chip { 
+            display: inline-block; padding: 6px 12px; background: var(--accent); 
+            border-radius: 6px; margin: 4px; font-weight: bold; font-size: 0.85rem;
+            animation: slideIn 0.3s ease;
+        }
         
-        .log { height: 150px; overflow-y: auto; background: #000; padding: 10px; font-family: monospace; border-radius: 8px; margin-top: 10px; }
+        .log-area { 
+            height: 200px; overflow-y: auto; background: #000; 
+            padding: 10px; font-family: 'Courier New', monospace; 
+            font-size: 0.8rem; border-radius: 8px; border: 1px solid #334155;
+        }
         .win { color: var(--green); font-weight: bold; }
         .loss { color: var(--red); }
-        .section-tag { font-size: 0.7rem; padding: 2px 5px; border-radius: 4px; color: black; font-weight: bold; margin-right: 5px; }
+        
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .btn-sync { 
+            width: 100%; padding: 12px; background: var(--accent); color: white; 
+            border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; color: var(--accent);">Sectional Cold Number Tracker</h2>
+    <h1 style="text-align:center; color: var(--accent);">Street Bet Reconciler</h1>
 
-    <div class="roulette-board" id="board">
-        <div class="cell num-green num-zero" onclick="addSpin(0)">0</div>
+    <div class="board-grid" id="board">
+        <div class="cell num-green zero" onclick="addNumber(0)">0</div>
         </div>
 
-    <div class="stats-grid">
-        <div>
+    <div class="main-layout">
+        <div class="left-col">
             <div class="card">
-                <h3>Current Bets</h3>
-                <div id="active-bets">No active bets</div>
-                <hr style="border-color: #334155">
-                <p>Targeting Section: <strong id="current-sec-name" style="color:var(--accent)">TIER</strong></p>
-                <p>Wins: <span id="win-count" style="color:var(--green); font-size: 1.5rem;">0</span></p>
-                <div id="last-wins-analysis" style="font-size: 0.8rem; color: #94a3b8;"></div>
+                <h3 style="margin-top:0">Current Bets</h3>
+                <div id="bet-display" style="min-height: 40px;">-</div>
+                <hr style="border-color:#334155">
+                <p>Last Number: <strong id="last-num" style="color:var(--accent)">None</strong></p>
+                <p>Rounds Since Win: <span id="win-gap">0</span></p>
             </div>
 
-            <div class="card" style="margin-top: 10px;">
-                <textarea id="bulk-input" style="width:100%; background:#0f172a; color:white; border:1px solid #334155; border-radius:5px;" rows="3" placeholder="Paste historical spins (comma separated)..."></textarea>
-                <button onclick="bulkImport()" style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-top:5px;">Import History</button>
+            <div class="card" style="margin-top:20px">
+                <label>Bulk Sync History:</label>
+                <textarea id="bulk-data" style="width:100%; height:80px; background:#0f172a; color:white; border:1px solid #334155; border-radius:5px; margin-top:10px; padding:8px;" placeholder="1, 23, 15..."></textarea>
+                <button class="btn-sync" onclick="syncBulk()">Sync Data</button>
             </div>
         </div>
 
-        <div class="card">
-            <h3>Sectional Analysis</h3>
-            <table id="stats-table">
-                <thead>
-                    <tr>
-                        <th>Section</th>
-                        <th>Coldest (Hits)</th>
-                        <th>Hottest (Hits)</th>
-                        <th>Active Bets</th>
-                    </tr>
-                </thead>
-                <tbody id="stats-body"></tbody>
-            </table>
-            <div class="log" id="game-log">System initialized. Waiting for data...</div>
+        <div class="right-col">
+            <div class="card">
+                <h3 style="margin-top:0">AI Analysis (Neighbor Scoring)</h3>
+                <div id="analysis-log" class="log-area">System Ready. Enter numbers to begin...</div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Logic from Java
-    const TIER = [27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33];
-    const ORPHILINE = [17, 34, 6, 1, 20, 14, 31, 9];
-    const VOISION = [22, 18, 29, 7, 28, 19, 4, 21, 2, 25];
-    const ZERO_SECTION = [15, 32, 26, 3, 35, 12]; // Zero handled separately
-    const SECTIONS = [TIER, ORPHILINE, VOISION, [...ZERO_SECTION, 0]];
-    const SECTION_NAMES = ["TIER", "ORPHILINE", "VOISION", "ZERO"];
+    // --- Logic Implementation ---
+    const reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+    let history = [];
+    let currentBetStreets = []; // Using Array to preserve LinkedHashSet behavior
+    let winGap = 0;
 
-    let spinResults = [];
-    let occurrenceMap = {};
-    let currentBets = [];
-    let currentSectionIndex = 0;
-    let usedIndexBySection = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set() };
-    let winCount = 0;
-    let lastWinNumbers = [];
+    // Generate Streets (1-36 only per Java logic)
+    const streetMap = {};
+    for (let i = 0; i < 12; i++) {
+        let first = i * 3 + 1;
+        let key = `${first}-${first+1}-${first+2}`;
+        streetMap[key] = [first, first+1, first+2];
+    }
 
-    const redNums = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-
-    // Initialize Physical Board
     function initBoard() {
         const board = document.getElementById('board');
         for (let i = 1; i <= 36; i++) {
             const cell = document.createElement('div');
-            const isRed = redNums.includes(i);
-            cell.className = `cell ${isRed ? 'num-red' : 'num-black'}`;
+            cell.className = `cell ${reds.includes(i) ? 'num-red' : 'num-black'}`;
             cell.innerText = i;
-            cell.onclick = () => addSpin(i);
-            // Reordering for 3-column layout look
+            cell.onclick = () => addNumber(i);
+            // Grid placement (3 rows)
             cell.style.gridRow = 3 - (i - 1) % 3;
             cell.style.gridColumn = Math.floor((i - 1) / 3) + 2;
             board.appendChild(cell);
         }
     }
 
-    function addSpin(num) {
-        spinResults.push(num);
-        occurrenceMap[num] = (occurrenceMap[num] || 0) + 1;
-        checkWinLoss(num);
-        updateUI();
-    }
-
-    function bulkImport() {
-        const input = document.getElementById('bulk-input').value;
-        const nums = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-        nums.forEach(n => {
-            spinResults.push(n);
-            occurrenceMap[n] = (occurrenceMap[n] || 0) + 1;
+    function syncBulk() {
+        const val = document.getElementById('bulk-data').value;
+        const nums = val.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        nums.forEach((n, idx) => {
+            // Last number in bulk sync should trigger the win/loss check logic
+            processNumber(n, idx === nums.length - 1);
         });
-        document.getElementById('bulk-input').value = "";
-        // First bet logic
-        if (currentBets.length === 0) {
-            getNextColdNumber();
-        }
-        updateUI();
+        document.getElementById('bulk-data').value = "";
     }
 
-    function checkWinLoss(spinResult) {
-        const log = document.getElementById('game-log');
-        const isWin = currentBets.includes(spinResult);
-
-        if (isWin) {
-            winCount++;
-            lastWinNumbers.push(spinResult);
-            if (lastWinNumbers.length > 5) lastWinNumbers.shift();
-            
-            log.innerHTML = `<div class="win">WIN! Result ${spinResult} matched. Total: ${winCount}</div>` + log.innerHTML;
-            
-            // Reset logic from Java
-            currentBets = [];
-            currentSectionIndex = (currentSectionIndex + 1) % SECTIONS.length;
-            for (let k in usedIndexBySection) usedIndexBySection[k].clear();
-            getNextColdNumber();
-        } else {
-            log.innerHTML = `<div class="loss">Loss. Result ${spinResult}. Adding next cold...</div>` + log.innerHTML;
-            currentSectionIndex = (currentSectionIndex + 1) % SECTIONS.length;
-            getNextColdNumber();
-        }
+    function addNumber(n) {
+        processNumber(n, true);
     }
 
-    function getNextColdNumber() {
-        const section = SECTIONS[currentSectionIndex];
-        const usedIndices = usedIndexBySection[currentSectionIndex];
+    function processNumber(num, checkWinLoss) {
+        const log = document.getElementById('analysis-log');
+        let win = false;
 
-        // Sort section numbers by occurrences
-        const sorted = [...section].sort((a, b) => (occurrenceMap[a] || 0) - (occurrenceMap[b] || 0));
+        // 1. Win/Loss Check (based on previousBetStreets logic)
+        if (checkWinLoss && currentBetStreets.length > 0) {
+            win = currentBetStreets.some(sKey => streetMap[sKey].includes(num));
+        }
 
-        for (let i = 0; i < sorted.length; i++) {
-            if (!usedIndices.has(i)) {
-                usedIndices.add(i);
-                currentBets.push(sorted[i]);
-                return;
+        history.push(num);
+        document.getElementById('last-num').innerText = num;
+
+        // 2. Neighbor Logic
+        const neighbors = [];
+        for (let i = 0; i < history.length; i++) {
+            if (history[i] === num) {
+                if (i > 0) neighbors.push(history[i - 1]);
+                if (i < history.length - 1) neighbors.push(history[i + 1]);
             }
         }
+
+        // 3. Scoring Streets
+        const neighborFreq = {};
+        neighbors.forEach(n => neighborFreq[n] = (neighborFreq[n] || 0) + 1);
+
+        const streetScores = [];
+        Object.keys(streetMap).forEach(key => {
+            const sum = streetMap[key].reduce((acc, val) => acc + (neighborFreq[val] || 0), 0);
+            if (sum > 0) streetScores.push({ key, score: sum });
+        });
+
+        // Sort descending by score
+        streetScores.sort((a, b) => b.score - a.score);
+        const sortedKeys = streetScores.map(s => s.key);
+
+        // 4. Update Betting Strategy
+        if (win) {
+            winGap = 0;
+            currentBetStreets = [];
+            if (sortedKeys.length > 0) currentBetStreets.push(sortedKeys[0]);
+            log.innerHTML = `<div class="win">✅ WIN! Result ${num} matched current bets.</div>` + log.innerHTML;
+        } else if (checkWinLoss) {
+            winGap++;
+            if (currentBetStreets.length === 0) {
+                if (sortedKeys.length > 0) currentBetStreets.push(sortedKeys[0]);
+            } else {
+                // Add one new recommended street not already present
+                const nextStreet = sortedKeys.find(k => !currentBetStreets.includes(k));
+                if (nextStreet) currentBetStreets.push(nextStreet);
+            }
+            log.innerHTML = `<div class="loss">Loss. Result ${num}. Strategy expanded.</div>` + log.innerHTML;
+        }
+
+        updateUI(sortedKeys);
     }
 
-    function updateUI() {
-        document.getElementById('win-count').innerText = winCount;
-        document.getElementById('current-sec-name').innerText = SECTION_NAMES[currentSectionIndex];
+    function updateUI(recommendations) {
+        document.getElementById('win-gap').innerText = winGap;
+        const betDisp = document.getElementById('bet-display');
         
-        // Active Bets
-        const betContainer = document.getElementById('active-bets');
-        betContainer.innerHTML = currentBets.map(b => 
-            `<span class="bet-chip" style="background:${redNums.includes(b)?'var(--red)':'var(--black)'}">${b}</span>`
-        ).join('');
-
-        // Stats Table
-        const body = document.getElementById('stats-body');
-        body.innerHTML = "";
-        SECTIONS.forEach((sec, idx) => {
-            const sorted = [...sec].sort((a, b) => (occurrenceMap[a] || 0) - (occurrenceMap[b] || 0));
-            const cold = sorted.slice(0, 3).map(n => `${n}(${occurrenceMap[n]||0})`).join(', ');
-            const hot = [...sorted].reverse().slice(0, 3).map(n => `${n}(${occurrenceMap[n]||0})`).join(', ');
-            const active = currentBets.filter(b => sec.includes(b)).join(', ') || '-';
-            
-            body.innerHTML += `
-                <tr>
-                    <td><strong>${SECTION_NAMES[idx]}</strong></td>
-                    <td style="color:var(--tier)">${cold}</td>
-                    <td style="color:var(--accent)">${hot}</td>
-                    <td>${active}</td>
-                </tr>
-            `;
-        });
-
-        // Last 5 analysis
-        analyzeLastWins();
-    }
-
-    function analyzeLastWins() {
-        let hot = 0, cold = 0;
-        lastWinNumbers.forEach(win => {
-            SECTIONS.forEach(sec => {
-                if(sec.includes(win)) {
-                    const sorted = [...sec].sort((a, b) => (occurrenceMap[a] || 0) - (occurrenceMap[b] || 0));
-                    const threshold = Math.ceil(sec.length * 0.3);
-                    if (sorted.slice(0, threshold).includes(win)) cold++;
-                    if (sorted.slice(-threshold).includes(win)) hot++;
-                }
-            });
-        });
-        document.getElementById('last-wins-analysis').innerHTML = 
-            `Last ${lastWinNumbers.length} Wins Analysis: <span style="color:var(--accent)">Hot: ${hot}</span> | <span style="color:var(--tier)">Cold: ${cold}</span>`;
+        if (currentBetStreets.length === 0) {
+            betDisp.innerText = "-";
+        } else {
+            betDisp.innerHTML = currentBetStreets.map(s => `<span class="street-chip">${s}</span>`).join('');
+        }
     }
 
     initBoard();
