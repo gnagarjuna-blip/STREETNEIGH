@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette Section Tracker V8</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --accent: #06b6d4;
+            --red: #ef4444; --black: #1a1a1a; --green: #10b981;
+            --tier: #f59e0b; --orph: #8b5cf6; --vois: #ec4899; --zero: #10b981;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: white; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* Table Styles */
+        .roulette-board { display: grid; grid-template-columns: repeat(14, 1fr); gap: 2px; background: #334155; padding: 10px; border-radius: 8px; margin-bottom: 20px; }
+        .cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.1); }
+        .cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px white; }
+        .num-red { background: var(--red); }
+        .num-black { background: var(--black); }
+        .num-green { background: var(--green); }
+        .num-zero { grid-row: 1 / span 3; aspect-ratio: auto; }
+
+        /* Dashboard Styles */
+        .stats-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #334155; }
+        .bet-chip { display: inline-block; padding: 5px 12px; border-radius: 20px; margin: 5px; font-weight: 800; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+        th, td { border: 1px solid #334155; padding: 8px; text-align: left; }
+        th { background: #0f172a; color: var(--accent); }
+        
+        .log { height: 150px; overflow-y: auto; background: #000; padding: 10px; font-family: monospace; border-radius: 8px; margin-top: 10px; }
+        .win { color: var(--green); font-weight: bold; }
+        .loss { color: var(--red); }
+        .section-tag { font-size: 0.7rem; padding: 2px 5px; border-radius: 4px; color: black; font-weight: bold; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align: center; color: var(--accent);">Sectional Cold Number Tracker</h2>
+
+    <div class="roulette-board" id="board">
+        <div class="cell num-green num-zero" onclick="addSpin(0)">0</div>
+        </div>
+
+    <div class="stats-grid">
+        <div>
+            <div class="card">
+                <h3>Current Bets</h3>
+                <div id="active-bets">No active bets</div>
+                <hr style="border-color: #334155">
+                <p>Targeting Section: <strong id="current-sec-name" style="color:var(--accent)">TIER</strong></p>
+                <p>Wins: <span id="win-count" style="color:var(--green); font-size: 1.5rem;">0</span></p>
+                <div id="last-wins-analysis" style="font-size: 0.8rem; color: #94a3b8;"></div>
+            </div>
+
+            <div class="card" style="margin-top: 10px;">
+                <textarea id="bulk-input" style="width:100%; background:#0f172a; color:white; border:1px solid #334155; border-radius:5px;" rows="3" placeholder="Paste historical spins (comma separated)..."></textarea>
+                <button onclick="bulkImport()" style="width:100%; padding:10px; background:var(--accent); border:none; border-radius:5px; cursor:pointer; font-weight:bold; margin-top:5px;">Import History</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Sectional Analysis</h3>
+            <table id="stats-table">
+                <thead>
+                    <tr>
+                        <th>Section</th>
+                        <th>Coldest (Hits)</th>
+                        <th>Hottest (Hits)</th>
+                        <th>Active Bets</th>
+                    </tr>
+                </thead>
+                <tbody id="stats-body"></tbody>
+            </table>
+            <div class="log" id="game-log">System initialized. Waiting for data...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Logic from Java
+    const TIER = [27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33];
+    const ORPHILINE = [17, 34, 6, 1, 20, 14, 31, 9];
+    const VOISION = [22, 18, 29, 7, 28, 19, 4, 21, 2, 25];
+    const ZERO_SECTION = [15, 32, 26, 3, 35, 12]; // Zero handled separately
+    const SECTIONS = [TIER, ORPHILINE, VOISION, [...ZERO_SECTION, 0]];
+    const SECTION_NAMES = ["TIER", "ORPHILINE", "VOISION", "ZERO"];
+
+    let spinResults = [];
+    let occurrenceMap = {};
+    let currentBets = [];
+    let currentSectionIndex = 0;
+    let usedIndexBySection = { 0: new Set(), 1: new Set(), 2: new Set(), 3: new Set() };
+    let winCount = 0;
+    let lastWinNumbers = [];
+
+    const redNums = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+
+    // Initialize Physical Board
+    function initBoard() {
+        const board = document.getElementById('board');
+        for (let i = 1; i <= 36; i++) {
+            const cell = document.createElement('div');
+            const isRed = redNums.includes(i);
+            cell.className = `cell ${isRed ? 'num-red' : 'num-black'}`;
+            cell.innerText = i;
+            cell.onclick = () => addSpin(i);
+            // Reordering for 3-column layout look
+            cell.style.gridRow = 3 - (i - 1) % 3;
+            cell.style.gridColumn = Math.floor((i - 1) / 3) + 2;
+            board.appendChild(cell);
+        }
+    }
+
+    function addSpin(num) {
+        spinResults.push(num);
+        occurrenceMap[num] = (occurrenceMap[num] || 0) + 1;
+        checkWinLoss(num);
+        updateUI();
+    }
+
+    function bulkImport() {
+        const input = document.getElementById('bulk-input').value;
+        const nums = input.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        nums.forEach(n => {
+            spinResults.push(n);
+            occurrenceMap[n] = (occurrenceMap[n] || 0) + 1;
+        });
+        document.getElementById('bulk-input').value = "";
+        // First bet logic
+        if (currentBets.length === 0) {
+            getNextColdNumber();
+        }
+        updateUI();
+    }
+
+    function checkWinLoss(spinResult) {
+        const log = document.getElementById('game-log');
+        const isWin = currentBets.includes(spinResult);
+
+        if (isWin) {
+            winCount++;
+            lastWinNumbers.push(spinResult);
+            if (lastWinNumbers.length > 5) lastWinNumbers.shift();
+            
+            log.innerHTML = `<div class="win">WIN! Result ${spinResult} matched. Total: ${winCount}</div>` + log.innerHTML;
+            
+            // Reset logic from Java
+            currentBets = [];
+            currentSectionIndex = (currentSectionIndex + 1) % SECTIONS.length;
+            for (let k in usedIndexBySection) usedIndexBySection[k].clear();
+            getNextColdNumber();
+        } else {
+            log.innerHTML = `<div class="loss">Loss. Result ${spinResult}. Adding next cold...</div>` + log.innerHTML;
+            currentSectionIndex = (currentSectionIndex + 1) % SECTIONS.length;
+            getNextColdNumber();
+        }
+    }
+
+    function getNextColdNumber() {
+        const section = SECTIONS[currentSectionIndex];
+        const usedIndices = usedIndexBySection[currentSectionIndex];
+
+        // Sort section numbers by occurrences
+        const sorted = [...section].sort((a, b) => (occurrenceMap[a] || 0) - (occurrenceMap[b] || 0));
+
+        for (let i = 0; i < sorted.length; i++) {
+            if (!usedIndices.has(i)) {
+                usedIndices.add(i);
+                currentBets.push(sorted[i]);
+                return;
+            }
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('win-count').innerText = winCount;
+        document.getElementById('current-sec-name').innerText = SECTION_NAMES[currentSectionIndex];
+        
+        // Active Bets
+        const betContainer = document.getElementById('active-bets');
+        betContainer.innerHTML = currentBets.map(b => 
+            `<span class="bet-chip" style="background:${redNums.includes(b)?'var(--red)':'var(--black)'}">${b}</span>`
+        ).join('');
+
+        // Stats Table
+        const body = document.getElementById('stats-body');
+        body.innerHTML = "";
+        SECTIONS.forEach((sec, idx) => {
+            const sorted = [...sec].sort((a, b) => (occurrenceMap[a] || 0) - (occurrenceMap[b] || 0));
+            const cold = sorted.slice(0, 3).map(n => `${n}(${occurrenceMap[n]||0})`).join(', ');
+            const hot = [...sorted].reverse().slice(0, 3).map(n => `${n}(${occurrenceMap[n]||0})`).join(', ');
+            const active = currentBets.filter(b => sec.includes(b)).join(', ') || '-';
+            
+            body.innerHTML += `
+                <tr>
+                    <td><strong>${SECTION_NAMES[idx]}</strong></td>
+                    <td style="color:var(--tier)">${cold}</td>
+                    <td style="color:var(--accent)">${hot}</td>
+                    <td>${active}</td>
+                </tr>
+            `;
+        });
+
+        // Last 5 analysis
+        analyzeLastWins();
+    }
+
+    function analyzeLastWins() {
+        let hot = 0, cold = 0;
+        lastWinNumbers.forEach(win => {
+            SECTIONS.forEach(sec => {
+                if(sec.includes(win)) {
+                    const sorted = [...sec].sort((a, b) => (occurrenceMap[a] || 0) - (occurrenceMap[b] || 0));
+                    const threshold = Math.ceil(sec.length * 0.3);
+                    if (sorted.slice(0, threshold).includes(win)) cold++;
+                    if (sorted.slice(-threshold).includes(win)) hot++;
+                }
+            });
+        });
+        document.getElementById('last-wins-analysis').innerHTML = 
+            `Last ${lastWinNumbers.length} Wins Analysis: <span style="color:var(--accent)">Hot: ${hot}</span> | <span style="color:var(--tier)">Cold: ${cold}</span>`;
+    }
+
+    initBoard();
+</script>
+
+</body>
+</html>
