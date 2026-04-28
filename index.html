@@ -2,55 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FoN Double Street Predictor</title>
+    <title>FoN Roulette Pro - DS Predictor</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a1a; color: #eee; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { background: #2d2d2d; border-radius: 12px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 100%; max-width: 700px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0; }
-        button { padding: 12px; border: none; border-radius: 6px; background: #444; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #666; transform: translateY(-2px); }
-        .btn-0 { grid-column: span 3; background: #27ae60; }
-        .prediction-box { background: #3d3d3d; border-left: 5px solid #f1c40f; padding: 15px; margin: 15px 0; border-radius: 4px; }
-        .prediction-val { font-size: 1.4em; color: #f1c40f; }
-        .history-list { font-size: 0.9em; color: #888; background: #222; padding: 10px; border-radius: 5px; height: 40px; overflow-x: auto; white-space: nowrap; }
-        .win { color: #2ecc71; font-weight: bold; }
-        .loss { color: #e74c3c; font-weight: bold; }
+        :root { --win-green: #27ae60; --loss-red: #c0392b; --table-dark: #1b1b1b; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #121212; color: #fff; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 95%; max-width: 900px; padding: 20px; }
+        
+        /* Layout Sections */
+        .flex-row { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
+        .section { background: #252525; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex: 1; min-width: 300px; }
+
+        /* Roulette Table */
+        .roulette-table { display: grid; grid-template-columns: 50px repeat(12, 1fr); grid-template-rows: repeat(3, 40px); gap: 2px; background: #444; border: 2px solid #444; margin-top: 10px; }
+        .cell { display: flex; align-items: center; justify-content: center; background: #0a4d28; cursor: pointer; font-weight: bold; font-size: 0.9em; user-select: none; }
+        .cell:hover { filter: brightness(1.3); }
+        .zero { grid-row: 1 / span 3; background: #27ae60; }
+        .red { background: #b92b27; }
+        .black { background: #1a1a1a; }
+
+        /* Controls & Input */
+        textarea { width: 100%; height: 60px; background: #111; color: #0f0; border: 1px solid #444; padding: 10px; border-radius: 4px; resize: none; font-family: monospace; box-sizing: border-box; }
+        button.action-btn { background: #3498db; border: none; padding: 8px 15px; color: white; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+        
+        /* Stats & Predictions */
+        .prediction-val { font-size: 2em; color: #f1c40f; text-shadow: 0 0 10px rgba(241, 196, 15, 0.3); }
+        .history-box { font-family: monospace; font-size: 0.85em; background: #111; padding: 10px; border-radius: 4px; color: #aaa; max-height: 100px; overflow-y: auto; word-wrap: break-word; }
+        .status-tag { padding: 5px 10px; border-radius: 4px; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; display: inline-block; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Roulette FoN DS Predictor</h2>
-    
-    <div class="grid">
-        <button class="btn-0" onclick="inputNumber(0)">0</button>
-        <script>
-            for(let i=1; i<=36; i++) {
-                document.write(`<button onclick="inputNumber(${i})">${i}</button>`);
-            }
-        </script>
+    <h2>FoN (Faces of Numbers) Strategy Console</h2>
+
+    <div class="section">
+        <strong>Import Past Results</strong> (Paste numbers separated by space or comma)
+        <textarea id="bulkInput" placeholder="e.g. 13, 2, 7, 19, 36, 1..."></textarea>
+        <button class="action-btn" onclick="importHistory()">Sync History</button>
     </div>
 
-    <div class="prediction-box">
-        <div><strong>Current Predictions:</strong></div>
-        <div id="predictedDS" class="prediction-val">Waiting for data...</div>
-        <div id="resultMsg" style="margin-top:10px"></div>
-    </div>
+    <div class="flex-row">
+        <div class="section" style="flex: 2;">
+            <strong>Click Number to Play:</strong>
+            <div class="roulette-table" id="rouletteTable">
+                <div class="cell zero" onclick="inputNumber(0)">0</div>
+                </div>
+        </div>
 
-    <div class="history-list" id="historyDisplay">History: </div>
+        <div class="section">
+            <strong>Predictions</strong>
+            <div id="statusUI"></div>
+            <div id="predictedDS" class="prediction-val">--</div>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+            <strong>History</strong>
+            <div class="history-box" id="historyDisplay">Ready...</div>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Mapping from your "Faces of Numbers" attachment
+    // Config: Faces of Numbers and Roulette Data
     const fonMap = {
         0:[5], 1:[6], 2:[7], 3:[8], 4:[9], 5:[0,10,15], 6:[1], 7:[2], 8:[3], 9:[4], 10:[5],
         11:[16,24,29], 12:[17,21,26], 13:[18,31,36], 14:[19], 15:[10], 16:[11], 17:[12,21,26], 18:[13,31,36],
         19:[14], 20:[25], 21:[12,17,26], 22:[27], 23:[28,32], 24:[29], 25:[20], 26:[12,21,17], 27:[22],
         28:[23,32], 29:[24], 30:[35], 31:[18,33,36], 32:[28,23], 33:[33], 34:[34], 35:[30], 36:[13,18,31]
     };
-
+    const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    
     let history = [];
-    let currentPredictions = []; // Array of predicted Double Streets
+    let currentPredictions = [];
+
+    // Build the Actual Roulette Table (Grid Layout)
+    const table = document.getElementById('rouletteTable');
+    for (let i = 1; i <= 36; i++) {
+        let col = Math.ceil(i / 3);
+        let row = 3 - (i % 3);
+        if (i % 3 === 0) row = 1;
+        
+        const cell = document.createElement('div');
+        cell.className = `cell ${redNumbers.includes(i) ? 'red' : 'black'}`;
+        cell.style.gridColumn = col + 1;
+        cell.style.gridRow = row;
+        cell.textContent = i;
+        cell.onclick = () => inputNumber(i);
+        table.appendChild(cell);
+    }
+
+    function importHistory() {
+        const input = document.getElementById('bulkInput').value;
+        const nums = input.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+        history = nums;
+        document.getElementById('historyDisplay').textContent = history.join(', ');
+        alert(`Imported ${nums.length} numbers.`);
+    }
 
     function getDoubleStreet(n) {
         if (n === 0) return null;
@@ -58,70 +103,54 @@
     }
 
     function inputNumber(num) {
-        let resultMsg = document.getElementById('resultMsg');
+        const statusUI = document.getElementById('statusUI');
         
-        // 1. Check Win/Loss of existing predictions
+        // 1. Process Win/Loss
         if (currentPredictions.length > 0) {
             const hitDS = getDoubleStreet(num);
             if (currentPredictions.includes(hitDS)) {
-                resultMsg.innerHTML = `<span class="win">WIN! Number ${num} hit DS ${hitDS}</span>`;
-                // Logic: "Reset one double street" - removing the oldest one
-                currentPredictions.shift();
+                statusUI.innerHTML = `<span class="status-tag" style="background:var(--win-green)">Win! Hits DS ${hitDS}</span>`;
+                currentPredictions.shift(); // Remove oldest prediction on win
             } else {
-                resultMsg.innerHTML = `<span class="loss">LOSS! Number ${num} missed. Adding DS.</span>`;
+                statusUI.innerHTML = `<span class="status-tag" style="background:var(--loss-red)">Loss! Adding DS</span>`;
             }
         }
 
-        // 2. Update History
+        // 2. Search for Neighbors using FoN logic
         history.push(num);
-        document.getElementById('historyDisplay').textContent = "History: " + history.join(', ');
-
-        // 3. Collect neighbors of clicked number AND its equivalents
         let equivalents = fonMap[num] || [];
         let targets = [num, ...equivalents];
-        let collectedNeighbors = [];
+        let neighbors = [];
 
         for (let i = 0; i < history.length; i++) {
             if (targets.includes(history[i])) {
-                if (i > 0) collectedNeighbors.push(history[i-1]);
-                if (i < history.length - 1) collectedNeighbors.push(history[i+1]);
+                if (i > 0) neighbors.push(history[i-1]);
+                if (i < history.length - 1) neighbors.push(history[i+1]);
             }
         }
 
-        // 4. Find Majority DS among neighbors
-        if (collectedNeighbors.length > 0) {
-            let dsFrequency = {};
-            collectedNeighbors.forEach(n => {
+        // 3. Find Majority DS
+        if (neighbors.length > 0) {
+            let dsCounts = {};
+            neighbors.forEach(n => {
                 let ds = getDoubleStreet(n);
-                if (ds) dsFrequency[ds] = (dsFrequency[ds] || 0) + 1;
+                if (ds) dsCounts[ds] = (dsCounts[ds] || 0) + 1;
             });
-
-            let bestDS = null;
-            let maxCount = -1;
-            for (let ds in dsFrequency) {
-                if (dsFrequency[ds] > maxCount) {
-                    maxCount = dsFrequency[ds];
-                    bestDS = parseInt(ds);
-                }
-            }
-
-            // Add the new predicted DS if not already in list
-            if (bestDS && !currentPredictions.includes(bestDS)) {
-                currentPredictions.push(bestDS);
+            
+            let bestDS = Object.keys(dsCounts).reduce((a, b) => dsCounts[a] > dsCounts[b] ? a : b, null);
+            if (bestDS && !currentPredictions.includes(parseInt(bestDS))) {
+                currentPredictions.push(parseInt(bestDS));
             }
         }
 
-        // 5. Update UI
-        updateUI();
-    }
-
-    function updateUI() {
-        const display = document.getElementById('predictedDS');
-        if (currentPredictions.length === 0) {
-            display.textContent = "Waiting for next prediction...";
-        } else {
-            display.textContent = currentPredictions.map(ds => `DS ${ds}`).join(' + ');
-        }
+        // 4. Update Displays
+        document.getElementById('historyDisplay').textContent = history.join(', ');
+        document.getElementById('predictedDS').textContent = 
+            currentPredictions.length > 0 ? currentPredictions.map(d => `DS ${d}`).join(' + ') : "--";
+        
+        // Auto-scroll history
+        const hb = document.getElementById('historyDisplay');
+        hb.scrollTop = hb.scrollHeight;
     }
 </script>
 
