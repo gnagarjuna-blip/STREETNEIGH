@@ -3,206 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Dealer Signature Dashboard</title>
+    <title>Dealer Signature Analysis Dashboard</title>
     <style>
-        :root { --primary: #4CAF50; --bg: #0f0f0f; --card: #1a1a1a; --text: #e0e0e0; --accent: #2196F3; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .dashboard { max-width: 1100px; width: 100%; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+        :root { --bg: #0a0a0a; --card: #161b22; --green: #2ea043; --red: #da3633; --black: #21262d; --accent: #58a6ff; --text: #c9d1d9; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         
-        /* Betting Table Styles */
-        .roulette-table { display: grid; grid-template-columns: repeat(14, 1fr); background: #064e3b; padding: 10px; border: 4px solid #047857; border-radius: 8px; margin-bottom: 20px; }
-        .cell { aspect-ratio: 1/1.5; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
-        .cell:hover { transform: scale(1.1); z-index: 10; box-shadow: 0 0 15px #fff; }
-        .zero { grid-row: span 3; background: #059669; }
-        .red { background: #b91c1c; }
-        .black { background: #18181b; }
-
-        /* Panel Styles */
-        .panel { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        h2 { margin-top: 0; color: var(--primary); font-size: 1.2rem; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
         
-        .bulk-input { width: 100%; height: 80px; background: #111; border: 1px solid #333; color: var(--primary); border-radius: 4px; padding: 10px; box-sizing: border-box; resize: none; }
+        /* TABLE LAYOUT - Matches Image */
+        .roulette-container { background: #013220; padding: 15px; border-radius: 10px; border: 3px solid #064e3b; display: flex; }
+        .zero-box { width: 60px; background: #2ea043; border: 1px solid white; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 24px; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 2px; }
+        .grid-main { display: grid; grid-template-columns: repeat(12, 1fr); gap: 2px; flex-grow: 1; }
+        .cell { width: 50px; height: 60px; border: 1px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; transition: 0.1s; position: relative; }
+        .cell:active { transform: scale(0.9); }
+        .r { background: var(--red); }
+        .b { background: var(--black); }
         
-        .prediction-box { background: linear-gradient(145deg, #1e293b, #0f172a); border: 2px solid var(--accent); text-align: center; padding: 20px; border-radius: 12px; margin-top: 20px; }
-        #predicted-num { font-size: 3.5rem; font-weight: 800; color: #fbbf24; line-height: 1; }
+        /* Sidebar Panels */
+        .panel { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid #30363d; margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; font-size: 1.1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .stat-item { background: #262626; padding: 10px; border-radius: 6px; text-align: center; }
-        .stat-val { display: block; font-size: 1.2rem; font-weight: bold; color: var(--primary); }
-
-        .log-container { height: 300px; overflow-y: auto; margin-top: 15px; background: #111; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th { position: sticky; top: 0; background: #222; padding: 8px; }
-        td { padding: 8px; text-align: center; border-bottom: 1px solid #222; }
-
-        .btn { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
-        .trend-up { color: #4ade80; }
-        .trend-down { color: #f87171; }
+        .prediction-display { text-align: center; background: linear-gradient(180deg, #1c2128 0%, #0d1117 100%); padding: 20px; border-radius: 10px; border: 2px solid var(--green); }
+        #target-num { font-size: 4rem; font-weight: 900; color: #f2e05d; display: block; line-height: 1; }
+        
+        .bulk-area { width: 100%; height: 60px; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 5px; padding: 10px; box-sizing: border-box; }
+        .btn { background: var(--green); color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        
+        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .history-table th { text-align: left; border-bottom: 1px solid #30363d; padding: 8px; color: #8b949e; }
+        .history-table td { padding: 8px; border-bottom: 1px solid #21262d; }
+        .trend-tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
+        .up { background: #238636; } .down { background: #da3633; }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
+<div class="container">
     <div>
         <div class="panel">
-            <h2>Interactive Entry Table</h2>
-            <div class="roulette-table" id="table-ui">
-                </div>
+            <h2>Interactive Roulette Table</h2>
+            <div class="roulette-container">
+                <div class="zero-box" onclick="logNum(0)">0</div>
+                <div class="grid-main" id="grid">
+                    </div>
+            </div>
             
-            <h2>Bulk Initial Data</h2>
-            <textarea class="bulk-input" id="bulkArea" placeholder="Paste numbers separated by space or comma (e.g. 12, 35, 3, 26)"></textarea>
-            <button class="btn" onclick="importBulk()">Import Session Data</button>
+            <h2 style="margin-top:25px">Initial Data Import</h2>
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste historical numbers (e.g. 14, 2, 33, 1)"></textarea>
+            <button class="btn" onclick="importData()">Process History</button>
         </div>
 
-        <div class="panel" style="margin-top: 20px;">
-            <h2>Session History</h2>
-            <div class="log-container">
-                <table>
+        <div class="panel">
+            <h2>Live Session Log</h2>
+            <div style="max-height: 300px; overflow-y: auto;">
+                <table class="history-table">
                     <thead>
-                        <tr><th>#</th><th>Number</th><th>Dist.</th><th>Trend</th></tr>
+                        <tr><th>Spin</th><th>Result</th><th>Distance</th><th>Trend</th></tr>
                     </thead>
-                    <tbody id="historyBody"></tbody>
+                    <tbody id="logBody"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
     <div>
-        <div class="prediction-box">
-            <div style="text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; opacity: 0.8;">Next Prediction</div>
-            <div id="predicted-num">--</div>
-            <div id="prediction-info" style="font-size: 0.9rem; margin-top: 10px;">Enter 3+ numbers</div>
+        <div class="prediction-display">
+            <span style="font-size: 0.8rem; color: #8b949e;">DEALER SIGNATURE TARGET</span>
+            <span id="target-num">--</span>
+            <div id="trend-label" style="margin-top: 10px; font-weight: bold;">Waiting for data...</div>
         </div>
 
         <div class="panel" style="margin-top: 20px;">
-            <h2>Strategy Analysis</h2>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span style="font-size: 0.7rem;">AVG DISTANCE</span>
-                    <span class="stat-val" id="stat-avg">0</span>
-                </div>
-                <div class="stat-item">
-                    <span style="font-size: 0.7rem;">TREND</span>
-                    <span class="stat-val" id="stat-trend">N/A</span>
-                </div>
+            <h2>Analysis Metrics</h2>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span>Average Travel:</span>
+                <span id="avg-val" style="color: var(--accent); font-weight: bold;">0</span>
             </div>
-            
-            <div style="margin-top:15px; font-size: 0.85rem; line-height: 1.4;">
-                <p id="advice-text">Waiting for dealer signature pattern...</p>
+            <div style="font-size: 0.85rem; color: #8b949e; line-height: 1.4;">
+                <p>The calculation identifies the <b>Travel Average</b> (distance between pockets) and adjusts for <b>Rising/Dying</b> trends in the dealer's physical release.</p>
             </div>
-            <button class="btn" style="background: #333;" onclick="resetData()">Clear Session</button>
+            <button class="btn" style="background: #30363d;" onclick="reset()">Reset All Data</button>
         </div>
     </div>
 </div>
 
 <script>
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-    let history = [];
-    let distances = [];
+    const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    let session = [];
+    let dists = [];
 
-    // Initialize Table UI
-    function initTable() {
-        const table = document.getElementById('table-ui');
-        // Add 0
-        const zeroCell = document.createElement('div');
-        zeroCell.className = 'cell zero';
-        zeroCell.innerText = '0';
-        zeroCell.onclick = () => addNumber(0);
-        table.appendChild(zeroCell);
-
-        // Add 1-36 in 3 rows
-        const rows = [[], [], []];
-        for(let i=1; i<=36; i++) {
-            const rowIdx = (i - 1) % 3;
-            rows[rowIdx].push(i);
-        }
-
-        // Roulette columns logic
-        for(let col=0; col<12; col++) {
-            for(let r=2; r>=0; r--) {
-                const num = (col * 3) + (r + 1);
-                const cell = document.createElement('div');
-                const colorClass = redNumbers.includes(num) ? 'red' : 'black';
-                cell.className = `cell ${colorClass}`;
-                cell.innerText = num;
-                cell.onclick = () => addNumber(num);
-                table.appendChild(cell);
-            }
+    // Generate Vertical Table (3 rows, 12 columns)
+    const grid = document.getElementById('grid');
+    for (let col = 1; col <= 12; col++) {
+        for (let row = 3; row >= 1; row--) {
+            const n = (col - 1) * 3 + row;
+            const cell = document.createElement('div');
+            cell.className = `cell ${reds.includes(n) ? 'r' : 'b'}`;
+            cell.innerText = n;
+            cell.onclick = () => logNum(n);
+            grid.appendChild(cell);
         }
     }
 
-    function addNumber(num) {
-        if (history.length > 0) {
-            const lastNum = history[history.length - 1];
-            const dist = (wheel.indexOf(num) - wheel.indexOf(lastNum) + 37) % 37;
-            distances.push(dist);
+    function logNum(n) {
+        if (session.length > 0) {
+            const prev = session[session.length - 1];
+            const d = (wheel.indexOf(n) - wheel.indexOf(prev) + 37) % 37;
+            dists.push(d);
         }
-        history.push(num);
-        analyze();
+        session.push(n);
+        calculate();
     }
 
-    function importBulk() {
-        const raw = document.getElementById('bulkArea').value;
-        const nums = raw.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n>=0 && n<=36);
-        nums.forEach(n => addNumber(n));
-        document.getElementById('bulkArea').value = '';
+    function importData() {
+        const input = document.getElementById('bulkData').value;
+        const nums = input.split(/[\s,]+/).map(Number).filter(v => !isNaN(v) && v >= 0 && v <= 36);
+        nums.forEach(n => logNum(n));
+        document.getElementById('bulkData').value = '';
     }
 
-    function analyze() {
-        if (history.length < 2) return updateUI();
+    function calculate() {
+        if (session.length < 2) return updateUI();
 
-        const avg = distances.reduce((a,b) => a+b, 0) / distances.length;
-        const lastDist = distances[distances.length - 1];
-        const prevDist = distances.length > 1 ? distances[distances.length - 2] : lastDist;
+        const avg = dists.reduce((a, b) => a + b, 0) / dists.length;
+        const lastD = dists[dists.length - 1];
+        const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
 
-        let trend = "Stable";
-        let adjustment = 0;
+        let trendStr = "Neutral";
+        let adj = 0;
 
-        if (lastDist > prevDist) {
-            trend = "Rising";
-            adjustment = 1; 
-        } else if (lastDist < prevDist) {
-            trend = "Dying";
-            adjustment = -1;
+        if (lastD > prevD) {
+            trendStr = "Rising Trend";
+            adj = 1;
+        } else if (lastD < prevD) {
+            trendStr = "Dying Trend";
+            adj = -1;
         }
 
-        // Prediction Logic
-        const lastNum = history[history.length - 1];
-        const lastIdx = wheel.indexOf(lastNum);
-        const targetIdx = (lastIdx + Math.round(avg) + adjustment + 37) % 37;
-        const prediction = wheel[targetIdx];
-
-        updateUI(prediction, avg, trend);
-    }
-
-    function updateUI(pred = "--", avg = 0, trend = "N/A") {
-        document.getElementById('predicted-num').innerText = pred;
-        document.getElementById('stat-avg').innerText = avg.toFixed(1);
-        const trendEl = document.getElementById('stat-trend');
-        trendEl.innerText = trend;
-        trendEl.className = `stat-val ${trend === 'Rising' ? 'trend-up' : (trend === 'Dying' ? 'trend-down' : '')}`;
-
-        const advice = document.getElementById('advice-text');
-        if(trend === "Rising") advice.innerHTML = "<b>Rising Trend:</b> Dealer is increasing momentum. Betting near top of average range recommended.";
-        else if(trend === "Dying") advice.innerHTML = "<b>Dying Trend:</b> Momentum dropping. Switch predictions closer to the last hit pocket.";
+        const lastIdx = wheel.indexOf(session[session.length - 1]);
+        const targetIdx = (lastIdx + Math.round(avg) + adj + 37) % 37;
         
-        const body = document.getElementById('historyBody');
+        updateUI(wheel[targetIdx], avg.toFixed(1), trendStr);
+    }
+
+    function updateUI(pred = "--", avg = "0", trend = "Waiting...") {
+        document.getElementById('target-num').innerText = pred;
+        document.getElementById('avg-val').innerText = avg;
+        document.getElementById('trend-label').innerText = trend;
+        document.getElementById('trend-label').style.color = trend.includes("Rising") ? "#2ea043" : (trend.includes("Dying") ? "#da3633" : "#8b949e");
+
+        const body = document.getElementById('logBody');
         body.innerHTML = '';
-        history.slice().reverse().forEach((num, i) => {
-            const idx = history.length - 1 - i;
-            const d = distances[idx-1] || '-';
-            body.innerHTML += `<tr><td>${idx+1}</td><td>${num}</td><td>${d}</td><td>-</td></tr>`;
+        session.slice().reverse().forEach((n, i) => {
+            const idx = session.length - 1 - i;
+            const d = dists[idx - 1] || "-";
+            let trendIcon = "";
+            if (idx > 1) {
+                trendIcon = dists[idx-1] > dists[idx-2] ? '<span class="trend-tag up">RISE</span>' : '<span class="trend-tag down">FALL</span>';
+            }
+            body.innerHTML += `<tr><td>${idx + 1}</td><td><b>${n}</b></td><td>${d}</td><td>${trendIcon}</td></tr>`;
         });
     }
 
-    function resetData() {
-        history = []; distances = [];
+    function reset() {
+        session = []; dists = [];
         updateUI();
     }
-
-    initTable();
 </script>
-
 </body>
 </html>
