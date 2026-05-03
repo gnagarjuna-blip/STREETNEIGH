@@ -2,165 +2,192 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FoN Roulette - 3DS Progression</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dealer Signature Predictor</title>
     <style>
-        :root { --win: #27ae60; --loss: #e74c3c; --accent: #f1c40f; --bg: #121212; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: #fff; margin: 0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { width: 100%; max-width: 1000px; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .container { max-width: 900px; width: 100%; background: #1e1e1e; padding: 20px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+        h1 { color: #4CAF50; text-align: center; }
         
-        .panel { background: #222; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        /* Custom Table Layout */
-        .table-container { display: flex; justify-content: center; margin: 20px 0; }
-        .zero { width: 60px; background: #27ae60; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border: 1px solid #555; border-radius: 5px 0 0 5px; }
-        .grid { display: grid; grid-template-rows: repeat(3, 50px); grid-auto-flow: column; background: #333; border: 1px solid #555; border-radius: 0 5px 5px 0; }
-        .cell { width: 65px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; border: 1px solid #444; }
-        .cell:hover { filter: brightness(1.4); background: #444; }
-        .red { background: #b92b27; }
-        .black { background: #1a1a1a; }
+        .wheel-container { position: relative; width: 300px; height: 300px; margin: auto; }
+        #wheel-canvas { width: 100%; height: 100%; transform: rotate(-90deg); }
+        
+        .controls, .stats { background: #2a2a2a; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+        input { background: #333; border: 1px solid #444; color: white; padding: 8px; border-radius: 4px; width: 80px; }
+        button { cursor: pointer; padding: 8px 16px; border: none; border-radius: 4px; background: #4CAF50; color: white; font-weight: bold; }
+        button:hover { background: #45a049; }
 
-        /* Logic & UI */
-        .stat-row { display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .unit-box { background: #333; border: 1px solid var(--accent); padding: 10px 20px; border-radius: 5px; font-size: 1.5em; min-width: 120px; text-align: center; }
-        .prediction-val { font-size: 2.2em; color: var(--accent); font-weight: 800; text-shadow: 0 0 10px rgba(241, 196, 15, 0.2); }
-        .neighbors-area { background: #000; padding: 12px; border-radius: 5px; color: #0f0; font-family: 'Courier New', monospace; border-left: 4px solid var(--accent); margin-top: 10px; }
+        .prediction-box { text-align: center; border: 2px solid #4CAF50; padding: 15px; margin-top: 15px; border-radius: 8px; }
+        #predicted-number { font-size: 2.5em; font-weight: bold; color: #ffeb3b; display: block; }
         
-        textarea { width: 100%; height: 50px; background: #000; color: #888; border: 1px solid #444; padding: 10px; border-radius: 4px; box-sizing: border-box; font-size: 12px; }
-        button { background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #2980b9; }
+        .log-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        .log-table th, .log-table td { border-bottom: 1px solid #444; padding: 8px; text-align: center; }
+        .win { color: #4CAF50; } .loss { color: #f44336; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="panel">
-        <strong>History Importer:</strong>
-        <textarea id="bulkInput" placeholder="Paste results here (comma or space separated)"></textarea>
-        <button style="margin-top:10px" onclick="syncHistory()">Sync Results</button>
-    </div>
+    <h1>Dealer Signature Analysis</h1>
 
-    <div class="table-container">
-        <div class="zero" onclick="handleInput(0)">0</div>
-        <div class="grid" id="rouletteGrid"></div>
-    </div>
-
-    <div class="panel">
-        <div class="stat-row">
-            <div>
-                <strong>Unit Progression:</strong>
-                <div id="unitDisplay" class="unit-box">1 Unit</div>
+    <div class="layout">
+        <div>
+            <div class="controls">
+                <h3>Input Results</h3>
+                <p>Enter number (0-36):</p>
+                <input type="number" id="numInput" min="0" max="36">
+                <button onclick="addNumber()">Add Number</button>
+                <button onclick="resetData()" style="background:#f44336">Reset</button>
             </div>
-            <div style="text-align: center;">
-                <strong>Next 3 Double Streets:</strong>
-                <div id="predictionDisplay" class="prediction-val">-- -- --</div>
+
+            <div class="stats">
+                <h3>Trend Analysis</h3>
+                <div id="trendStatus">Waiting for data (Need 3+ results)...</div>
+                <div id="avgDist">Avg. Travel Distance: 0</div>
             </div>
         </div>
-        
-        <div id="statusTag" style="text-align: center; margin: 15px 0; font-weight: bold; height: 20px;"></div>
 
-        <div style="margin-top: 15px;">
-            <strong>Sorted Neighbors in History:</strong>
-            <div id="neighborDisplay" class="neighbors-area">Waiting for input...</div>
+        <div class="wheel-container">
+            <canvas id="wheel-canvas" width="300" height="300"></canvas>
         </div>
     </div>
+
+    <div class="prediction-box">
+        <span style="font-size: 1.1em;">Next Predicted Number (Target Pocket)</span>
+        <span id="predicted-number">--</span>
+        <small id="prediction-reason">Add numbers to start prediction</small>
+    </div>
+
+    <h3>History & Distances</h3>
+    <table class="log-table">
+        <thead>
+            <tr>
+                <th>Spin #</th>
+                <th>Result</th>
+                <th>Distance (Pockets)</th>
+                <th>Trend</th>
+            </tr>
+        </thead>
+        <tbody id="historyLog"></tbody>
+    </table>
 </div>
 
 <script>
-    // FoN Mapping
-    const fonMap = {
-        0:[5], 1:[6], 2:[7], 3:[8], 4:[9], 5:[0,10,15], 6:[1], 7:[2], 8:[3], 9:[4], 10:[5],
-        11:[16,24,29], 12:[17,21,26], 13:[18,31,36], 14:[19], 15:[10], 16:[11], 17:[12,21,26], 18:[13,31,36],
-        19:[14], 20:[25], 21:[12,17,26], 22:[27], 23:[28,32], 24:[29], 25:[20], 26:[12,21,17], 27:[22],
-        28:[23,32], 29:[24], 30:[35], 31:[18,33,36], 32:[28,23], 33:[33], 34:[34], 35:[30], 36:[13,18,31]
-    };
-    const reds = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-    
+    // European Roulette Layout
+    const wheelNumbers = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     let history = [];
-    let currentPredictions = [];
-    let currentUnits = 1;
+    let distances = [];
 
-    // Table Generation: Row 1 (1,4,7...), Row 2 (2,5,8...), Row 3 (3,6,9...)
-    const grid = document.getElementById('rouletteGrid');
-    const tableLayout = [
-        [1,4,7,10,13,16,19,22,25,28,31,34],
-        [2,5,8,11,14,17,20,23,26,29,32,35],
-        [3,6,9,12,15,18,21,24,27,30,33,36]
-    ];
+    function drawWheel(highlightNum = null) {
+        const canvas = document.getElementById('wheel-canvas');
+        const ctx = canvas.getContext('2d');
+        const centerX = 150;
+        const centerY = 150;
+        const radius = 130;
+        const slice = (Math.PI * 2) / 37;
 
-    tableLayout.forEach(row => {
-        row.forEach(num => {
-            const cell = document.createElement('div');
-            cell.className = `cell ${reds.includes(num) ? 'red' : 'black'}`;
-            cell.textContent = num;
-            cell.onclick = () => handleInput(num);
-            grid.appendChild(cell);
+        ctx.clearRect(0, 0, 300, 300);
+
+        wheelNumbers.forEach((num, i) => {
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, i * slice, (i + 1) * slice);
+            
+            if (num === highlightNum) ctx.fillStyle = '#ffeb3b';
+            else if (num === 0) ctx.fillStyle = '#008000';
+            else ctx.fillStyle = [32,19,21,25,34,27,36,30,23,5,16,1,14,9,18,7,12,3].includes(num) ? '#e61919' : '#1a1a1a';
+            
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw text
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(i * slice + slice / 2);
+            ctx.fillStyle = num === highlightNum ? 'black' : 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText(num, radius - 20, 5);
+            ctx.restore();
         });
-    });
-
-    function getDS(n) { return n === 0 ? null : Math.ceil(n / 6); }
-
-    function syncHistory() {
-        const val = document.getElementById('bulkInput').value;
-        history = val.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-        updateUI();
-        alert("Synced " + history.length + " numbers.");
     }
 
-    function handleInput(num) {
-        const hitDS = getDS(num);
-        const status = document.getElementById('statusTag');
+    function calculateDistance(startNum, endNum) {
+        let startIndex = wheelNumbers.indexOf(startNum);
+        let endIndex = wheelNumbers.indexOf(endNum);
+        // Clockwise distance
+        return (endIndex - startIndex + 37) % 37;
+    }
 
-        // 1. Progression: Loss +1, Win -1
-        if (currentPredictions.length > 0) {
-            if (currentPredictions.includes(hitDS)) {
-                status.innerHTML = `<span style="color:var(--win)">WIN! Unit Level Down</span>`;
-                currentUnits = Math.max(1, currentUnits - 1);
-            } else {
-                status.innerHTML = `<span style="color:var(--loss)">LOSS! Unit Level Up</span>`;
-                currentUnits += 1;
-            }
+    function addNumber() {
+        const val = parseInt(document.getElementById('numInput').value);
+        if (isNaN(val) || val < 0 || val > 36) return;
+
+        if (history.length > 0) {
+            const dist = calculateDistance(history[history.length - 1], val);
+            distances.push(dist);
         }
-
-        history.push(num);
         
-        // 2. Neighbor Logic for Number + Equivalents
-        let equivalents = fonMap[num] || [];
-        let targets = [num, ...equivalents];
-        let foundNeighbors = [];
-
-        for (let i = 0; i < history.length; i++) {
-            if (targets.includes(history[i])) {
-                if (i > 0) foundNeighbors.push(history[i-1]);
-                if (i < history.length - 1) foundNeighbors.push(history[i+1]);
-            }
-        }
-
-        // 3. Display Neighbors (Ascending)
-        const sorted = [...foundNeighbors].sort((a, b) => a - b);
-        document.getElementById('neighborDisplay').textContent = sorted.length ? sorted.join(', ') : "None";
-
-        // 4. Determine Top 3 Double Streets
-        if (foundNeighbors.length > 0) {
-            let counts = {};
-            foundNeighbors.forEach(n => {
-                let ds = getDS(n);
-                if (ds) counts[ds] = (counts[ds] || 0) + 1;
-            });
-
-            currentPredictions = Object.keys(counts)
-                .map(Number)
-                .sort((a, b) => counts[b] - counts[a])
-                .slice(0, 3);
-        }
-
+        history.push(val);
         updateUI();
+        document.getElementById('numInput').value = '';
+        drawWheel(val);
     }
 
     function updateUI() {
-        document.getElementById('unitDisplay').textContent = `${currentUnits} Unit${currentUnits > 1 ? 's' : ''}`;
-        document.getElementById('predictionDisplay').textContent = 
-            currentPredictions.length ? currentPredictions.map(d => `DS${d}`).join(' ') : "-- -- --";
+        const log = document.getElementById('historyLog');
+        log.innerHTML = '';
+        
+        history.forEach((num, i) => {
+            const dist = i === 0 ? '-' : distances[i-1];
+            log.innerHTML = `<tr>
+                <td>${i+1}</td>
+                <td><b>${num}</b></td>
+                <td>${dist}</td>
+                <td>-</td>
+            </tr>` + log.innerHTML;
+        });
+
+        if (distances.length >= 2) {
+            const avg = distances.reduce((a, b) => a + b, 0) / distances.length;
+            document.getElementById('avgDist').innerText = `Avg. Travel Distance: ${avg.toFixed(2)}`;
+            
+            // Basic Trend Logic (Rising/Dying)
+            const last = distances[distances.length - 1];
+            const prev = distances[distances.length - 2];
+            let trend = "Stable";
+            if (last > prev) trend = "Rising Trend";
+            if (last < prev) trend = "Dying Trend";
+            document.getElementById('trendStatus').innerText = `Current Status: ${trend}`;
+
+            // Predict Next
+            const lastNum = history[history.length - 1];
+            const lastIdx = wheelNumbers.indexOf(lastNum);
+            
+            // Adjust prediction based on trend
+            let adjustment = 0;
+            if (trend === "Rising Trend") adjustment = 1; 
+            if (trend === "Dying Trend") adjustment = -1;
+
+            const predictedIdx = (lastIdx + Math.round(avg) + adjustment + 37) % 37;
+            const prediction = wheelNumbers[predictedIdx];
+            
+            document.getElementById('predicted-number').innerText = prediction;
+            document.getElementById('prediction-reason').innerText = 
+                `Based on ${trend} and Average Distance of ${Math.round(avg)}`;
+        }
     }
+
+    function resetData() {
+        history = [];
+        distances = [];
+        document.getElementById('historyLog').innerHTML = '';
+        document.getElementById('predicted-number').innerText = '--';
+        drawWheel();
+    }
+
+    drawWheel();
 </script>
 
 </body>
