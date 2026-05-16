@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Roulette Deep Sector Filter</title>
+    <title>Auto-Roulette 15-Spin Deep Sector Filter</title>
     <style>
         :root { --bg: #0b0f19; --panel: #161e2d; --accent: #38bdf8; --green: #10b981; --red: #ef4444; --black: #1e293b; --text: #f1f5f9; }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -93,7 +93,7 @@
         </div>
 
         <div class="prediction-hero">
-            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">FILTERED DEEP SECTOR (7+1+7)</div>
+            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">15-SPIN DEEP SCAN FILTER (7+1+7)</div>
             <div id="target-display">--</div>
             
             <div class="neighbors-box" id="neighbors-output"></div>
@@ -105,11 +105,11 @@
         </div>
 
         <div class="panel">
-            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS (DEEP FILTER)</h2>
+            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS</h2>
             <div style="margin: 15px 0;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Filtered Sector Density:</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0 hits</span>
+                    <span>Avg Distance (Last 15):</span>
+                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span>Total Sample:</span>
@@ -226,8 +226,8 @@
             return updateUI();
         }
 
-        // 1. Calculate Average Distance based on rolling window (Last 5 drops for Auto-Roulette)
-        const recentDists = dists.slice(-5);
+        // LAYER 1: Calculate Average Distance strictly from the last 15 results
+        const recentDists = dists.slice(-15);
         const avg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
         const lastD = dists[dists.length - 1];
@@ -244,7 +244,7 @@
             offset = -1;
         }
 
-        // 2. Map out primary mathematical center index
+        // Find primary mathematical sector index
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
         let predIdx = 0;
         let roundedAvgShift = Math.round(avg) + offset;
@@ -257,10 +257,10 @@
 
         const mathPredictedCenter = wheelOrder[predIdx];
         
-        // 3. Extract the 15-number distance block (Layer 1 Scan Block)
+        // Extract Layer 1 15-number distance block 
         const scanBlock = get7Neighbors(mathPredictedCenter);
 
-        // 4. Loop strictly inside this block to find the number whose own neighborhood has the most historical hits
+        // LAYER 2: Scan inside the 15-number block for highest 7-neighbor density hits
         let highestHitsCount = -1;
         let filteredBestCenter = mathPredictedCenter;
 
@@ -268,30 +268,30 @@
             let candidateSector = get7Neighbors(candidateNumber);
             let contextHitCount = 0;
 
-            // Tally total historical occurrences within this candidate's personal neighborhood
+            // Tally historical hits inside the candidate's personal neighborhood
             history.forEach(historicalNum => {
                 if (candidateSector.includes(historicalNum)) {
                     contextHitCount++;
                 }
             });
 
-            // Update choice if candidate exhibits a hotter personal 7-neighbors density
+            // If this candidate's neighborhood shows a higher trend hit percentage, make it our choice
             if (contextHitCount > highestHitsCount) {
                 highestHitsCount = contextHitCount;
                 filteredBestCenter = candidateNumber;
             }
         });
 
-        // 5. Build final target sector using the highest density candidate from step 4
+        // Build final prediction block from the highest performance choice
         const targetSector = get7Neighbors(filteredBestCenter);
         predictedSectorsLog.push(targetSector);
 
-        updateUI(filteredBestCenter, highestHitsCount, trend, targetSector);
+        updateUI(filteredBestCenter, avg, trend, targetSector);
     }
 
-    function updateUI(prediction = "--", densityHits = 0, trend = "STABLE", targetSector = []) {
+    function updateUI(prediction = "--", avg = 0, trend = "STABLE", targetSector = []) {
         document.getElementById('target-display').innerText = prediction;
-        document.getElementById('avg-val').innerText = history.length >= 2 ? densityHits + " hits" : "0 hits";
+        document.getElementById('avg-val').innerText = avg.toFixed(2);
         document.getElementById('count-val').innerText = history.length;
         
         const trendEl = document.getElementById('trend-text');
