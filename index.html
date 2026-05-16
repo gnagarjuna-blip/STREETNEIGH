@@ -94,8 +94,8 @@
             <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS</h2>
             <div style="margin: 15px 0;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Avg. Distance:</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.0</span>
+                    <span>Avg. Distance (Last 14):</span>
+                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span>Total Sample:</span>
@@ -116,8 +116,8 @@
     
     let history = [];
     let dists = [];
-    let predictedSectorsLog = []; // Keeps track of what the predictions were BEFORE each spin landed
-    let outcomesLog = []; // Records 'W' or 'L' for evaluation
+    let predictedSectorsLog = []; 
+    let outcomesLog = []; 
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
@@ -138,7 +138,6 @@
         });
     }
 
-    // Returns a 15 number sector array around a center index on the wheel
     function get7Neighbors(centerNumber) {
         if(centerNumber === null || centerNumber === undefined) return [];
         let idx = wheelOrder.indexOf(centerNumber);
@@ -151,8 +150,6 @@
     }
 
     function track(num) {
-        // Evaluate previous prediction if available before changing history states
-        let nextPredictionCenter = null;
         let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[predictedSectorsLog.length - 1] : [];
 
         if (currentActivePredictionSector.length > 0) {
@@ -162,7 +159,7 @@
                 outcomesLog.push("L");
             }
         } else {
-            outcomesLog.push(null); // No prediction setup yet
+            outcomesLog.push(null); 
         }
 
         if (history.length > 0) {
@@ -188,7 +185,10 @@
             return updateUI();
         }
 
-        const avg = dists.reduce((a, b) => a + b, 0) / dists.length;
+        // Slice only the last 14 distance markers for signature mapping
+        const recentDists = dists.slice(-14);
+        const avg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
+        
         const lastD = dists[dists.length - 1];
         const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
 
@@ -207,7 +207,6 @@
         const predIdx = (lastIdx + Math.round(avg) + offset + 37) % 37;
         const targetCenter = wheelOrder[predIdx];
         
-        // Calculate the sector for the *NEXT* incoming spin
         const targetSector = get7Neighbors(targetCenter);
         predictedSectorsLog.push(targetSector);
 
@@ -223,7 +222,6 @@
         trendEl.innerText = trend;
         trendEl.className = trend.includes("↑") ? "trend-up" : (trend.includes("↓") ? "trend-down" : "");
 
-        // Render Neighbor Track Line Elements
         const neighborsBox = document.getElementById('neighbors-output');
         neighborsBox.innerHTML = '';
         if (targetSector.length > 0) {
@@ -234,10 +232,8 @@
             });
         }
 
-        // Render Win/Loss Streak Badges (Last 8 evaluated outcomes)
         const streakBox = document.getElementById('streak-output');
         streakBox.innerHTML = '';
-        // Filter out nulls (initial spins before predictions existed)
         const validOutcomes = outcomesLog.filter(o => o !== null);
         const lastEight = validOutcomes.slice(-8);
         
@@ -251,7 +247,6 @@
             }
         }
 
-        // Generate the Table Log
         const tbody = document.getElementById('logTable');
         tbody.innerHTML = '';
         
@@ -264,7 +259,6 @@
                 status = dists[actualIdx-1] > dists[actualIdx-2] ? '<span class="trend-up">RISE</span>' : '<span class="trend-down">FALL</span>';
             }
             
-            // Look up what prediction was active BEFORE this spin landed
             let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
             if (outcomesLog[actualIdx] !== null && outcomesLog[actualIdx] !== undefined) {
                 outcomeVerdict = outcomesLog[actualIdx] === 'W' 
