@@ -36,6 +36,12 @@
         button:hover { background: #444; }
 
         .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--gold); }
+        
+        /* New Tracking Log Display Elements */
+        .recent-display-container { margin-top: 15px; background: #111; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; }
+        .recent-display-title { font-size: 0.85rem; color: #888; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .recent-chips-wrapper { display: flex; gap: 6px; flex-wrap: wrap; }
+        .recent-chip { min-width: 28px; height: 28px; padding: 0 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
     </style>
 </head>
 <body>
@@ -49,8 +55,15 @@
             <div id="board" class="board">
                 <div class="cell n0" onclick="inputResult(0)">0</div>
             </div>
-            <textarea id="bulk" placeholder="Paste history here (e.g. 10, 32, 15, 19)..."></textarea>
+            <textarea id="bulk" placeholder="Paste history here (Top is latest, e.g. 10, 32, 15, 19)..."></textarea>
             <button onclick="importBulk()">Process History</button>
+            
+            <div class="recent-display-container">
+                <div class="recent-display-title">Latest 10 Results (Newest → Oldest)</div>
+                <div id="recentChips" class="recent-chips-wrapper">
+                    <span style="color:#666; font-size:0.85rem; font-style:italic;">No spins recorded yet</span>
+                </div>
+            </div>
         </div>
 
         <div class="panel">
@@ -82,20 +95,29 @@
 
     function inputResult(n) {
         checkWinLoss(n);
-        history.push(n);
+        // Direct click means this is manually added as the absolute latest spin element
+        history.unshift(n); 
+        updateRecentChipsDisplay();
         processLogic(n);
     }
 
     function importBulk() {
         const val = document.getElementById('bulk').value;
+        // Parse numbers as pasted
         const nums = val.split(/[ ,]+/).map(x => parseInt(x.trim())).filter(x => !isNaN(x));
         
-        nums.forEach(n => {
+        if (nums.length === 0) return;
+
+        // Since top of text is latest data point, reverse the loop order to process 
+        // older items (bottom) first, building up chronological sequence to the top.
+        for (let i = nums.length - 1; i >= 0; i--) {
+            const n = nums[i];
             checkWinLoss(n);
-            history.push(n);
+            history.unshift(n); // unshift keeps index [0] running as the newest element
             processLogic(n);
-        });
+        }
         
+        updateRecentChipsDisplay();
         document.getElementById('bulk').value = '';
     }
 
@@ -142,6 +164,29 @@
         let finalPredictionSector = getSector(bestCenter);
         lastPredictedSector = finalPredictionSector; // Save for next comparison
         render(lastNum, bestCenter, highestWinRate, finalPredictionSector);
+    }
+
+    // Update real-time box component view below input panel
+    function updateRecentChipsDisplay() {
+        const wrapper = document.getElementById('recentChips');
+        if (history.length === 0) {
+            wrapper.innerHTML = `<span style="color:#666; font-size:0.85rem; font-style:italic;">No spins recorded yet</span>`;
+            return;
+        }
+
+        // Pull out first 10 entries from our tracking history array
+        const latest10 = history.slice(0, 10);
+        let htmlStr = "";
+        
+        latest10.forEach(num => {
+            let bgColor = "var(--black)";
+            if (num === 0) bgColor = "var(--green)";
+            else if (REDS.includes(num)) bgColor = "var(--red)";
+            
+            htmlStr += `<span class="recent-chip" style="background:${bgColor};">${num}</span>`;
+        });
+        
+        wrapper.innerHTML = htmlStr;
     }
 
     function render(last, best, rate, sector) {
