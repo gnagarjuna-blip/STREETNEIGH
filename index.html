@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Roulette Top-Down History Tracker</title>
+    <title>Auto-Roulette Alternating Tracker</title>
     <style>
         :root { --bg: #0b0f19; --panel: #161e2d; --accent: #38bdf8; --green: #10b981; --red: #ef4444; --black: #1e293b; --text: #f1f5f9; }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .dashboard { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
         
-        /* THE ROULETTE BOARD INTERFACE */
+        /* THE ACTUAL ROULETTE TABLE */
         .table-section { background: #064e3b; padding: 20px; border-radius: 15px; border: 4px solid #065f46; position: relative; overflow-x: auto; }
         .roulette-board { display: flex; align-items: stretch; min-width: 800px; }
         
@@ -71,11 +71,11 @@
         </div>
 
         <div class="panel" style="margin-top: 20px;">
-            <h2 style="margin:0; font-size: 1rem;">SESSION LOG (TOP IS LATEST)</h2>
+            <h2 style="margin:0; font-size: 1rem;">SESSION LOG</h2>
             <div class="log-wrap">
                 <table>
                     <thead>
-                        <tr><th>Spin ID</th><th>Result</th><th>Ball Direction</th><th>Distance</th><th>Momentum</th><th>Sector Verdict</th></tr>
+                        <tr><th>Spin</th><th>Result</th><th>Spin Direction</th><th>Distance</th><th>Momentum</th><th>Sector Verdict</th></tr>
                     </thead>
                     <tbody id="logTable"></tbody>
                 </table>
@@ -93,7 +93,7 @@
         </div>
 
         <div class="prediction-hero">
-            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">CONSISTENT DISTANCE ENGINE</div>
+            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">PREDICTED AUTO SECTOR (7+1+7)</div>
             <div id="target-display">--</div>
             
             <div class="neighbors-box" id="neighbors-output"></div>
@@ -105,11 +105,11 @@
         </div>
 
         <div class="panel">
-            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS</h2>
+            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS (AUTO)</h2>
             <div style="margin: 15px 0;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Consistent Distance (Last 15):</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0</span>
+                    <span>Avg. Distance (Rolling 5):</span>
+                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span>Total Sample:</span>
@@ -117,7 +117,7 @@
                 </div>
             </div>
             
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste history here (Top line = Latest number)"></textarea>
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste history (e.g. 32, 15, 19, 4)"></textarea>
             <button class="btn btn-primary" onclick="importHistory()">IMPORT DATA</button>
             <button class="btn btn-danger" onclick="resetSession()">RESET ALL</button>
         </div>
@@ -130,11 +130,11 @@
     
     let history = [];
     let dists = [];
-    let spinDirections = []; 
+    let spinDirections = []; // Record 'CW' or 'CCW' for every historical drop
     let predictedSectorsLog = []; 
     let outcomesLog = []; 
 
-    let currentDirection = 'CW'; 
+    let currentDirection = 'CW'; // Tracks the coming configuration
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
@@ -189,6 +189,7 @@
             outcomesLog.push(null); 
         }
 
+        // Record the current direction state for this specific completed spin
         spinDirections.push(currentDirection);
 
         if (history.length > 0) {
@@ -198,8 +199,10 @@
             
             let travel = 0;
             if (currentDirection === 'CW') {
+                // Moving forward through array
                 travel = (idxCurrent - idxLast + 37) % 37;
             } else {
+                // Moving backward through array (Counter Clockwise)
                 travel = (idxLast - idxCurrent + 37) % 37;
             }
             dists.push(travel);
@@ -207,23 +210,16 @@
         
         history.push(num);
 
+        // Auto-Alternate direction for the NEXT upcoming spin
         currentDirection = currentDirection === 'CW' ? 'CCW' : 'CW';
         updateDirectionUI();
 
         process();
     }
 
-    // UPDATE: Reads the input list treating the TOP item as the latest spin
     function importHistory() {
         const raw = document.getElementById('bulkData').value;
-        // Parse numbers from the paste area
-        let nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        
-        if(nums.length === 0) return;
-
-        // Since top is latest, reverse the array so we inject old numbers first into the processing sequence
-        nums.reverse();
-
+        const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
         nums.forEach(n => track(n));
         document.getElementById('bulkData').value = '';
     }
@@ -234,75 +230,46 @@
             return updateUI();
         }
 
-        // LAYER 1: Scan last 15 distance results for the absolute most frequent (consistent) distance
-        const recentDists = dists.slice(-15);
+        // AUTO ROULLETTE WINDOW: Slice only the last 5 distance markers
+        const recentDists = dists.slice(-5);
+        const avg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
-        let distCounts = {};
-        let consistentDistance = recentDists[0] || 0;
-        let maxOccurrences = 0;
-
-        recentDists.forEach(d => {
-            distCounts[d] = (distCounts[d] || 0) + 1;
-            if (distCounts[d] > maxOccurrences) {
-                maxOccurrences = distCounts[d];
-                consistentDistance = d;
-            }
-        });
-
-        // Determine momentum indicators
         const lastD = dists[dists.length - 1];
         const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
+
         let trend = "STABLE";
         let offset = 0;
-        if (lastD > prevD) { trend = "RISING ↑"; offset = 1; }
-        else if (lastD < prevD) { trend = "DYING ↓"; offset = -1; }
 
-        // Apply consistent distance jump to find the primary target base
-        const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
-        let predIdx = 0;
-        let targetShift = consistentDistance + offset;
-        
-        if (currentDirection === 'CW') {
-            predIdx = (lastIdx + targetShift + 37) % 37;
-        } else {
-            predIdx = (lastIdx - targetShift + 37) % 37;
+        if (lastD > prevD) {
+            trend = "RISING ↑"; 
+            offset = 1;
+        } else if (lastD < prevD) {
+            trend = "DYING ↓";
+            offset = -1;
         }
 
-        const mathPredictedCenter = wheelOrder[predIdx];
+        const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
         
-        // Extract Layer 1 15-number distance block around the consistent target
-        const scanBlock = get7Neighbors(mathPredictedCenter);
+        // Calculate forward jump if next is CW, backward jump if next is CCW
+        let predIdx = 0;
+        let roundedAvgShift = Math.round(avg) + offset;
+        
+        if (currentDirection === 'CW') {
+            predIdx = (lastIdx + roundedAvgShift + 37) % 37;
+        } else {
+            predIdx = (lastIdx - roundedAvgShift + 37) % 37;
+        }
 
-        // LAYER 2: Scan inside that 15-number block for the single number with the highest 7-neighbor density hits
-        let highestHitsCount = -1;
-        let filteredBestCenter = mathPredictedCenter;
-
-        scanBlock.forEach(candidateNumber => {
-            let candidateSector = get7Neighbors(candidateNumber);
-            let contextHitCount = 0;
-
-            history.forEach(historicalNum => {
-                if (candidateSector.includes(historicalNum)) {
-                    contextHitCount++;
-                }
-            });
-
-            if (contextHitCount > highestHitsCount) {
-                highestHitsCount = contextHitCount;
-                filteredBestCenter = candidateNumber;
-            }
-        });
-
-        // Final output build
-        const targetSector = get7Neighbors(filteredBestCenter);
+        const targetCenter = wheelOrder[predIdx];
+        const targetSector = get7Neighbors(targetCenter);
         predictedSectorsLog.push(targetSector);
 
-        updateUI(filteredBestCenter, consistentDistance, trend, targetSector);
+        updateUI(targetCenter, avg, trend, targetSector);
     }
 
-    function updateUI(prediction = "--", consistentDist = 0, trend = "STABLE", targetSector = []) {
+    function updateUI(prediction = "--", avg = 0, trend = "STABLE", targetSector = []) {
         document.getElementById('target-display').innerText = prediction;
-        document.getElementById('avg-val').innerText = "+" + consistentDist + " pockets";
+        document.getElementById('avg-val').innerText = avg.toFixed(2);
         document.getElementById('count-val').innerText = history.length;
         
         const trendEl = document.getElementById('trend-text');
@@ -337,7 +304,6 @@
         const tbody = document.getElementById('logTable');
         tbody.innerHTML = '';
         
-        // Displays history top-down (row #1 at the top of the table is always the latest spin)
         history.slice().reverse().forEach((n, i) => {
             const actualIdx = history.length - 1 - i;
             const distance = dists[actualIdx - 1] ?? "-";
@@ -356,7 +322,7 @@
             }
 
             tbody.innerHTML += `<tr>
-                <td>#${actualIdx + 1}</td>
+                <td>${actualIdx + 1}</td>
                 <td><b>${n}</b></td>
                 <td><span style="font-size:0.8rem; font-weight:bold; color:#94a3b8">${loggedDirection}</span></td>
                 <td>${distance}</td>
