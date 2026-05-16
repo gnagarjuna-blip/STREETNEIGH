@@ -2,348 +2,176 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auto-Roulette Alternating Tracker</title>
+    <title>Advanced Sector-in-Sector Tracker</title>
     <style>
-        :root { --bg: #0b0f19; --panel: #161e2d; --accent: #38bdf8; --green: #10b981; --red: #ef4444; --black: #1e293b; --text: #f1f5f9; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .dashboard { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
+        .container { max-width: 1100px; margin: auto; }
         
-        /* THE ACTUAL ROULETTE TABLE */
-        .table-section { background: #064e3b; padding: 20px; border-radius: 15px; border: 4px solid #065f46; position: relative; overflow-x: auto; }
-        .roulette-board { display: flex; align-items: stretch; min-width: 800px; }
-        
-        .zero-container { width: 70px; background: var(--green); border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; cursor: pointer; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 5px; }
-        
-        .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; flex-grow: 1; }
-        .cell { height: 60px; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
-        .cell:hover { filter: brightness(1.3); border-color: white; }
-        .cell:active { transform: scale(0.95); }
-        .r { background: var(--red); }
-        .b { background: var(--black); }
+        .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .panel { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; flex: 1; min-width: 350px; }
 
-        /* Panels */
-        .panel { background: var(--panel); border-radius: 12px; padding: 20px; border: 1px solid #2d3748; }
-        .prediction-hero { text-align: center; background: #0f172a; border: 2px solid var(--accent); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        #target-display { font-size: 3rem; font-weight: 800; color: #fbbf24; line-height: 1.1; margin: 10px 0; }
+        /* Board Styling */
+        .board { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-top: 15px; }
+        .cell { height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; 
+                font-weight: bold; border-radius: 4px; border: 1px solid #444; }
+        .n0 { background: var(--green); grid-row: span 3; }
+        .nRed { background: var(--red); }
+        .nBlack { background: var(--black); }
         
-        /* Neighbors Visualizer */
-        .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 12px 0; overflow-x: auto; padding: 5px 0; }
-        .nb-cell { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); }
-        .nb-center { border: 2px solid #fbbf24; transform: scale(1.15); box-shadow: 0 0 10px rgba(251,191,36,0.4); }
+        /* Prediction Styling */
+        .prediction-area { background: linear-gradient(145deg, #252525, #1a1a1a); border: 2px solid var(--gold); 
+                           padding: 20px; border-radius: 15px; text-align: center; margin-top: 10px; }
+        .target-num { font-size: 4rem; color: var(--gold); font-weight: 900; line-height: 1; margin: 10px 0; }
+        .sector-list { color: #888; font-family: monospace; word-spacing: 5px; background: #000; padding: 10px; border-radius: 5px; font-size: 0.9rem; }
         
-        /* Direction Controls */
-        .direction-panel { display: flex; gap: 10px; margin-bottom: 15px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; justify-content: space-between; align-items: center;}
-        .dir-btn { flex: 1; padding: 8px; border: 1px solid #475569; background: #1e293b; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;}
-        .dir-btn.active { background: #fbbf24; color: #0b0f19; border-color: #fbbf24; }
-        .next-indicator { font-size: 0.75rem; color: #94a3b8; font-weight: bold; text-transform: uppercase;}
+        /* Streak Styling */
+        .streak-container { margin-bottom: 15px; display: flex; justify-content: center; gap: 5px; }
+        .streak-item { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem; }
+        .win { background: var(--green); color: white; }
+        .loss { background: var(--red); color: white; }
 
-        /* Streak Badges */
-        .streak-container { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-        .streak-badge { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; }
-        .badge-win { background: var(--green); }
-        .badge-loss { background: var(--red); }
-        .badge-empty { background: #334155; opacity: 0.4; }
+        textarea { width: 100%; height: 50px; background: #000; color: var(--green); border: 1px solid #444; margin-top: 10px; padding: 5px; font-family: monospace; }
+        button { width: 100%; padding: 12px; margin-top: 10px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
+        button:hover { background: #444; }
 
-        .log-wrap { height: 350px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0b0f19; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #1e293b; padding: 12px; position: sticky; top: 0; text-align: center; }
-        td { padding: 10px; text-align: center; border-bottom: 1px solid #2d3748; }
-
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-primary { background: var(--accent); color: #0b0f19; }
-        .btn-danger { background: #7f1d1d; color: white; }
-        
-        .bulk-area { width: 100%; height: 60px; background: #0b0f19; color: var(--accent); border: 1px solid #475569; border-radius: 6px; padding: 10px; box-sizing: border-box; }
-        .trend-up { color: #4ade80; } .trend-down { color: #f87171; }
+        .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--gold); }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div>
-        <div class="table-section">
-            <h2 style="margin:0 0 15px 0; font-size: 1rem; opacity: 0.8;">LIVE AUTO-ROULETTE INPUT</h2>
-            <div class="roulette-board">
-                <div class="zero-container" onclick="track(0)">0</div>
-                <div class="numbers-grid" id="boardGrid"></div>
+<div class="container">
+    <h2 style="color: var(--gold);">Layered Sector Tracker (7-Neighbor Hit %)</h2>
+
+    <div class="flex-row">
+        <div class="panel">
+            <h3>Add Last Result</h3>
+            <div id="board" class="board">
+                <div class="cell n0" onclick="inputResult(0)">0</div>
             </div>
-        </div>
-
-        <div class="panel" style="margin-top: 20px;">
-            <h2 style="margin:0; font-size: 1rem;">SESSION LOG</h2>
-            <div class="log-wrap">
-                <table>
-                    <thead>
-                        <tr><th>Spin</th><th>Result</th><th>Spin Direction</th><th>Distance</th><th>Momentum</th><th>Sector Verdict</th></tr>
-                    </thead>
-                    <tbody id="logTable"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <div>
-        <div class="direction-panel">
-            <span class="next-indicator">Next Launch:</span>
-            <div style="display:flex; gap: 5px; width: 65%;">
-                <button id="btn-cw" class="dir-btn active" onclick="setInitialDirection('CW')">CLOCKWISE ↻</button>
-                <button id="btn-ccw" class="dir-btn" onclick="setInitialDirection('CCW')">C-CLOCKWISE ↺</button>
-            </div>
-        </div>
-
-        <div class="prediction-hero">
-            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">PREDICTED AUTO SECTOR (7+1+7)</div>
-            <div id="target-display">--</div>
-            
-            <div class="neighbors-box" id="neighbors-output"></div>
-
-            <div id="trend-text" style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px;">NEED 3+ SPINS</div>
-            
-            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px;">LAST 8 SPINS STREAK</div>
-            <div class="streak-container" id="streak-output"></div>
+            <textarea id="bulk" placeholder="Paste history here (e.g. 10, 32, 15, 19)..."></textarea>
+            <button onclick="importBulk()">Process History</button>
         </div>
 
         <div class="panel">
-            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS (AUTO)</h2>
-            <div style="margin: 15px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Avg. Distance (Rolling 5):</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Total Sample:</span>
-                    <span id="count-val">0</span>
-                </div>
+            <h3>Strongest Nearby Sector</h3>
+            <div id="display" class="prediction-area">
+                <p>Waiting for data entry...</p>
             </div>
             
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste history (e.g. 32, 15, 19, 4)"></textarea>
-            <button class="btn btn-primary" onclick="importHistory()">IMPORT DATA</button>
-            <button class="btn btn-danger" onclick="resetSession()">RESET ALL</button>
+            <div id="logicPath" class="log-box">
+                Logic trail will appear here after calculation.
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    
+    const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     let history = [];
-    let dists = [];
-    let spinDirections = []; // Record 'CW' or 'CCW' for every historical drop
-    let predictedSectorsLog = []; 
-    let outcomesLog = []; 
+    let streaks = []; // Stores "W" or "L"
+    let lastPredictedSector = [];
 
-    let currentDirection = 'CW'; // Tracks the coming configuration
+    // Initialize UI Board
+    const board = document.getElementById('board');
+    const rows = [[3,6,9,12,15,18,21,24,27,30,33,36],[2,5,8,11,14,17,20,23,26,29,32,35],[1,4,7,10,13,16,19,22,25,28,31,34]];
+    rows.forEach(r => r.forEach(n => {
+        board.innerHTML += `<div class="cell ${REDS.includes(n)?'nRed':'nBlack'}" onclick="inputResult(${n})">${n}</div>`;
+    }));
 
-    function buildBoard() {
-        const grid = document.getElementById('boardGrid');
-        const rows = [
-            [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
-            [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
-            [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
-        ];
+    function inputResult(n) {
+        checkWinLoss(n);
+        history.push(n);
+        processLogic(n);
+    }
 
-        rows.forEach(rowArr => {
-            rowArr.forEach(n => {
-                const cell = document.createElement('div');
-                cell.className = `cell ${reds.includes(n) ? 'r' : 'b'}`;
-                cell.innerText = n;
-                cell.onclick = () => track(n);
-                grid.appendChild(cell);
-            });
+    function importBulk() {
+        const val = document.getElementById('bulk').value;
+        const nums = val.split(/[ ,]+/).map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+        
+        nums.forEach(n => {
+            checkWinLoss(n);
+            history.push(n);
+            processLogic(n);
         });
+        
+        document.getElementById('bulk').value = '';
     }
 
-    function setInitialDirection(dir) {
-        currentDirection = dir;
-        updateDirectionUI();
+    function checkWinLoss(newNum) {
+        if (lastPredictedSector.length > 0) {
+            const isWin = lastPredictedSector.includes(newNum);
+            streaks.push(isWin ? "W" : "L");
+            if (streaks.length > 8) streaks.shift(); // Keep only last 8
+        }
     }
 
-    function updateDirectionUI() {
-        document.getElementById('btn-cw').classList.toggle('active', currentDirection === 'CW');
-        document.getElementById('btn-ccw').classList.toggle('active', currentDirection === 'CCW');
-    }
-
-    function get7Neighbors(centerNumber) {
-        if(centerNumber === null || centerNumber === undefined) return [];
-        let idx = wheelOrder.indexOf(centerNumber);
+    // Core Logic
+    function getSector(center) {
+        let idx = WHEEL.indexOf(center);
         let sector = [];
         for (let i = -7; i <= 7; i++) {
-            let targetIdx = (idx + i + 37) % 37;
-            sector.push(wheelOrder[targetIdx]);
+            sector.push(WHEEL[(idx + i + 37) % 37]);
         }
         return sector;
     }
 
-    function track(num) {
-        let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[predictedSectorsLog.length - 1] : [];
-
-        if (currentActivePredictionSector.length > 0) {
-            if (currentActivePredictionSector.includes(num)) {
-                outcomesLog.push("W");
-            } else {
-                outcomesLog.push("L");
-            }
-        } else {
-            outcomesLog.push(null); 
-        }
-
-        // Record the current direction state for this specific completed spin
-        spinDirections.push(currentDirection);
-
-        if (history.length > 0) {
-            const lastNum = history[history.length - 1];
-            const idxCurrent = wheelOrder.indexOf(num);
-            const idxLast = wheelOrder.indexOf(lastNum);
-            
-            let travel = 0;
-            if (currentDirection === 'CW') {
-                // Moving forward through array
-                travel = (idxCurrent - idxLast + 37) % 37;
-            } else {
-                // Moving backward through array (Counter Clockwise)
-                travel = (idxLast - idxCurrent + 37) % 37;
-            }
-            dists.push(travel);
-        }
-        
-        history.push(num);
-
-        // Auto-Alternate direction for the NEXT upcoming spin
-        currentDirection = currentDirection === 'CW' ? 'CCW' : 'CW';
-        updateDirectionUI();
-
-        process();
+    function calculateSectorWinRate(sectorNumbers) {
+        if (history.length === 0) return 0;
+        let wins = history.filter(num => sectorNumbers.includes(num)).length;
+        return (wins / history.length) * 100;
     }
 
-    function importHistory() {
-        const raw = document.getElementById('bulkData').value;
-        const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        nums.forEach(n => track(n));
-        document.getElementById('bulkData').value = '';
-    }
+    function processLogic(lastNum) {
+        let triggerZone = getSector(lastNum);
 
-    function process() {
-        if (history.length < 2) {
-            predictedSectorsLog.push([]);
-            return updateUI();
-        }
+        let bestCenter = triggerZone[0];
+        let highestWinRate = -1;
 
-        // AUTO ROULLETTE WINDOW: Slice only the last 5 distance markers
-        const recentDists = dists.slice(-5);
-        const avg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
-        
-        const lastD = dists[dists.length - 1];
-        const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
-
-        let trend = "STABLE";
-        let offset = 0;
-
-        if (lastD > prevD) {
-            trend = "RISING ↑"; 
-            offset = 1;
-        } else if (lastD < prevD) {
-            trend = "DYING ↓";
-            offset = -1;
-        }
-
-        const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
-        
-        // Calculate forward jump if next is CW, backward jump if next is CCW
-        let predIdx = 0;
-        let roundedAvgShift = Math.round(avg) + offset;
-        
-        if (currentDirection === 'CW') {
-            predIdx = (lastIdx + roundedAvgShift + 37) % 37;
-        } else {
-            predIdx = (lastIdx - roundedAvgShift + 37) % 37;
-        }
-
-        const targetCenter = wheelOrder[predIdx];
-        const targetSector = get7Neighbors(targetCenter);
-        predictedSectorsLog.push(targetSector);
-
-        updateUI(targetCenter, avg, trend, targetSector);
-    }
-
-    function updateUI(prediction = "--", avg = 0, trend = "STABLE", targetSector = []) {
-        document.getElementById('target-display').innerText = prediction;
-        document.getElementById('avg-val').innerText = avg.toFixed(2);
-        document.getElementById('count-val').innerText = history.length;
-        
-        const trendEl = document.getElementById('trend-text');
-        trendEl.innerText = trend;
-        trendEl.className = trend.includes("↑") ? "trend-up" : (trend.includes("↓") ? "trend-down" : "");
-
-        const neighborsBox = document.getElementById('neighbors-output');
-        neighborsBox.innerHTML = '';
-        if (targetSector.length > 0) {
-            targetSector.forEach((num, index) => {
-                const colorClass = num === 0 ? 'var(--green)' : (reds.includes(num) ? 'var(--red)' : 'var(--black)');
-                const isCenter = index === 7 ? 'nb-center' : '';
-                neighborsBox.innerHTML += `<div class="nb-cell ${isCenter}" style="background: ${colorClass};">${num}</div>`;
-            });
-        }
-
-        const streakBox = document.getElementById('streak-output');
-        streakBox.innerHTML = '';
-        const validOutcomes = outcomesLog.filter(o => o !== null);
-        const lastEight = validOutcomes.slice(-8);
-        
-        for (let i = 0; i < 8; i++) {
-            if (i < lastEight.length) {
-                const outcome = lastEight[i];
-                const badgeClass = outcome === 'W' ? 'badge-win' : 'badge-loss';
-                streakBox.innerHTML += `<div class="streak-badge ${badgeClass}">${outcome}</div>`;
-            } else {
-                streakBox.innerHTML += `<div class="streak-badge badge-empty">-</div>`;
-            }
-        }
-
-        const tbody = document.getElementById('logTable');
-        tbody.innerHTML = '';
-        
-        history.slice().reverse().forEach((n, i) => {
-            const actualIdx = history.length - 1 - i;
-            const distance = dists[actualIdx - 1] ?? "-";
-            const loggedDirection = spinDirections[actualIdx] || "-";
+        triggerZone.forEach(candidate => {
+            let candidateSector = getSector(candidate);
+            let winRate = calculateSectorWinRate(candidateSector);
             
-            let status = "-";
-            if (actualIdx > 1) {
-                status = dists[actualIdx-1] > dists[actualIdx-2] ? '<span class="trend-up">RISE</span>' : '<span class="trend-down">FALL</span>';
+            if (winRate > highestWinRate) {
+                highestWinRate = winRate;
+                bestCenter = candidate;
             }
-            
-            let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
-            if (outcomesLog[actualIdx] !== null && outcomesLog[actualIdx] !== undefined) {
-                outcomeVerdict = outcomesLog[actualIdx] === 'W' 
-                    ? '<span class="trend-up" style="font-weight:bold;">HIT (WIN)</span>' 
-                    : '<span class="trend-down">MISS (LOSS)</span>';
-            }
-
-            tbody.innerHTML += `<tr>
-                <td>${actualIdx + 1}</td>
-                <td><b>${n}</b></td>
-                <td><span style="font-size:0.8rem; font-weight:bold; color:#94a3b8">${loggedDirection}</span></td>
-                <td>${distance}</td>
-                <td>${status}</td>
-                <td>${outcomeVerdict}</td>
-            </tr>`;
         });
+
+        let finalPredictionSector = getSector(bestCenter);
+        lastPredictedSector = finalPredictionSector; // Save for next comparison
+        render(lastNum, bestCenter, highestWinRate, finalPredictionSector);
     }
 
-    function resetSession() {
-        history = []; 
-        dists = [];
-        spinDirections = [];
-        predictedSectorsLog = [];
-        outcomesLog = [];
-        currentDirection = 'CW';
-        updateDirectionUI();
-        updateUI();
-    }
+    function render(last, best, rate, sector) {
+        const disp = document.getElementById('display');
+        const path = document.getElementById('logicPath');
 
-    buildBoard();
+        // Build streak HTML
+        let streakHtml = `<div class="streak-container">`;
+        streaks.forEach(s => {
+            streakHtml += `<span class="streak-item ${s === 'W' ? 'win' : 'loss'}">${s}</span>`;
+        });
+        streakHtml += `</div>`;
+
+        disp.innerHTML = `
+            ${streakHtml}
+            <div style="font-size:0.9rem; color:var(--gold)">WINNING SECTOR CENTER</div>
+            <div class="target-num">${best}</div>
+            <div style="margin-bottom:10px">Sector Strength: <strong>${rate.toFixed(1)}%</strong></div>
+            <div class="sector-list">${sector.join(' ')}</div>
+        `;
+
+        path.innerHTML = `
+            <strong>Logic Trail:</strong><br>
+            • Last Entered: <b>${last}</b><br>
+            • Analyzing all 15 sectors neighboring ${last}...<br>
+            • Sector <b>${best}</b> has the highest historical hit density (<b>${rate.toFixed(1)}%</b>).<br>
+            • <b>Recommendation:</b> Play ${best} with 7 neighbors.
+        `;
+    }
 </script>
+
 </body>
 </html>
