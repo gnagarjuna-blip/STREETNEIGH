@@ -25,10 +25,10 @@
         .zero-container { width: 70px; background: var(--green); border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; cursor: pointer; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 5px; }
         .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; flex-grow: 1; }
         .cell { height: 60px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
-        .cell:hover { filter: brightness(1.3); border-color: white; }
+        .cell:hover { filter: brightness(1.3); border-color: white; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
         .cell:active { transform: scale(0.95); }
-        .r { background: var(--red); }
-        .b { background: var(--black); }
+        .r { background: var(--red); color: white; }
+        .b { background: var(--black); color: white; }
 
         /* Interface Layout UI Panels */
         .panel { background: var(--panel); border-radius: 12px; padding: 25px; border: 1px solid #1e293b; margin-bottom: 20px; }
@@ -51,7 +51,7 @@
         .verdict-title { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; }
         .verdict-value { font-size: 1rem; font-weight: 700; margin-top: 4px; line-height: 1.4; }
 
-        /* Performance Analytics Analytics Data Grids */
+        /* Performance Analytics Data Grids */
         .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
         .metric-card { background: #0f172a; border: 1px solid #1e293b; padding: 12px; border-radius: 6px; }
         .metric-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: bold; }
@@ -88,7 +88,7 @@
 <div class="dashboard">
     <div>
         <div class="table-section">
-            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; letter-spacing: 1px; color: #cbd5e1;">REAL-TIME ROULETTE TRACKING MODULE</h2>
+            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; letter-spacing: 1px; color: #cbd5e1;">REAL-TIME EUROPEAN ROULETTE TRACKING MODULE</h2>
             <div class="roulette-board">
                 <div class="zero-container" onclick="track(0)">0</div>
                 <div class="numbers-grid" id="boardGrid"></div>
@@ -186,6 +186,8 @@
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
+        // Clean layout out first
+        grid.innerHTML = '';
         const rows = [
             [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
             [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
@@ -277,10 +279,8 @@
         }
 
         // LARGE DATA SET CORE MATH IMPLEMENTATION
-        // Macro Average evaluates the entire historical sample depth to extract real physical signature baseline
         const macroAvg = dists.reduce((a, b) => a + b, 0) / dists.length;
         
-        // Micro Trend isolates the recent 5 samples to detect micro-variations or sudden dealer release adaptations
         const recentDists = dists.slice(-5);
         const microAvg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
@@ -291,8 +291,6 @@
         let actionAdvice = "ESTABLISHING INTERMEDIARY CRITERIA: Awaiting high-capacity data processing.";
         let riskColor = "var(--accent)";
 
-        // Macro-to-Micro trend delta computation
-        // Determines how sharply the local momentum is tearing away from long term patterns
         let rawDeltaOffset = microAvg - macroAvg;
         let calculatedOffset = Math.round(rawDeltaOffset);
 
@@ -304,18 +302,16 @@
             trend = "STABLE MOMENTUM ↔";
         }
 
-        // DEEP ADVANCED RISK CRITERIA ANALYSIS FOR MULTI-DEALER LARGE SAMPLES
         if (history.length < 5) {
             actionAdvice = "COLLECTING RHYTHM BASELINE: Keep stakes zeroed out. Initial sample sizing building.";
             riskColor = "#64748b";
         } else if (history.length >= 5 && history.length < 30) {
             actionAdvice = "INTERMEDIATE PATTERN CAPTURE: Small confirmation unit stakes suggested. Testing long-term macro trend line consistency.";
-            riskColor = var(--gold);
+            riskColor = "var(--gold)";
         } else {
-            // High-capacity strategic execution matrix (>30 spins validated)
             const sampleVariance = recentDists.map(x => Math.pow(x - microAvg, 2)).reduce((a, b) => a + b, 0) / recentDists.length;
             
-            if (sampleVariance > 144) { // Variance exceeds 12 pockets deep
+            if (sampleVariance > 144) { 
                 trend = "TRAP SECTOR DETECTED ⚠";
                 actionAdvice = "CRITICAL COHERENCE BREAKDOWN: Dealer rhythm variance is excessively unstable. Halt betting progression and wait for confirmation.";
                 riskColor = "var(--red)";
@@ -334,7 +330,6 @@
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
         let predIdx = 0;
         
-        // Core calculation locks prediction against the macro signature, modified dynamically by the micro offset vector
         let finalSignatureShift = Math.round(macroAvg) + calculatedOffset;
         
         if (currentDirection === 'CW') {
@@ -366,7 +361,6 @@
         strategyEl.innerText = advice;
         wrapperEl.style.borderLeftColor = riskColor;
 
-        // Custom real-time feedback loops based on mathematical sample depth
         if (history.length >= 30) {
             warnEl.innerText = "BIG DATA DATASET ACTIVE: Statistical convergence automated.";
             warnEl.style.color = "var(--green)";
