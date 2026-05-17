@@ -39,12 +39,6 @@
         .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 15px 0; overflow-x: auto; padding: 8px 0; }
         .nb-cell { width: 34px; height: 34px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
         .nb-center { border: 2px solid var(--gold); transform: scale(1.2); box-shadow: 0 0 15px rgba(245,158,11,0.5); z-index: 10; }
-        
-        /* Release Vector Navigation Panel */
-        .direction-panel { display: flex; gap: 10px; margin-bottom: 15px; background: #020617; padding: 12px; border-radius: 8px; border: 1px solid #1e293b; justify-content: space-between; align-items: center;}
-        .dir-btn { flex: 1; padding: 12px; border: 1px solid #334155; background: #0f172a; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px; transition: all 0.2s; }
-        .dir-btn.active { background: var(--gold); color: #020617; border-color: var(--gold); box-shadow: 0 0 10px rgba(245,158,11,0.2); }
-        .next-indicator { font-size: 0.75rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
         /* Dynamic Engine Verdict Matrices */
         .verdict-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent); text-align: left; }
@@ -103,7 +97,6 @@
                         <tr>
                             <th>Spin #</th>
                             <th>Value</th>
-                            <th>Release Vector</th>
                             <th>Pocket Distance</th>
                             <th>Rhythm Momentum</th>
                             <th>Session Verdict</th>
@@ -116,15 +109,7 @@
     </div>
 
     <div>
-        <div class="direction-panel">
-            <span class="next-indicator">Next Release Vector:</span>
-            <div style="display:flex; gap: 5px; width: 65%;">
-                <button id="btn-cw" class="dir-btn active" onclick="setInitialDirection('CW')">CLOCKWISE ↻</button>
-                <button id="btn-ccw" class="dir-btn" onclick="setInitialDirection('CCW')">C-CLOCKWISE ↺</button>
-            </div>
-        </div>
-
-        <div class="prediction-hero">
+        <div class="prediction-hero" style="margin-top: 0;">
             <div style="font-size: 0.75rem; letter-spacing: 1px; color: #94a3b8; font-weight: bold;">SIGNATURE PREDICTED TARGET SECTOR (7+1+7)</div>
             <div id="target-display">--</div>
             
@@ -178,11 +163,8 @@
     
     let history = [];
     let dists = [];
-    let spinDirections = []; 
     let predictedSectorsLog = []; 
     let outcomesLog = []; 
-
-    let currentDirection = 'CW'; 
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
@@ -202,16 +184,6 @@
                 grid.appendChild(cell);
             });
         });
-    }
-
-    function setInitialDirection(dir) {
-        currentDirection = dir;
-        updateDirectionUI();
-    }
-
-    function updateDirectionUI() {
-        document.getElementById('btn-cw').classList.toggle('active', currentDirection === 'CW');
-        document.getElementById('btn-ccw').classList.toggle('active', currentDirection === 'CCW');
     }
 
     function get7Neighbors(centerNumber) {
@@ -238,40 +210,26 @@
             outcomesLog.push(null); 
         }
 
-        spinDirections.push(currentDirection);
-
         if (history.length > 0) {
             const lastNum = history[history.length - 1];
             const idxCurrent = wheelOrder.indexOf(num);
             const idxLast = wheelOrder.indexOf(lastNum);
             
-            let travel = 0;
-            if (currentDirection === 'CW') {
-                travel = (idxCurrent - idxLast + 37) % 37;
-            } else {
-                travel = (idxLast - idxCurrent + 37) % 37;
-            }
+            // Absolute uniform linear array parsing
+            let travel = (idxCurrent - idxLast + 37) % 37;
             dists.push(travel);
         }
         
         history.push(num);
-
-        // Auto-Alternate ball launch paths
-        currentDirection = currentDirection === 'CW' ? 'CCW' : 'CW';
-        updateDirectionUI();
-
         process();
     }
 
     function importHistory() {
         const raw = document.getElementById('bulkData').value;
-        // Split strings by space, commas, or linebreaks
         let nums = raw.split(/[\s,;\t\n]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
         if(nums.length === 0) return alert("No valid numerical layout parsed.");
         
-        // REVERSE THE INCOMING ARRAY LIST
-        // If user pastes data where top layout is newest (e.g. [Newest, Mid, Oldest]), 
-        // reversing it ensures the engine processes it chronological order (Oldest -> Newest).
+        // Keeps chronological ordering clean when top line of string source is latest
         nums.reverse();
         
         nums.forEach(n => track(n));
@@ -284,7 +242,7 @@
             return updateUI();
         }
 
-        // LARGE DATA SET MATH MATRIX
+        // BIG DATA MATHEMATICAL ALLOCATIONS
         const macroAvg = dists.reduce((a, b) => a + b, 0) / dists.length;
         const recentDists = dists.slice(-5);
         const microAvg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
@@ -333,14 +291,8 @@
         }
 
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
-        let predIdx = 0;
         let finalSignatureShift = Math.round(macroAvg) + calculatedOffset;
-        
-        if (currentDirection === 'CW') {
-            predIdx = (lastIdx + finalSignatureShift + 37) % 37;
-        } else {
-            predIdx = (lastIdx - finalSignatureShift + 37) % 37;
-        }
+        let predIdx = (lastIdx + finalSignatureShift + 37) % 37;
 
         const targetCenter = wheelOrder[predIdx];
         const targetSector = get7Neighbors(targetCenter);
@@ -407,11 +359,9 @@
         const tbody = document.getElementById('logTable');
         tbody.innerHTML = '';
         
-        // Keeps the top entry in display table as the latest recorded spin result
         history.slice().reverse().forEach((n, i) => {
             const actualIdx = history.length - 1 - i;
             const distance = dists[actualIdx - 1] ?? "-";
-            const loggedDirection = spinDirections[actualIdx] || "-";
             
             let status = '<span class="status-badge" style="background:#334155; color:#94a3b8">STABLE baseline</span>';
             if (actualIdx > 1) {
@@ -430,7 +380,6 @@
             tbody.innerHTML += `<tr>
                 <td><b>#${actualIdx + 1}</b></td>
                 <td><b>${n}</b></td>
-                <td><span style="font-size:0.8rem; font-weight:700; color:#cbd5e1">${loggedDirection} Vector</span></td>
                 <td><b>${distance}</b> pockets</td>
                 <td>${status}</td>
                 <td>${outcomeVerdict}</td>
@@ -441,11 +390,8 @@
     function resetSession() {
         history = []; 
         dists = [];
-        spinDirections = [];
         predictedSectorsLog = [];
         outcomesLog = [];
-        currentDirection = 'CW';
-        updateDirectionUI();
         updateUI();
     }
 
