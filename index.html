@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Proximity Cluster & Neighbor Density Tracker</title>
+    <title>Dynamic Proximity Cluster Tracker</title>
     <style>
         :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --teal: #008080; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
@@ -47,7 +47,7 @@
 <body>
 
 <div class="container">
-    <h2 style="color: var(--gold);">Proximity Neighbor Cluster Tracker (7-Neighbor Matrix)</h2>
+    <h2 style="color: var(--gold);">Dynamic Neighbor Cluster Tracker (Reactive Mode)</h2>
 
     <div class="flex-row">
         <div class="panel">
@@ -56,7 +56,7 @@
                 <div class="cell n0" onclick="inputResult(0)">0</div>
             </div>
 
-            <textarea id="bulk" placeholder="Paste history here (Top is latest, e.g. 23, 10, 5, 24)..."></textarea>
+            <textarea id="bulk" placeholder="Paste history here (Top is latest, e.g. 23, 10, 5)..."></textarea>
             <button onclick="importBulk()">Extract & Analyze Neighbors</button>
             
             <div class="recent-display-container">
@@ -69,7 +69,7 @@
         </div>
 
         <div class="panel">
-            <h3>Dense Proximity Target Sector</h3>
+            <h3>Reactive Proximity Target Sector</h3>
             <div id="display" class="prediction-area">
                 <p>Awaiting data to collect spatial left/right distributions...</p>
             </div>
@@ -82,11 +82,11 @@
 </div>
 
 <script>
-    // Standard European Wheel Layout Matrix
     const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
-    const MAX_ROLLING_HISTORY = 70; 
+    // Kept tight at 50 to maximize fast-shifting responsiveness
+    const MAX_ROLLING_HISTORY = 50; 
     const MAX_STREAKS = 10;         
 
     let history = []; 
@@ -118,7 +118,6 @@
         
         if (nums.length === 0) return;
 
-        // Process sequentially from bottom up (chronological oldest to newest)
         for (let i = nums.length - 1; i >= 0; i--) {
             const n = nums[i];
             checkWinLoss(n);
@@ -142,7 +141,6 @@
         }
     }
 
-    // Helper to get 15 pocket window array
     function getSector(center) {
         let idx = WHEEL.indexOf(center);
         let sector = [];
@@ -152,57 +150,59 @@
         return sector;
     }
 
-    // --- NEW PURE PROXIMITY EXTRACTION CALCULATION ENGINE ---
+    // --- RE-ENGINEERED HIGHLY REACTIVE NEIGHBOR CALCULATION LOOP ---
     function calculateProximityDensity() {
         if (history.length === 0) return;
 
-        // Step 1: Collect immediate left and right neighbors for ALL instances in tracking memory
-        let collectedNeighborsPool = [];
+        // Create a clear frequency counter map for all 37 pockets
+        let frequencyMap = {};
+        WHEEL.forEach(num => frequencyMap[num] = 0);
 
+        // 1. Map out the immediate physical left and right neighbors for every instance inside the history pool
         history.forEach(num => {
             let wheelIdx = WHEEL.indexOf(num);
             if (wheelIdx !== -1) {
                 let leftNeighbor = WHEEL[(wheelIdx - 1 + 37) % 37];
                 let rightNeighbor = WHEEL[(wheelIdx + 1) % 37];
                 
-                collectedNeighborsPool.push(leftNeighbor);
-                collectedNeighborsPool.push(rightNeighbor);
+                // Track cumulative hits for these exact pockets
+                frequencyMap[leftNeighbor]++;
+                frequencyMap[rightNeighbor]++;
             }
         });
 
-        // Step 2: Scan the wheel to find the 15-number coverage area containing the most collected pool targets
         let bestCenterNumber = WHEEL[0];
-        let maxClusterHits = -1;
-        let bestSectorBreakdown = [];
+        let maxClusterWeight = -1;
+        let finalSectorBreakdown = [];
 
+        // 2. Scan every wheel pocket to find whose 7-neighbor zone holds the highest accumulated frequency weight
         WHEEL.forEach(candidateNum => {
             let candidateSector = getSector(candidateNum);
-            let currentSectorHitsCount = 0;
-            let capturedInThisSector = [];
+            let totalSectorScore = 0;
+            let activelyContributing = [];
 
-            // Cross-check every item in our collected pool to evaluate structural crowding score
-            collectedNeighborsPool.forEach(poolNum => {
-                if (candidateSector.includes(poolNum)) {
-                    currentSectorHitsCount++;
-                    if (!capturedInThisSector.includes(poolNum)) {
-                        capturedInThisSector.push(poolNum);
-                    }
+            candidateSector.forEach(sectorNum => {
+                let count = frequencyMap[sectorNum] || 0;
+                totalSectorScore += count;
+                
+                if (count > 0 && !activelyContributing.includes(sectorNum)) {
+                    activelyContributing.push(sectorNum);
                 }
             });
 
-            // Target selection looks for the highest density overlap score
-            if (currentSectorHitsCount > maxClusterHits) {
-                maxClusterHits = currentSectorHitsCount;
+            // Forces selection to alter immediately if a localized cluster takes over weight density
+            if (totalSectorScore > maxClusterWeight) {
+                maxClusterWeight = totalSectorScore;
                 bestCenterNumber = candidateNum;
-                bestSectorBreakdown = capturedInThisSector;
+                finalSectorBreakdown = activelyContributing;
             }
         });
 
-        // Step 3: Lock final prediction calculations
+        // 3. Assign target output boundaries
         let finalPredictionSector = getSector(bestCenterNumber);
         lastPredictedSector = finalPredictionSector;
 
-        renderProximityMetrics(history[0], bestCenterNumber, maxClusterHits, bestSectorBreakdown, finalPredictionSector);
+        renderProximityMetrics(history[0], bestCenterNumber, maxClusterWeight, finalSectorBreakdown, finalPredictionSector);
     }
 
     function updateRecentChipsDisplay() {
@@ -230,7 +230,7 @@
         updateRecentChipsDisplay();
     }
 
-    function renderProximityMetrics(last, best, totalHits, hotSubGroup, sector) {
+    function renderProximityMetrics(last, best, totalScore, hotSubGroup, sector) {
         const disp = document.getElementById('display');
         const path = document.getElementById('logicPath');
 
@@ -247,16 +247,16 @@
             </div>
             <div style="font-size:0.9rem; color:var(--gold)">PREDICTED HIGHEST CLUSTER CENTER</div>
             <div class="target-num">${best}</div>
-            <div style="margin-bottom:10px">Cluster Overlap Load: <strong>${totalHits} Matches</strong></div>
+            <div style="margin-bottom:10px">Cluster Overlap Density Weight: <strong>${totalScore} Points</strong></div>
             <div class="sector-list">${sector.join(' ')}</div>
         `;
 
         path.innerHTML = `
-            <strong>Proximity Overlap Trail:</strong><br>
-            • Latest Entry: <b>${last}</b><br>
-            • Processing Extraction: Evaluated immediate physical left/right slices across historical variables.<br>
-            • Proximity Cluster Discovery: The group <b>[${hotSubGroup.join(', ')}]</b> has formed a heavy spatial alignment loop.<br>
-            • Selection Choice: Sector <b>${best}</b> naturally covers the highest configuration density of these bunched numbers.<br>
+            <strong>Dynamic Proximity Overlap Trail:</strong><br>
+            • Latest Live Entry: <b>${last}</b><br>
+            • Real-Time Recalculation Loop executed successfully.<br>
+            • Dense Pocket Cluster found: <b>[${hotSubGroup.sort((a,b)=>WHEEL.indexOf(a)-WHEEL.indexOf(b)).join(', ')}]</b>.<br>
+            • Optimal Alignment Choice: Target sector center <b>${best}</b> currently shifts to encapsulate maximum proximity points.<br>
             • <b>Instruction:</b> Run ${best} with its 7 left and right wheel neighbors.
         `;
     }
