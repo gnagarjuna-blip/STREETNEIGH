@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chronological Sequence Neighbor Cluster Tracker</title>
+    <title>Dynamic Multi-Sector Sequence Coverage Tracker</title>
     <style>
-        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --teal: #00a8ff; --orange: #e67e22; }
+        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --teal: #00a8ff; --orange: #e67e22; --purple: #9b59b6; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
         .container { max-width: 1200px; margin: auto; }
         
@@ -19,7 +19,7 @@
         .nRed { background: var(--red); }
         .nBlack { background: var(--black); }
 
-        /* Diagnostic Styling */
+        /* Diagnostic Box Styling */
         .diagnostic-box { background: #111; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; margin-top: 15px; }
         .diagnostic-title { font-size: 0.85rem; color: #888; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         
@@ -33,11 +33,12 @@
         .pool-count { color: var(--gold); font-size: 0.7rem; font-family: monospace; }
         .pool-active { border-color: var(--teal); background: #0a2535; }
 
-        /* Prediction Styling */
-        .prediction-area { background: linear-gradient(145deg, #0f2330, #0a141a); border: 2px solid var(--gold); 
+        /* Prediction Area Styling */
+        .prediction-area { background: linear-gradient(145deg, #1b1226, #0e0914); border: 2px solid var(--gold); 
                            padding: 20px; border-radius: 15px; text-align: center; margin-top: 10px; }
-        .target-num { font-size: 4rem; color: var(--gold); font-weight: 900; line-height: 1; margin: 10px 0; }
-        .sector-list { color: #888; font-family: monospace; word-spacing: 5px; background: #000; padding: 10px; border-radius: 5px; font-size: 0.9rem; }
+        .target-tokens-wrapper { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 15px 0; }
+        .token-item { background: #000; border: 2px solid var(--purple); padding: 8px 14px; border-radius: 8px; font-size: 1.3rem; font-weight: bold; color: var(--gold); font-family: monospace; }
+        .sector-list { color: #ccc; font-family: monospace; word-spacing: 5px; background: #000; padding: 12px; border-radius: 5px; font-size: 0.95rem; border: 1px dashed #444; }
         
         /* Streak Styling */
         .streak-container { margin-bottom: 15px; display: flex; justify-content: center; gap: 5px; }
@@ -49,7 +50,7 @@
         button { width: 100%; padding: 12px; margin-top: 10px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
         button:hover { background: #444; }
 
-        .log-box { font-size: 0.85rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--teal); line-height: 1.4; }
+        .log-box { font-size: 0.85rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--purple); line-height: 1.4; }
         
         .recent-chips-wrapper { display: flex; gap: 6px; flex-wrap: wrap; }
         .recent-chip { min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
@@ -58,7 +59,7 @@
 <body>
 
 <div class="container">
-    <h2 style="color: var(--gold);">Chronological Sequence Cluster Tracker (Actual History Extraction Mode)</h2>
+    <h2 style="color: var(--gold);">Dynamic Multi-Sector Sequence Coverage (Max 17 Pockets)</h2>
 
     <div class="flex-row">
         <div class="panel">
@@ -87,13 +88,13 @@
         </div>
 
         <div class="panel">
-            <h3>Dynamic High-Density Sector</h3>
+            <h3>Optimized Multi-Sector Target Output</h3>
             <div id="display" class="prediction-area">
-                <p>Awaiting history points to process sequence data streams...</p>
+                <p>Awaiting history points to map custom multi-neighbor structures...</p>
             </div>
             
             <div id="logicPath" class="log-box">
-                Chronological sequence mapping and proof data points will show here.
+                Adaptive cluster breakdowns and neighbor assignments will populate here.
             </div>
 
             <div class="diagnostic-box">
@@ -106,17 +107,15 @@
 </div>
 
 <script>
-    // Physical European Wheel Reference Array Layout
     const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
-    // Kept at a larger window to hold more timeline sequence links
-    const MAX_ROLLING_HISTORY = 200; 
+    const MAX_ROLLING_HISTORY = 150; 
     const MAX_STREAKS = 10;         
 
     let history = []; 
     let streaks = []; 
-    let lastPredictedSector = [];
+    let lastPredictedSector = []; // Storing the full unique flat list of numbers to track wins/losses
 
     // Build UI Input Board
     const board = document.getElementById('board');
@@ -147,7 +146,7 @@
         }
 
         updateRecentChipsDisplay();
-        calculateSequenceDensity();
+        calculateAdaptiveMultiSector();
     }
 
     function importBulk() {
@@ -156,7 +155,6 @@
         
         if (nums.length === 0) return;
 
-        // Process sequentially so array timeline reads identically
         for (let i = nums.length - 1; i >= 0; i--) {
             const n = nums[i];
             checkWinLoss(n);
@@ -168,7 +166,7 @@
         }
         
         updateRecentChipsDisplay();
-        calculateSequenceDensity();
+        calculateAdaptiveMultiSector();
         document.getElementById('bulk').value = '';
     }
 
@@ -180,39 +178,25 @@
         }
     }
 
-    function getSector(center) {
-        let idx = WHEEL.indexOf(center);
-        let sector = [];
-        for (let i = -7; i <= 7; i++) {
-            sector.push(WHEEL[(idx + i + 37) % 37]);
-        }
-        return sector;
-    }
-
-    // --- NEW ENGINE: PARSES CHRONOLOGICAL TIMELINE SLICES ---
-    function calculateSequenceDensity() {
+    // --- RE-ENGINEERED MULTI-SECTOR COMPRESSION MATRIX ---
+    function calculateAdaptiveMultiSector() {
         if (history.length === 0) return;
 
-        // Target number is the absolute latest result entered
         let activeTargetNum = history[0];
-
         let frequencyMap = {};
         WHEEL.forEach(num => frequencyMap[num] = 0);
 
         let leftSlicesFound = [];
         let rightSlicesFound = [];
 
-        // 1. Scan your actual game timeline stream (skipping ends to prevent breaking boundaries)
-        // Array reading index directions: history[i-1] happened AFTER history[i], history[i+1] happened BEFORE history[i]
+        // 1. Gather up timeline occurrences
         for (let i = 0; i < history.length; i++) {
             if (history[i] === activeTargetNum) {
-                // Number landed immediately AFTER this occurrence (Right chronological link)
                 if (i - 1 >= 0) {
                     let rightNeighbor = history[i - 1];
                     frequencyMap[rightNeighbor]++;
                     if (!rightSlicesFound.includes(rightNeighbor)) rightSlicesFound.push(rightNeighbor);
                 }
-                // Number landed immediately BEFORE this occurrence (Left chronological link)
                 if (i + 1 < history.length) {
                     let leftNeighbor = history[i + 1];
                     frequencyMap[leftNeighbor]++;
@@ -221,10 +205,10 @@
             }
         }
 
-        // 2. Render out those matched values visually to the top helper log pane box instantly
+        // Render input hit extractions
         const monitorDiv = document.getElementById('immediateNeighborsDisplay');
         if (leftSlicesFound.length === 0 && rightSlicesFound.length === 0) {
-            monitorDiv.innerHTML = `<span style="color:#888; font-style:italic; font-size:0.85rem;">First time seeing ${activeTargetNum}. Need more data entries to build timeline matches.</span>`;
+            monitorDiv.innerHTML = `<span style="color:#888; font-style:italic; font-size:0.85rem;">First time seeing ${activeTargetNum}. Enter more points to map sequence strings.</span>`;
         } else {
             monitorDiv.innerHTML = `
                 <div style="font-size:0.8rem; color:#aaa;">In history, when <strong>${activeTargetNum}</strong> lands:</div>
@@ -233,49 +217,100 @@
             `;
         }
 
-        // 3. Update global grid data counts visual monitor panel matrix interface
+        // Update background visual grid counters
         WHEEL.forEach(num => {
             const card = document.getElementById(`pool-card-${num}`);
             const countLabel = document.getElementById(`pool-count-${num}`);
             let currentVal = frequencyMap[num] || 0;
-
             countLabel.textContent = currentVal;
-            if (currentVal > 0) {
-                card.className = "pool-item pool-active";
-            } else {
-                card.className = "pool-item";
-            }
+            card.className = currentVal > 0 ? "pool-item pool-active" : "pool-item";
         });
 
-        let bestCenterNumber = WHEEL[0];
-        let maxClusterWeight = -1;
-        let finalSectorBreakdown = {};
+        // 2. Extract active targets sorted strictly by weight density
+        let targets = Object.keys(frequencyMap)
+                            .map(num => ({ number: parseInt(num), weight: frequencyMap[num] }))
+                            .filter(t => t.weight > 0)
+                            .sort((a, b) => b.weight - a.weight);
 
-        // 4. Scan wheel layout grid positions to spot where these sequence numbers are crowding together
-        WHEEL.forEach(candidateNum => {
-            let candidateSector = getSector(candidateNum);
-            let totalSectorScore = 0;
-            let contributingInThisSector = {};
+        if (targets.length === 0) {
+            document.getElementById('display').innerHTML = `<p>Awaiting more sequence connections...</p>`;
+            return;
+        }
 
-            candidateSector.forEach(sectorNum => {
-                let count = frequencyMap[sectorNum] || 0;
-                if (count > 0) {
-                    totalSectorScore += count;
-                    contributingInThisSector[sectorNum] = count;
+        // 3. Dynamic Sector Packager Engine
+        let finalCoveredNumbers = new Set();
+        let formattedTokens = [];
+        let processingLogStrings = [];
+
+        // Track items that have already been naturally covered by an existing sector band
+        let fullyCoveredTargets = new Set();
+
+        targets.forEach(targetItem => {
+            if (fullyCoveredTargets.has(targetItem.number)) return;
+
+            let num = targetItem.number;
+            let wheelIdx = WHEEL.indexOf(num);
+
+            // Let's test different look-ahead ranges to find out if this target is part of a larger cluster
+            let chosenRange = 0; // 0 = standalone single number
+
+            for (let r = 3; r >= 1; r--) {
+                let leftCount = 0;
+                let rightCount = 0;
+
+                // Scan positions around this number on the physical wheel wheel layout
+                for (let step = 1; step <= r; step++) {
+                    let leftNum = WHEEL[(wheelIdx - step + 37) % 37];
+                    let rightNum = WHEEL[(wheelIdx + step) % 37];
+
+                    if (frequencyMap[leftNum] > 0) leftCount++;
+                    if (frequencyMap[rightNum] > 0) rightCount++;
                 }
-            });
 
-            if (totalSectorScore > maxClusterWeight) {
-                maxClusterWeight = totalSectorScore;
-                bestCenterNumber = candidateNum;
-                finalSectorBreakdown = contributingInThisSector;
+                // If either boundary side registers heavily crowded targets, pack them as an interconnected sector block
+                if (leftCount > 0 || rightCount > 0) {
+                    chosenRange = r;
+                    break;
+                }
+            }
+
+            // Calculate numbers generated by this sector radius choice
+            let proposedSectorList = [];
+            for (let i = -chosenRange; i <= chosenRange; i++) {
+                proposedSectorList.push(WHEEL[(wheelIdx + i + 37) % 37]);
+            }
+
+            // Safety Guard: Verify if committing this block pushes our total list past the 17-pocket boundary cap limit
+            let tempUnion = new Set([...finalCoveredNumbers, ...proposedSectorList]);
+            
+            if (tempUnion.size <= 17) {
+                // Commit numbers safely to our betting board
+                proposedSectorList.forEach(n => {
+                    finalCoveredNumbers.add(n);
+                    if (frequencyMap[n] > 0) {
+                        fullyCoveredTargets.add(n); // flag target as safely integrated
+                    }
+                });
+
+                // Format textual string exactly to user layout description (e.g. 23n3, 3n2, or just 14)
+                let tokenString = chosenRange > 0 ? `${num}n${chosenRange}` : `${num}`;
+                formattedTokens.push(tokenString);
+                
+                processingLogStrings.push(`• Sector <b>${tokenString}</b> engaged → Covers: [${proposedSectorList.join(', ')}]`);
+            } else {
+                // If it doesn't fit within 17 pockets, add just the single standalone base number to capture high-weight targets safely
+                if (finalCoveredNumbers.size < 17) {
+                    finalCoveredNumbers.add(num);
+                    fullyCoveredTargets.add(num);
+                    formattedTokens.push(`${num}`);
+                    processingLogStrings.push(`• Limit Check: Isolated single pocket <b>${num}</b> to fit inside safety line constraint.`);
+                }
             }
         });
 
-        let finalPredictionSector = getSector(bestCenterNumber);
-        lastPredictedSector = finalPredictionSector;
-
-        renderSequenceMetrics(activeTargetNum, bestCenterNumber, maxClusterWeight, finalSectorBreakdown, finalPredictionSector);
+        // 4. Final Processing & Assignment
+        lastPredictedSector = Array.from(finalCoveredNumbers);
+        renderMultiSectorMetrics(activeTargetNum, formattedTokens, lastPredictedSector, processingLogStrings);
     }
 
     function updateRecentChipsDisplay() {
@@ -298,14 +333,14 @@
 
     function clearTracker() {
         history = []; streaks = []; lastPredictedSector = [];
-        document.getElementById('display').innerHTML = `<p>Awaiting history points to process sequence data streams...</p>`;
-        document.getElementById('logicPath').innerHTML = `Chronological sequence mapping and proof data points will show here.`;
+        document.getElementById('display').innerHTML = `<p>Awaiting history points to map custom multi-neighbor structures...</p>`;
+        document.getElementById('logicPath').innerHTML = `Adaptive cluster breakdowns and neighbor assignments will populate here.`;
         document.getElementById('immediateNeighborsDisplay').innerHTML = `<span style="color:#666; font-style:italic; font-size:0.85rem;">Awaiting a live number match...</span>`;
         buildPoolLayoutPlaceholder();
         updateRecentChipsDisplay();
     }
 
-    function renderSequenceMetrics(last, best, totalScore, breakdownObj, sector) {
+    function renderMultiSectorMetrics(last, tokens, fullFlatBetList, logs) {
         const disp = document.getElementById('display');
         const path = document.getElementById('logicPath');
 
@@ -315,30 +350,30 @@
         });
         streakHtml += `</div>`;
 
-        let breakdownStrings = [];
-        Object.keys(breakdownObj).forEach(num => {
-            breakdownStrings.push(`<b>${num}</b> (${breakdownObj[num]}x)`);
+        let tokensHtml = `<div class="target-tokens-wrapper">`;
+        tokens.forEach(tk => {
+            tokensHtml += `<span class="token-item">${tk}</span>`;
         });
+        tokensHtml += `</div>`;
 
         disp.innerHTML = `
             ${streakHtml}
-            <div style="font-size:0.85rem; color:var(--teal); font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
-                SEQUENCE NEIGHBOR CLUSTER FOUND
+            <div style="font-size:0.85rem; color:var(--purple); font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
+                ADAPTIVE TIMELINE NO-GAP MATRIX
             </div>
-            <div style="font-size:0.9rem; color:var(--gold)">PREDICTED SECTOR CENTER</div>
-            <div class="target-num">${best}</div>
-            <div style="margin-bottom:10px">Total Timeline Matches inside Zone: <strong>${totalScore} Hits</strong></div>
-            <div class="sector-list">${sector.join(' ')}</div>
+            <div style="font-size:0.9rem; color:var(--gold)">PLAY ALL EXPANDED TARGET TOKENS</div>
+            ${tokensHtml}
+            <div style="margin-bottom:10px; font-size: 0.9rem;">Total Active Chips Covered: <strong>${fullFlatBetList.length} / 17 Max Pockets</strong></div>
+            <div class="sector-list">Full Flat Bet Sheet:<br> ${fullFlatBetList.sort((a,b)=>a-b).join(' ')}</div>
         `;
 
         path.innerHTML = `
-            <strong>Chronological Proof Trail:</strong><br>
-            • Latest Entry analyzed: <b>${last}</b><br>
-            • Calculation: Scanned past occurrences of <b>${last}</b> inside your actual data history stream and collected the numbers that directly preceded or followed it.<br><br>
-            • <b>Proof of Clustering:</b> Placing your betting center at <b>${best}</b> sets up a 15-number coverage net that blankets these specific timeline neighbors where they sleep together on the wheel layout:<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;→ ${breakdownStrings.length > 0 ? breakdownStrings.join(', ') : 'No heavy sequence ties logged yet.'}<br><br>
-            • <b>Combined Weight:</b> This specific wheel sector captures a density score of <b>${totalScore} matching items</b>, making it the highest concentrated zone for this sequence.<br>
-            • <b>Instruction:</b> Bet center <b>${best}</b> along with its 7 left and 7 right layout neighbors.
+            <strong>Adaptive Geometry Calculations:</strong><br>
+            • Analyzed sequence hits around current number <b>${last}</b>.<br>
+            • Applied variable-neighbor sector mapping layout strategy to stop target leakage.<br><br>
+            <b>Sector Assembly Flow:</b><br>
+            ${logs.join('<br>')}<br><br>
+            • <b>Result:</b> All chronological sequence neighbors are fully blanketed inside customized physical pockets, perfectly locked under your 17-chip ceiling.
         `;
     }
 </script>
