@@ -2,315 +2,413 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Advanced Sector-in-Sector Tracker (Dual Zone Pro)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dealer Signature Strategy Engine</title>
     <style>
-        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --blue: #2980b9; }
-        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
-        .container { max-width: 1300px; margin: auto; }
+        :root { 
+            --bg: #0b0f19; 
+            --panel: #161e2d; 
+            --accent: #38bdf8; 
+            --green: #10b981; 
+            --red: #ef4444; 
+            --black: #1e293b; 
+            --text: #f1f5f9; 
+            --gold: #fbbf24;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .dashboard { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 420px; gap: 20px; }
         
-        .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
-        .panel { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; flex: 1; min-width: 350px; }
+        /* ROULETTE TABLE SECTIONS */
+        .table-section { background: #064e3b; padding: 20px; border-radius: 15px; border: 4px solid #065f46; position: relative; overflow-x: auto; }
+        .roulette-board { display: flex; align-items: stretch; min-width: 800px; }
+        
+        .zero-container { width: 70px; background: var(--green); border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; cursor: pointer; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 5px; }
+        
+        .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; flex-grow: 1; }
+        .cell { height: 60px; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
+        .cell:hover { filter: brightness(1.3); border-color: white; }
+        .cell:active { transform: scale(0.95); }
+        .r { background: var(--red); }
+        .b { background: var(--black); }
 
-        /* Board Styling */
-        .board { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-top: 15px; }
-        .cell { height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; 
-                font-weight: bold; border-radius: 4px; border: 1px solid #444; user-select: none; }
-        .n0 { background: var(--green); grid-row: span 3; }
-        .nRed { background: var(--red); }
-        .nBlack { background: var(--black); }
+        /* Panels */
+        .panel { background: var(--panel); border-radius: 12px; padding: 20px; border: 1px solid #2d3748; margin-bottom: 20px; }
+        .prediction-hero { text-align: center; background: #0f172a; border: 2px solid var(--accent); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        #target-display { font-size: 3.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; margin: 10px 0; }
         
-        /* Prediction Styling */
-        .prediction-container { display: flex; gap: 15px; margin-top: 10px; }
-        .prediction-area { background: linear-gradient(145deg, #252525, #1a1a1a); padding: 15px; border-radius: 15px; text-align: center; flex: 1; }
-        .primary-border { border: 2px solid var(--gold); }
-        .remaining-border { border: 2px solid var(--blue); }
+        /* Neighbors Visualizer */
+        .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 15px 0; overflow-x: auto; padding: 5px 0; }
+        .nb-cell { width: 34px; height: 34px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
+        .nb-center { border: 2px solid var(--gold); transform: scale(1.15); box-shadow: 0 0 10px rgba(251,191,36,0.4); }
         
-        .target-num { font-size: 3.5rem; font-weight: 900; line-height: 1; margin: 10px 0; }
-        .gold-text { color: var(--gold); }
-        .blue-text { color: var(--blue); }
-        
-        .sector-list { color: #888; font-family: monospace; word-spacing: 5px; background: #000; padding: 10px; border-radius: 5px; font-size: 0.9rem; }
-        
-        textarea { width: 100%; height: 60px; background: #000; color: var(--green); border: 1px solid #444; margin-top: 10px; padding: 5px; font-family: monospace; resize: none; }
-        button { width: 100%; padding: 12px; margin-top: 10px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
-        button:hover { background: #444; }
+        /* Direction Controls */
+        .direction-panel { display: flex; gap: 10px; margin-bottom: 15px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; justify-content: space-between; align-items: center;}
+        .dir-btn { flex: 1; padding: 10px; border: 1px solid #475569; background: #1e293b; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;}
+        .dir-btn.active { background: var(--gold); color: #0b0f19; border-color: var(--gold); }
+        .next-indicator { font-size: 0.75rem; color: #94a3b8; font-weight: bold; text-transform: uppercase;}
 
-        .streak-container { display: flex; justify-content: space-around; margin-top: 10px; background: #111; padding: 8px; border-radius: 8px; font-size: 0.85rem; }
-        .streak-win { color: var(--green); font-weight: bold; }
-        .streak-loss { color: var(--red); font-weight: bold; }
+        /* Streak Badges */
+        .streak-container { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+        .streak-badge { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; }
+        .badge-win { background: var(--green); }
+        .badge-loss { background: var(--red); }
+        .badge-empty { background: #334155; opacity: 0.4; }
 
-        .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 15px; border-left: 3px solid var(--gold); }
-        .recent-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; min-height: 35px; align-items: center; }
-        .chip { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; border: 1px solid #444; }
+        /* Advice Block */
+        .verdict-box { background: #1e293b; padding: 12px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent); text-align: left; }
+        .verdict-title { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: bold; }
+        .verdict-value { font-size: 1rem; font-weight: bold; margin-top: 2px; }
+
+        .log-wrap { height: 400px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0b0f19; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #1e293b; padding: 12px; position: sticky; top: 0; text-align: center; color: #94a3b8; }
+        td { padding: 10px; text-align: center; border-bottom: 1px solid #2d3748; }
+
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
+        .btn-primary { background: var(--accent); color: #0b0f19; }
+        .btn-danger { background: #7f1d1d; color: white; }
         
-        /* New History Sheet Styling */
-        .history-sheet { background: #111; padding: 12px; border-radius: 8px; margin-top: 15px; border: 1px solid #222; }
-        .history-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; margin-top: 6px; padding-bottom: 4px; border-bottom: 1px dashed #222; }
-        .wl-badge { font-weight: 900; font-family: monospace; font-size: 1rem; }
+        .bulk-area { width: 100%; height: 70px; background: #0b0f19; color: var(--accent); border: 1px solid #475569; border-radius: 6px; padding: 10px; box-sizing: border-box; font-family: monospace; }
+        .trend-up { color: #4ade80; } 
+        .trend-down { color: #f87171; }
+        .trend-stable { color: #e2e8f0; }
+        .warn-text { color: #f59e0b; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2 style="color: var(--gold); margin-bottom: 5px;">Layered Sector Tracker (Pro Version)</h2>
-    <p style="margin-top: 0; color: #888;">Complete Sector Separation & Streak Tracking</p>
-
-    <div class="flex-row">
-        <div class="panel">
-            <h3>Add Last Result</h3>
-            <div id="board" class="board">
-                <div class="cell n0" onclick="inputResult(0)">0</div>
-            </div>
-            <textarea id="bulk" placeholder="Paste history here (LATEST number at the TOP)...&#10;10&#10;32&#10;15"></textarea>
-            <button onclick="importBulk()">Process History</button>
-            
-            <h4 style="margin-bottom: 5px; margin-top: 20px;">Last 10 Spins (Latest Left)</h4>
-            <div id="recentHistory" class="recent-chips">
-                <span style="color:#666; font-size:0.85rem;">No spins tracked yet.</span>
-            </div>
-
-            <div class="history-sheet">
-                <h4 style="margin: 0 0 8px 0; color: #aaa; font-size: 0.9rem;">Last 10 Outcomes (Latest Left)</h4>
-                <div class="history-row">
-                    <span>Actual Area:</span>
-                    <span id="actualWLSequence" style="letter-spacing: 5px;">-</span>
-                </div>
-                <div class="history-row">
-                    <span>Remaining Area:</span>
-                    <span id="remainingWLSequence" style="letter-spacing: 5px;">-</span>
-                </div>
+<div class="dashboard">
+    <div>
+        <div class="table-section">
+            <h2 style="margin:0 0 15px 0; font-size: 1rem; letter-spacing: 1px; opacity: 0.9;">LIVE REAL-TIME WHEEL DATA INPUT</h2>
+            <div class="roulette-board">
+                <div class="zero-container" onclick="track(0)">0</div>
+                <div class="numbers-grid" id="boardGrid"></div>
             </div>
         </div>
 
+        <div class="panel" style="margin-top: 20px;">
+            <h2 style="margin:0; font-size: 1rem; letter-spacing: 0.5px;">DEALER REPEATING PATTERNS & MOMENTUM LOG</h2>
+            <div class="log-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Spin</th>
+                            <th>Result</th>
+                            <th>Release Vector</th>
+                            <th>Pocket Distance</th>
+                            <th>Rhythm Momentum</th>
+                            <th>Sector Play Outcome</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <div class="direction-panel">
+            <span class="next-indicator">Next Release Vector:</span>
+            <div style="display:flex; gap: 5px; width: 65%;">
+                <button id="btn-cw" class="dir-btn active" onclick="setInitialDirection('CW')">CLOCKWISE ↻</button>
+                <button id="btn-ccw" class="dir-btn" onclick="setInitialDirection('CCW')">C-CLOCKWISE ↺</button>
+            </div>
+        </div>
+
+        <div class="prediction-hero">
+            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6; font-weight: bold;">SIGNATURE PREDICTED TARGET SECTOR (7+1+7)</div>
+            <div id="target-display">--</div>
+            
+            <div class="neighbors-box" id="neighbors-output"></div>
+
+            <div id="trend-text" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">COLLECTING DATA SECTOR</div>
+            <div id="sample-warning" class="warn-text">Need 3+ spins to evaluate trend curves.</div>
+            
+            <div class="verdict-box">
+                <div class="verdict-title">STRATEGY ACTION & RISK SCALE</div>
+                <div id="strategy-verdict" class="verdict-value">Observing Dealer Rhythms...</div>
+            </div>
+
+            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 15px; border-top: 1px solid #334155; padding-top: 8px; letter-spacing: 0.5px;">LAST 8 SIGNATURE TARGET TRACKER</div>
+            <div class="streak-container" id="streak-output"></div>
+        </div>
+
         <div class="panel">
-            <h3>Calculated Targets</h3>
-            <div id="display-container" class="prediction-container">
-                <div class="prediction-area" style="border: 1px dashed #444; color: #666; width: 100%;">
-                    Waiting for data entry...
+            <h2 style="margin:0; font-size: 1rem; letter-spacing: 0.5px;">ADVANCED SIGNATURE ANALYTICS</h2>
+            <div style="margin: 15px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem;">
+                    <span>Rolling Signature Range (Last 5):</span>
+                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00 pock.</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
+                    <span>Total Session Samples:</span>
+                    <span id="count-val" style="font-weight: bold;">0 / 30+ recommended</span>
                 </div>
             </div>
             
-            <div id="logicPath" class="log-box">
-                Logic trail will appear here after calculation.
-            </div>
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste historical strings to isolate rhythms (e.g. 32, 15, 19, 4, 21)"></textarea>
+            <button class="btn btn-primary" onclick="importHistory()">IMPORT BIAS ANALYSIS DATA</button>
+            <button class="btn btn-danger" onclick="resetSession()">PURGE SESSION DATA</button>
         </div>
     </div>
 </div>
 
 <script>
-    const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    const REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+    const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     
-    let history = []; 
+    let history = [];
+    let dists = [];
+    let spinDirections = []; 
+    let predictedSectorsLog = []; 
+    let outcomesLog = []; 
 
-    // Streak systems
-    let primaryStreak = { currentWin: 0, currentLoss: 0, maxWin: 0, maxLoss: 0 };
-    let remainingStreak = { currentWin: 0, currentLoss: 0, maxWin: 0, maxLoss: 0 };
-    
-    // Arrays to hold the chronological hit history strings ('W' or 'L')
-    let actualWLLog = [];
-    let remainingWLLog = [];
+    let currentDirection = 'CW'; 
 
-    // Initialize UI Board
-    const board = document.getElementById('board');
-    const rows = [[3,6,9,12,15,18,21,24,27,30,33,36],[2,5,8,11,14,17,20,23,26,29,32,35],[1,4,7,10,13,16,19,22,25,28,31,34]];
-    rows.forEach(r => r.forEach(n => {
-        board.innerHTML += `<div class="cell ${REDS.includes(n)?'nRed':'nBlack'}" onclick="inputResult(${n})">${n}</div>`;
-    }));
+    function buildBoard() {
+        const grid = document.getElementById('boardGrid');
+        const rows = [
+            [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+            [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+            [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+        ];
 
-    function inputResult(n) {
-        updateStreaksBeforeNewSpin(n);
-        history.push(n);
-        processLogic();
-    }
-
-    function importBulk() {
-        const val = document.getElementById('bulk').value;
-        let nums = val.split(/[ ,\n]+/).map(x => parseInt(x.trim())).filter(x => !isNaN(x));
-        nums.reverse(); 
-
-        nums.forEach(n => {
-            updateStreaksBeforeNewSpin(n);
-            history.push(n);
+        rows.forEach(rowArr => {
+            rowArr.forEach(n => {
+                const cell = document.createElement('div');
+                cell.className = `cell ${reds.includes(n) ? 'r' : 'b'}`;
+                cell.innerText = n;
+                cell.onclick = () => track(n);
+                grid.appendChild(cell);
+            });
         });
-
-        if(history.length > 0) processLogic();
-        document.getElementById('bulk').value = '';
     }
 
-    function getSector15(center) {
-        let idx = WHEEL.indexOf(center);
+    function setInitialDirection(dir) {
+        currentDirection = dir;
+        updateDirectionUI();
+    }
+
+    function updateDirectionUI() {
+        document.getElementById('btn-cw').classList.toggle('active', currentDirection === 'CW');
+        document.getElementById('btn-ccw').classList.toggle('active', currentDirection === 'CCW');
+    }
+
+    function get7Neighbors(centerNumber) {
+        if(centerNumber === null || centerNumber === undefined) return [];
+        let idx = wheelOrder.indexOf(centerNumber);
         let sector = [];
         for (let i = -7; i <= 7; i++) {
-            sector.push(WHEEL[(idx + i + 37) % 37]);
+            let targetIdx = (idx + i + 37) % 37;
+            sector.push(wheelOrder[targetIdx]);
         }
         return sector;
     }
 
-    function calculateSectorWinRate(sectorNumbers, historyUntilNow = history) {
-        if (historyUntilNow.length === 0) return 0;
-        let wins = historyUntilNow.filter(num => sectorNumbers.includes(num)).length;
-        return (wins / historyUntilNow.length) * 100;
-    }
+    function track(num) {
+        let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[predictedSectorsLog.length - 1] : [];
 
-    function updateStreaksBeforeNewSpin(newNum) {
-        if (history.length === 0) return;
-        
-        let lastNum = history[history.length - 1];
-        let primaryZone = getSector15(lastNum);
-
-        let bestPrimaryCenter = primaryZone[0];
-        let highestPrimaryWinRate = -1;
-        primaryZone.forEach(candidate => {
-            let candidateSector = getSector15(candidate);
-            let winRate = calculateSectorWinRate(candidateSector);
-            if (winRate > highestPrimaryWinRate) { highestPrimaryWinRate = winRate; bestPrimaryCenter = candidate; }
-        });
-        let activePrimarySector = getSector15(bestPrimaryCenter);
-
-        let bestRemainingCenter = -1;
-        let highestRemainingWinRate = -1;
-        WHEEL.forEach(candidate => {
-            let candidateSector = getSector15(candidate);
-            let overlaps = candidateSector.some(num => activePrimarySector.includes(num));
-            if (!overlaps) {
-                let winRate = calculateSectorWinRate(candidateSector);
-                if (winRate > highestRemainingWinRate) {
-                    highestRemainingWinRate = winRate;
-                    bestRemainingCenter = candidate;
-                }
+        if (currentActivePredictionSector.length > 0) {
+            if (currentActivePredictionSector.includes(num)) {
+                outcomesLog.push("W");
+            } else {
+                outcomesLog.push("L");
             }
-        });
-        let activeRemainingSector = bestRemainingCenter !== -1 ? getSector15(bestRemainingCenter) : [];
-
-        // Evaluate Actual Area Hit
-        if (activePrimarySector.includes(newNum)) {
-            primaryStreak.currentWin++;
-            primaryStreak.currentLoss = 0;
-            if (primaryStreak.currentWin > primaryStreak.maxWin) primaryStreak.maxWin = primaryStreak.currentWin;
-            actualWLLog.push('W');
         } else {
-            primaryStreak.currentLoss++;
-            primaryStreak.currentWin = 0;
-            if (primaryStreak.currentLoss > primaryStreak.maxLoss) primaryStreak.maxLoss = primaryStreak.currentLoss;
-            actualWLLog.push('L');
+            outcomesLog.push(null); 
         }
 
-        // Evaluate Remaining Area Hit
-        if (activeRemainingSector.length > 0 && activeRemainingSector.includes(newNum)) {
-            remainingStreak.currentWin++;
-            remainingStreak.currentLoss = 0;
-            if (remainingStreak.currentWin > remainingStreak.maxWin) remainingStreak.maxWin = remainingStreak.currentWin;
-            remainingWLLog.push('W');
-        } else {
-            remainingStreak.currentLoss++;
-            remainingStreak.currentWin = 0;
-            if (remainingStreak.currentLoss > remainingStreak.maxLoss) remainingStreak.maxLoss = remainingStreak.currentLoss;
-            remainingWLLog.push('L');
+        spinDirections.push(currentDirection);
+
+        if (history.length > 0) {
+            const lastNum = history[history.length - 1];
+            const idxCurrent = wheelOrder.indexOf(num);
+            const idxLast = wheelOrder.indexOf(lastNum);
+            
+            let travel = 0;
+            if (currentDirection === 'CW') {
+                travel = (idxCurrent - idxLast + 37) % 37;
+            } else {
+                travel = (idxLast - idxCurrent + 37) % 37;
+            }
+            dists.push(travel);
         }
-    }
-
-    function processLogic() {
-        let lastNum = history[history.length - 1];
         
-        let primaryZone = getSector15(lastNum);
-        let bestPrimaryCenter = primaryZone[0];
-        let highestPrimaryWinRate = -1;
+        history.push(num);
 
-        primaryZone.forEach(candidate => {
-            let candidateSector = getSector15(candidate);
-            let winRate = calculateSectorWinRate(candidateSector);
-            if (winRate > highestPrimaryWinRate) {
-                highestPrimaryWinRate = winRate;
-                bestPrimaryCenter = candidate;
-            }
-        });
-        let finalPrimarySector = getSector15(bestPrimaryCenter);
+        // Auto-Alternate coming ball trajectory pathing
+        currentDirection = currentDirection === 'CW' ? 'CCW' : 'CW';
+        updateDirectionUI();
 
-        let bestRemainingCenter = null;
-        let highestRemainingWinRate = -1;
+        process();
+    }
 
-        WHEEL.forEach(candidate => {
-            let candidateSector = getSector15(candidate);
-            let hasOverlap = candidateSector.some(num => finalPrimarySector.includes(num));
-            
-            if (!hasOverlap) {
-                let winRate = calculateSectorWinRate(candidateSector);
-                if (winRate > highestRemainingWinRate) {
-                    highestRemainingWinRate = winRate;
-                    bestRemainingCenter = candidate;
-                }
-            }
-        });
+    function importHistory() {
+        const raw = document.getElementById('bulkData').value;
+        const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        nums.forEach(n => track(n));
+        document.getElementById('bulkData').value = '';
+    }
+
+    function process() {
+        if (history.length < 2) {
+            predictedSectorsLog.push([]);
+            return updateUI();
+        }
+
+        // Window Isolation Analytics
+        const recentDists = dists.slice(-5);
+        const avg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
-        let finalRemainingSector = bestRemainingCenter !== null ? getSector15(bestRemainingCenter) : [];
+        const lastD = dists[dists.length - 1];
+        const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
 
-        render(lastNum, bestPrimaryCenter, highestPrimaryWinRate, finalPrimarySector, bestRemainingCenter, highestRemainingWinRate, finalRemainingSector);
+        let trend = "STABLE PATTERN";
+        let offset = 0;
+        let actionAdvice = "MOMENTUM BALANCED: Place standard neighborhood coverage.";
+
+        // Logic Mapping based on Momentum Shifts & Confidence Boundaries
+        if (lastD > prevD) {
+            trend = "RISING MOMENTUM ↑"; 
+            offset = 1; // Anticipate acceleration push out
+            actionAdvice = "TREND ACCELERATION DETECTED: Scaling up to high-tier target units near average zones.";
+        } else if (lastD < prevD) {
+            trend = "DYING MOMENTUM ↓";
+            offset = -1; // Anticipate deceleration breakdown drop short
+            actionAdvice = "DEVIATION COMPRESSION: Velocity reduction observed. Play optimized inner-pocket values.";
+        }
+
+        // Automation Risk Filter for Sample Depths 
+        if(history.length < 4) {
+            actionAdvice = "INSUFFICIENT STRATEGY MARGIN: Keep bets small. Accumulating pattern verification.";
+        } else if (history.length > 30) {
+            actionAdvice = `TRUE AVERAGE SECURED (${history.length} Spins): Strategy automation high precision accuracy enabled. Bet with confidence.`;
+        } else if (Math.abs(lastD - avg) > 12) {
+            actionAdvice = "VELOCITY TRAP / RHYTHM BREAK: Wild signature variance encountered. Minimize bets, wait for pattern confirmation.";
+        }
+
+        const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
+        
+        let predIdx = 0;
+        let roundedAvgShift = Math.round(avg) + offset;
+        
+        if (currentDirection === 'CW') {
+            predIdx = (lastIdx + roundedAvgShift + 37) % 37;
+        } else {
+            predIdx = (lastIdx - roundedAvgShift + 37) % 37;
+        }
+
+        const targetCenter = wheelOrder[predIdx];
+        const targetSector = get7Neighbors(targetCenter);
+        predictedSectorsLog.push(targetSector);
+
+        updateUI(targetCenter, avg, trend, targetSector, actionAdvice);
     }
 
-    function render(last, pBest, pRate, pSector, rBest, rRate, rSector) {
-        const dispContainer = document.getElementById('display-container');
-        const path = document.getElementById('logicPath');
-        const recentBox = document.getElementById('recentHistory');
-        const actualWLBox = document.getElementById('actualWLSequence');
-        const remainingWLBox = document.getElementById('remainingWLSequence');
+    function updateUI(prediction = "--", avg = 0, trend = "COLLECTING DATA SECTOR", targetSector = [], advice = "Observing Dealer Rhythms...") {
+        document.getElementById('target-display').innerText = prediction;
+        document.getElementById('avg-val').innerText = `${avg.toFixed(2)} pockets`;
+        document.getElementById('count-val').innerText = `${history.length} spins`;
+        
+        const trendEl = document.getElementById('trend-text');
+        const warnEl = document.getElementById('sample-warning');
+        const strategyEl = document.getElementById('strategy-verdict');
+        
+        trendEl.innerText = trend;
+        strategyEl.innerText = advice;
 
-        // Render Prediction Output Cards
-        dispContainer.innerHTML = `
-            <div class="prediction-area primary-border">
-                <div style="font-size:0.85rem; color:var(--gold); font-weight:bold;">ACTUAL PREDICTION AREA</div>
-                <div class="target-num gold-text">${pBest}</div>
-                <div style="margin-bottom:10px">Sector Strength: <strong>${pRate.toFixed(1)}%</strong></div>
-                <div class="sector-list">${pSector.join(' ')}</div>
-                <div class="streak-container">
-                    <div>Streak: <span class="${primaryStreak.currentWin > 0 ? 'streak-win':'streak-loss'}">${primaryStreak.currentWin > 0 ? 'W' + primaryStreak.currentWin : 'L' + primaryStreak.currentLoss}</span></div>
-                    <div>Max: <span class="streak-win">W${primaryStreak.maxWin}</span> / <span class="streak-loss">L${primaryStreak.maxLoss}</span></div>
-                </div>
-            </div>
+        if (trend.includes("↑")) {
+            trendEl.className = "trend-up";
+            strategyEl.style.color = "#4ade80";
+        } else if (trend.includes("↓")) {
+            trendEl.className = "trend-down";
+            strategyEl.style.color = "#f87171";
+        } else {
+            trendEl.className = "trend-stable";
+            strategyEl.style.color = "#fbbf24";
+        }
+
+        // Interactive Warnings Based on Volume
+        if(history.length >= 30) {
+            warnEl.innerText = "Target dataset verified. High stability profile automated.";
+            warnEl.style.color = "#10b981";
+        } else if(history.length >= 3) {
+            warnEl.innerText = "Intermediary signature tracking active. (Low data pool risk)";
+            warnEl.style.color = "#f59e0b";
+        } else {
+            warnEl.innerText = "Need 3+ spins to evaluate trend curves.";
+            warnEl.style.color = "#ef4444";
+        }
+
+        const neighborsBox = document.getElementById('neighbors-output');
+        neighborsBox.innerHTML = '';
+        if (targetSector.length > 0) {
+            targetSector.forEach((num, index) => {
+                const colorClass = num === 0 ? 'var(--green)' : (reds.includes(num) ? 'var(--red)' : 'var(--black)');
+                const isCenter = index === 7 ? 'nb-center' : '';
+                neighborsBox.innerHTML += `<div class="nb-cell ${isCenter}" style="background: ${colorClass};">${num}</div>`;
+            });
+        }
+
+        const streakBox = document.getElementById('streak-output');
+        streakBox.innerHTML = '';
+        const validOutcomes = outcomesLog.filter(o => o !== null);
+        const lastEight = validOutcomes.slice(-8);
+        
+        for (let i = 0; i < 8; i++) {
+            if (i < lastEight.length) {
+                const outcome = lastEight[i];
+                const badgeClass = outcome === 'W' ? 'badge-win' : 'badge-loss';
+                streakBox.innerHTML += `<div class="streak-badge ${badgeClass}">${outcome}</div>`;
+            } else {
+                streakBox.innerHTML += `<div class="streak-badge badge-empty">-</div>`;
+            }
+        }
+
+        const tbody = document.getElementById('logTable');
+        tbody.innerHTML = '';
+        
+        history.slice().reverse().forEach((n, i) => {
+            const actualIdx = history.length - 1 - i;
+            const distance = dists[actualIdx - 1] ?? "-";
+            const loggedDirection = spinDirections[actualIdx] || "-";
             
-            <div class="prediction-area remaining-border">
-                <div style="font-size:0.85rem; color:var(--blue); font-weight:bold;">REMAINING WHEEL PREDICTION</div>
-                <div class="target-num blue-text">${rBest !== null ? rBest : 'N/A'}</div>
-                <div style="margin-bottom:10px">Sector Strength: <strong>${rBest !== null ? rRate.toFixed(1) + '%' : '0.0%'}</strong></div>
-                <div class="sector-list">${rBest !== null ? rSector.join(' ') : 'No valid isolated sector'}</div>
-                <div class="streak-container">
-                    <div>Streak: <span class="${remainingStreak.currentWin > 0 ? 'streak-win':'streak-loss'}">${remainingStreak.currentWin > 0 ? 'W' + remainingStreak.currentWin : 'L' + remainingStreak.currentLoss}</span></div>
-                    <div>Max: <span class="streak-win">W${remainingStreak.maxWin}</span> / <span class="streak-loss">L${remainingStreak.maxLoss}</span></div>
-                </div>
-            </div>
-        `;
+            let status = "-";
+            if (actualIdx > 1) {
+                status = dists[actualIdx-1] > dists[actualIdx-2] ? '<span class="trend-up">RHYTHM GAIN ↑</span>' : '<span class="trend-down">RHYTHM LOSS ↓</span>';
+            }
+            
+            let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
+            if (outcomesLog[actualIdx] !== null && outcomesLog[actualIdx] !== undefined) {
+                outcomeVerdict = outcomesLog[actualIdx] === 'W' 
+                    ? '<span class="trend-up" style="font-weight:bold;">SECTOR HIT (WIN)</span>' 
+                    : '<span class="trend-down">SECTOR MISS</span>';
+            }
 
-        path.innerHTML = `
-            <strong>Logic Trail:</strong><br>
-            • Last Hit: <b>${last}</b><br>
-            • <b>Actual Prediction:</b> Center <b>${pBest}</b> chosen inside ${last}'s neighborhood.<br>
-            • <b>Remaining Wheel Filtering:</b> All 15 numbers in the Actual Prediction Area were blacklisted. Scanned remaining options to isolate a clean, high-density 15-number setup.<br>
-            • <b>Resulting Choice:</b> Selected 15-number sector centered at <b>${rBest}</b>.
-        `;
-
-        // Render Last 10 Number Chips (Latest Left)
-        recentBox.innerHTML = '';
-        let recentSpins = [...history].reverse().slice(0, 10);
-        recentSpins.forEach(n => {
-            let bg = n === 0 ? 'var(--green)' : (REDS.includes(n) ? 'var(--red)' : 'var(--black)');
-            recentBox.innerHTML += `<span class="chip" style="background:${bg}; color:#fff">${n}</span>`;
+            tbody.innerHTML += `<tr>
+                <td>${actualIdx + 1}</td>
+                <td><b>${n}</b></td>
+                <td><span style="font-size:0.8rem; font-weight:bold; color:#94a3b8">${loggedDirection} Vector</span></td>
+                <td><b>${distance}</b> pock.</td>
+                <td>${status}</td>
+                <td>${outcomeVerdict}</td>
+            </tr>`;
         });
-
-        // Helper function to build custom colored W/L spans (Latest Left)
-        const buildWLHtml = (logArray) => {
-            let recentWL = [...logArray].reverse().slice(0, 10);
-            if (recentWL.length === 0) return '<span style="color:#444">-</span>';
-            return recentWL.map(letter => {
-                let color = letter === 'W' ? 'var(--green)' : 'var(--red)';
-                return `<span class="wl-badge" style="color:${color}">${letter}</span>`;
-            }).join(' ');
-        };
-
-        // Render the Last 10 Win/Loss Strings
-        actualWLBox.innerHTML = buildWLHtml(actualWLLog);
-        remainingWLBox.innerHTML = buildWLHtml(remainingWLLog);
     }
+
+    function resetSession() {
+        history = []; 
+        dists = [];
+        spinDirections = [];
+        predictedSectorsLog = [];
+        outcomesLog = [];
+        currentDirection = 'CW';
+        updateDirectionUI();
+        updateUI();
+    }
+
+    buildBoard();
 </script>
-
 </body>
 </html>
