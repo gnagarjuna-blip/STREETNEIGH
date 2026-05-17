@@ -164,7 +164,7 @@
                 </div>
             </div>
             
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste historical strings to analyze large data sets. (e.g. 14, 22, 0, 32, 15, 19, 4, 21, 2, 25, 17)"></textarea>
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste history (Top line is latest, e.g.&#10;32&#10;15&#10;19&#10;4)"></textarea>
             <button class="btn btn-primary" onclick="importHistory()">PROCESS BATCH DATA SET</button>
             <button class="btn btn-danger" onclick="resetSession()">PURGE ACTIVE DATA SET</button>
         </div>
@@ -186,7 +186,6 @@
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
-        // Clean layout out first
         grid.innerHTML = '';
         const rows = [
             [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
@@ -266,8 +265,15 @@
 
     function importHistory() {
         const raw = document.getElementById('bulkData').value;
-        const nums = raw.split(/[\s,;\t\n]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        if(nums.length === 0) return alert("No valid numerical layout parsed. Re-check data formatting configuration.");
+        // Split strings by space, commas, or linebreaks
+        let nums = raw.split(/[\s,;\t\n]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        if(nums.length === 0) return alert("No valid numerical layout parsed.");
+        
+        // REVERSE THE INCOMING ARRAY LIST
+        // If user pastes data where top layout is newest (e.g. [Newest, Mid, Oldest]), 
+        // reversing it ensures the engine processes it chronological order (Oldest -> Newest).
+        nums.reverse();
+        
         nums.forEach(n => track(n));
         document.getElementById('bulkData').value = '';
     }
@@ -278,9 +284,8 @@
             return updateUI();
         }
 
-        // LARGE DATA SET CORE MATH IMPLEMENTATION
+        // LARGE DATA SET MATH MATRIX
         const macroAvg = dists.reduce((a, b) => a + b, 0) / dists.length;
-        
         const recentDists = dists.slice(-5);
         const microAvg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
@@ -288,7 +293,7 @@
         const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
 
         let trend = "STABLE DEVIATION";
-        let actionAdvice = "ESTABLISHING INTERMEDIARY CRITERIA: Awaiting high-capacity data processing.";
+        let actionAdvice = "ESTABLISHING BASELINE: Awaiting higher capacity dataset arrays.";
         let riskColor = "var(--accent)";
 
         let rawDeltaOffset = microAvg - macroAvg;
@@ -306,30 +311,29 @@
             actionAdvice = "COLLECTING RHYTHM BASELINE: Keep stakes zeroed out. Initial sample sizing building.";
             riskColor = "#64748b";
         } else if (history.length >= 5 && history.length < 30) {
-            actionAdvice = "INTERMEDIATE PATTERN CAPTURE: Small confirmation unit stakes suggested. Testing long-term macro trend line consistency.";
+            actionAdvice = "INTERMEDIATE PATTERN CAPTURE: Small confirmation stakes suggested. Validating trend stability.";
             riskColor = "var(--gold)";
         } else {
             const sampleVariance = recentDists.map(x => Math.pow(x - microAvg, 2)).reduce((a, b) => a + b, 0) / recentDists.length;
             
             if (sampleVariance > 144) { 
                 trend = "TRAP SECTOR DETECTED ⚠";
-                actionAdvice = "CRITICAL COHERENCE BREAKDOWN: Dealer rhythm variance is excessively unstable. Halt betting progression and wait for confirmation.";
+                actionAdvice = "CRITICAL COHERENCE BREAKDOWN: Excessively high variance. Halt progression models immediately.";
                 riskColor = "var(--red)";
             } else if (Math.abs(rawDeltaOffset) <= 2) {
-                actionAdvice = "MAX STABILITY (TOP METRIC BET): Local micro-rhythm matches all-time macro signature. Deploy primary sector weight allocations.";
+                actionAdvice = "MAX STABILITY (TOP METRIC BET): Micro rhythm matches macro physical signatures. Deploy maximum target units.";
                 riskColor = "var(--green)";
             } else if (rawDeltaOffset > 2) {
-                actionAdvice = "ACCELERATING PATTERN DETECTED: Micro rhythm shifting forward. Tracking calculated target sector allocations.";
+                actionAdvice = "ACCELERATING PATTERN DETECTED: Rhythm pushing outward. Betting rising average values.";
                 riskColor = "var(--accent)";
             } else {
-                actionAdvice = "COMPRESSION/DECELERATION PATTERN: Pocket targeting falling short of baseline. System adjusting target profile inward.";
+                actionAdvice = "COMPRESSION PATTERN: Pocket distances falling short. Adjusting allocation matrix downward.";
                 riskColor = "var(--purple)";
             }
         }
 
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
         let predIdx = 0;
-        
         let finalSignatureShift = Math.round(macroAvg) + calculatedOffset;
         
         if (currentDirection === 'CW') {
@@ -403,6 +407,7 @@
         const tbody = document.getElementById('logTable');
         tbody.innerHTML = '';
         
+        // Keeps the top entry in display table as the latest recorded spin result
         history.slice().reverse().forEach((n, i) => {
             const actualIdx = history.length - 1 - i;
             const distance = dists[actualIdx - 1] ?? "-";
