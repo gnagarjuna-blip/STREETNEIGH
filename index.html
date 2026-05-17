@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Auto-Roulette Constant Speed Displacement Tracker</title>
+    <title>Auto-Roulette Dual-Direction Displacement Tracker</title>
     <style>
-        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --blue: #2980b9; }
+        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --blue: #2980b9; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
-        .container { max-width: 1100px; margin: auto; }
+        .container { max-width: 1200px; margin: auto; }
         
         .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
         .panel { background: #1e1e1e; padding: 20px; border-radius: 12px; border: 1px solid #333; flex: 1; min-width: 350px; }
@@ -14,11 +14,17 @@
         /* Board Styling */
         .board { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-top: 15px; }
         .cell { height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; 
-                font-weight: bold; border-radius: 4px; border: 1px solid #444; }
+                font-weight: bold; border-radius: 4px; border: 1px solid #444; user-select: none; }
         .n0 { background: var(--green); grid-row: span 3; }
         .nRed { background: var(--red); }
         .nBlack { background: var(--black); }
         
+        /* Direction Controls */
+        .direction-toggle { display: flex; gap: 10px; margin-top: 15px; background: #111; padding: 10px; border-radius: 6px; align-items: center; justify-content: space-between; }
+        .dir-btn { flex: 1; padding: 8px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; text-align: center; background: #333; color: #aaa; }
+        .dir-btn.active-cw { background: var(--blue); color: white; border: 1px solid var(--gold); }
+        .dir-btn.active-ccw { background: var(--purple); color: white; border: 1px solid var(--gold); }
+
         /* Prediction Styling */
         .prediction-area { background: linear-gradient(145deg, #1c2833, #111b24); border: 2px solid var(--gold); 
                            padding: 20px; border-radius: 15px; text-align: center; margin-top: 10px; }
@@ -31,23 +37,24 @@
         .win { background: var(--green); color: white; }
         .loss { background: var(--red); color: white; }
 
-        textarea { width: 100%; height: 50px; background: #000; color: var(--green); border: 1px solid #444; margin-top: 10px; padding: 5px; font-family: monospace; }
+        textarea { width: 100%; height: 60px; background: #000; color: var(--green); border: 1px solid #444; margin-top: 10px; padding: 5px; font-family: monospace; resize: none; }
         button { width: 100%; padding: 12px; margin-top: 10px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
         button:hover { background: #444; }
 
-        .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--blue); }
+        .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--gold); }
         
         /* Tracking Log Display Elements */
         .recent-display-container { margin-top: 15px; background: #111; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; }
         .recent-display-title { font-size: 0.85rem; color: #888; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .recent-chips-wrapper { display: flex; gap: 6px; flex-wrap: wrap; }
-        .recent-chip { min-width: 28px; height: 28px; padding: 0 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+        .recent-chip { min-width: 32px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); color: #fff; position: relative; }
+        .dir-indicator { font-size: 0.5rem; font-weight: 900; margin-top: -2px; opacity: 0.8; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: var(--gold);">Auto-Roulette Rotor Displacement Tracker</h2>
+    <h2 style="color: var(--gold);">25-26 Rotation Dual-Direction Displacement Tracker</h2>
 
     <div class="flex-row">
         <div class="panel">
@@ -55,8 +62,15 @@
             <div id="board" class="board">
                 <div class="cell n0" onclick="inputResult(0)">0</div>
             </div>
-            <textarea id="bulk" placeholder="Paste initial window (Top is latest, e.g. 40-50 spins)..."></textarea>
-            <button onclick="importBulk()">Analyze Mechanical Signature</button>
+            
+            <div class="direction-toggle">
+                <span style="font-size: 0.85rem; font-weight: bold; color: #888;">NEXT SPIN DIRECTION:</span>
+                <button id="btnCW" class="dir-btn active-cw" onclick="setNextDirection('CW')">CLOCKWISE (CW)</button>
+                <button id="btnCCW" class="dir-btn" onclick="setNextDirection('CCW')">COUNTER (CCW)</button>
+            </div>
+
+            <textarea id="bulk" placeholder="Paste history window (Top is latest). System assumes perfect alternation (CW, CCW, CW...) starting with your chosen direction above..."></textarea>
+            <button onclick="importBulk()">Process Directional History</button>
             
             <div class="recent-display-container">
                 <div class="recent-display-title">Latest 10 Results (Newest → Oldest)</div>
@@ -64,13 +78,13 @@
                     <span style="color:#666; font-size:0.85rem; font-style:italic;">No spins recorded yet</span>
                 </div>
             </div>
-            <button onclick="clearTracker()" style="background: var(--red); margin-top: 15px;">Reset Tracking Target</button>
+            <button onclick="clearTracker()" style="background: var(--red); margin-top: 15px;">Reset Tracker & Sync</button>
         </div>
 
         <div class="panel">
-            <h3>Velocity-Based Prediction</h3>
+            <h3>Velocity-Stabilized Prediction</h3>
             <div id="display" class="prediction-area">
-                <p>Waiting for baseline velocity analysis...</p>
+                <p>Awaiting baseline data for direction tracking channels...</p>
             </div>
             
             <div id="logicPath" class="log-box">
@@ -81,16 +95,16 @@
 </div>
 
 <script>
-    // Ordered European Wheel Profile layout map
     const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
-    const MAX_ROLLING_HISTORY = 70; 
+    const MAX_ROLLING_HISTORY = 80; // Larger history to ensure enough data points per direction channel
     const MAX_STREAKS = 10;         
 
-    let history = []; // Index 0 is always latest
+    let history = []; // Objects: { number: N, direction: 'CW'|'CCW' }
     let streaks = []; 
     let lastPredictedSector = [];
+    let nextDirection = 'CW'; // Auto-alternates default
 
     // Initialize UI Board
     const board = document.getElementById('board');
@@ -99,16 +113,26 @@
         board.innerHTML += `<div class="cell ${REDS.includes(n)?'nRed':'nBlack'}" onclick="inputResult(${n})">${n}</div>`;
     }));
 
-    function inputResult(n) {
-        checkWinLoss(n);
-        history.unshift(n); 
-        
-        if (history.length > MAX_ROLLING_HISTORY) {
-            history.pop();
-        }
+    function setNextDirection(dir) {
+        nextDirection = dir;
+        document.getElementById('btnCW').className = `dir-btn ${dir === 'CW' ? 'active-cw' : ''}`;
+        document.getElementById('btnCCW').className = `dir-btn ${dir === 'CCW' ? 'active-ccw' : ''}`;
+    }
 
+    function toggleDirection() {
+        setNextDirection(nextDirection === 'CW' ? 'CCW' : 'CW');
+    }
+
+    function inputResult(n) {
+        let currentSpinDir = nextDirection;
+        checkWinLoss(n);
+        
+        history.unshift({ number: n, direction: currentSpinDir }); 
+        if (history.length > MAX_ROLLING_HISTORY) history.pop();
+
+        toggleDirection(); // Auto-alternate for the next spin
         updateRecentChipsDisplay();
-        processDisplacementLogic(n);
+        processDirectionalLogic();
     }
 
     function importBulk() {
@@ -117,21 +141,37 @@
         
         if (nums.length === 0) return;
 
-        // Loop array in chronological order (oldest to newest) to populate correctly
+        // Process data bottom-to-top to construct history sequentially
+        // Top of textarea is latest, so start at the bottom (oldest)
+        let startingDirection = nextDirection;
+        
+        // To accurately alternate backward, we figure out what the direction sequence would be
+        // But to keep it simple, we assume the user aligned the 'Next Spin Direction' button with the TOP element.
+        // We calculate down to the bottom, then loop back up.
+        let directionalPattern = [];
+        let tempDir = startingDirection;
+        for (let i = 0; i < nums.length; i++) {
+            directionalPattern.push(tempDir);
+            tempDir = (tempDir === 'CW') ? 'CCW' : 'CW';
+        }
+
+        // Push into history from bottom (oldest) to top (newest)
         for (let i = nums.length - 1; i >= 0; i--) {
             const n = nums[i];
-            checkWinLoss(n);
-            history.unshift(n);
+            const dir = directionalPattern[i];
             
-            if (history.length > MAX_ROLLING_HISTORY) {
-                history.pop();
-            }
+            checkWinLoss(n);
+            history.unshift({ number: n, direction: dir });
+            
+            if (history.length > MAX_ROLLING_HISTORY) history.pop();
         }
         
+        // Match the live toggle state with the next predicted round configuration
+        setNextDirection(directionalPattern[0]);
+        toggleDirection(); 
+
         updateRecentChipsDisplay();
-        if(history.length >= 2) {
-            processDisplacementLogic(history[0]);
-        }
+        processDirectionalLogic();
         document.getElementById('bulk').value = '';
     }
 
@@ -152,34 +192,39 @@
         return sector;
     }
 
-    // --- NEW MECHANICAL DISPLACEMENT CALCULATOR ---
-    function processDisplacementLogic(lastNum) {
-        if (history.length < 2) {
-            document.getElementById('display').innerHTML = `<p>Data initialized. Awaiting next live spin to map displacement tracking...</p>`;
+    // --- TRACKING ENGINE OPTIMIZED FOR DIRECTION CORRELATION ---
+    function processDirectionalLogic() {
+        if (history.length < 3) {
+            document.getElementById('display').innerHTML = `<p>Data initializing. Awaiting matching directional spins to calibrate channels...</p>`;
             return;
         }
 
-        // 1. Calculate historical step displacement frequencies
-        let displacementCounts = {};
+        let targetChannel = nextDirection; // Predict for the UPCOMING direction frame
         
-        // Loop backward through history to calculate step distances between chronological items
-        for (let i = history.length - 2; i >= 0; i--) {
-            let prevNum = history[i + 1];
-            let currentNum = history[i];
+        // Filter history to isolate only the spins that match our target channel profile direction
+        let channelHistory = history.filter(spin => spin.direction === targetChannel);
+
+        if (channelHistory.length < 2) {
+            document.getElementById('display').innerHTML = `<p>Calibrating Channel [${targetChannel}]... Need another spin in this direction.</p>`;
+            return;
+        }
+
+        // 1. Compute displacements purely within this isolated mechanical channel
+        let displacementCounts = {};
+        for (let i = channelHistory.length - 2; i >= 0; i--) {
+            let prevNum = channelHistory[i + 1].number;
+            let currentNum = channelHistory[i].number;
             
             let prevIdx = WHEEL.indexOf(prevNum);
             let currIdx = WHEEL.indexOf(currentNum);
             
-            // Absolute forward pocket steps calculation
             let displacement = (currIdx - prevIdx + 37) % 37;
-            
             displacementCounts[displacement] = (displacementCounts[displacement] || 0) + 1;
         }
 
-        // 2. Identify the highest recurring target distance profile
+        // 2. Identify highest matching target step jump parameter
         let optimalDisplacement = -1;
         let maxCount = -1;
-
         Object.keys(displacementCounts).forEach(disp => {
             if (displacementCounts[disp] > maxCount) {
                 maxCount = displacementCounts[disp];
@@ -187,19 +232,20 @@
             }
         });
 
-        // 3. Project the optimal jump path forward from the last hit number location
-        let lastNumIdx = WHEEL.indexOf(lastNum);
-        let targetCenterIdx = (lastNumIdx + optimalDisplacement) % 37;
+        // 3. Project forward from the absolute last result of THIS specific channel
+        let baseChannelAnchorNum = channelHistory[0].number;
+        let anchorIdx = WHEEL.indexOf(baseChannelAnchorNum);
+        
+        let targetCenterIdx = (anchorIdx + optimalDisplacement) % 37;
         let predictedCenter = WHEEL[targetCenterIdx];
 
-        // 4. Generate playing zone target mapping (Center + 7 neighbors)
+        // 4. Map output layout boundary matrix array
         let finalPredictionSector = getSector(predictedCenter);
         lastPredictedSector = finalPredictionSector;
 
-        // Calculate exact visual appearance strength percentage based on the data points analyzed
-        let strengthPct = (maxCount / (history.length - 1)) * 100;
+        let strengthPct = (maxCount / (channelHistory.length - 1)) * 100;
 
-        renderDisplacement(lastNum, predictedCenter, optimalDisplacement, strengthPct, finalPredictionSector);
+        renderDirectionalTracker(baseChannelAnchorNum, targetChannel, predictedCenter, optimalDisplacement, strengthPct, finalPredictionSector);
     }
 
     function updateRecentChipsDisplay() {
@@ -211,23 +257,31 @@
 
         const latest10 = history.slice(0, 10);
         let htmlStr = "";
-        latest10.forEach(num => {
+        latest10.forEach(spin => {
             let bgColor = "var(--black)";
-            if (num === 0) bgColor = "var(--green)";
-            else if (REDS.includes(num)) bgColor = "var(--red)";
-            htmlStr += `<span class="recent-chip" style="background:${bgColor};">${num}</span>`;
+            if (spin.number === 0) bgColor = "var(--green)";
+            else if (REDS.includes(spin.number)) bgColor = "var(--red)";
+            
+            let dirColor = spin.direction === 'CW' ? 'color:var(--blue);' : 'color:var(--purple);';
+            
+            htmlStr += `
+                <span class="recent-chip" style="background:${bgColor};">
+                    <div>${spin.number}</div>
+                    <div class="dir-indicator" style="${dirColor}">${spin.direction}</div>
+                </span>`;
         });
         wrapper.innerHTML = htmlStr;
     }
 
     function clearTracker() {
         history = []; streaks = []; lastPredictedSector = [];
-        document.getElementById('display').innerHTML = `<p>Waiting for baseline velocity analysis...</p>`;
+        setNextDirection('CW');
+        document.getElementById('display').innerHTML = `<p>Awaiting baseline data for direction tracking channels...</p>`;
         document.getElementById('logicPath').innerHTML = `Displacement tracking path calculations will compile here.`;
         updateRecentChipsDisplay();
     }
 
-    function renderDisplacement(last, best, displacementSteps, rate, sector) {
+    function renderDirectionalTracker(anchor, channel, best, displacementSteps, rate, sector) {
         const disp = document.getElementById('display');
         const path = document.getElementById('logicPath');
 
@@ -237,20 +291,25 @@
         });
         streakHtml += `</div>`;
 
+        let channelColor = channel === 'CW' ? 'var(--blue)' : 'var(--purple)';
+
         disp.innerHTML = `
             ${streakHtml}
-            <div style="font-size:0.9rem; color:var(--gold); font-weight:bold; letter-spacing:0.5px;">PROJECTED DISPLACEMENT CENTER</div>
+            <div style="font-size:0.85rem; color:${channelColor}; font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
+                TARGET PROFILE: ACTIVE ${channel} ENVELOPE
+            </div>
+            <div style="font-size:0.9rem; color:var(--gold)">PROJECTED SECTOR CENTER</div>
             <div class="target-num">${best}</div>
-            <div style="margin-bottom:10px">Mechanical Sync Density: <strong>${rate.toFixed(1)}%</strong></div>
+            <div style="margin-bottom:10px">Channel Signature Match: <strong>${rate.toFixed(1)}%</strong></div>
             <div class="sector-list">${sector.join(' ')}</div>
         `;
 
         path.innerHTML = `
-            <strong>Displacement Diagnostic:</strong><br>
-            • Last Ball Pocket: <b>${last}</b> (Wheel Index Location: ${WHEEL.indexOf(last)})<br>
-            • Core Velocity Baseline Signature: <b>+${displacementSteps} pockets</b> forward.<br>
-            • Target Sector Focus: Centered directly around pocket <b>${best}</b>.<br>
-            • <b>Execution:</b> Place coverage zone across 7 neighbors left and right.
+            <strong>Directional Diagnostic [Channel: ${channel}]:</strong><br>
+            • Last Anchored ${channel} Hit: <b>${anchor}</b> (Wheel Index: ${WHEEL.indexOf(anchor)})<br>
+            • Friction-Decay Profile (25-26 Rotations): <b>+${displacementSteps} pockets</b> displacement.<br>
+            • Projected Landing Center: <b>${best}</b>.<br>
+            • <b>Bet Placement:</b> Play ${best} with 7 neighbors on the wheel layout next round.
         `;
     }
 </script>
