@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Absolute Coverage Multi-Sector Tracker</title>
+    <title>Absolute Coverage Tracker - Custom Notation</title>
     <style>
         :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --teal: #00a8ff; --orange: #e67e22; --purple: #9b59b6; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
@@ -59,7 +59,7 @@
 <body>
 
 <div class="container">
-    <h2 style="color: var(--gold);">Absolute Coverage Tracker (No-Gap Timeline Mapping)</h2>
+    <h2 style="color: var(--gold);">Absolute Coverage - Pure Timeline Matrix</h2>
 
     <div class="flex-row">
         <div class="panel">
@@ -178,7 +178,7 @@
         }
     }
 
-    // --- NEW PURE COVERAGE GUARANTEE ENGINE ---
+    // --- PURE SECTOR NO-LEAK ENGINE (UPDATED TO EXACT USER NOTATION) ---
     function calculateAbsoluteCoverage() {
         if (history.length === 0) return;
 
@@ -189,26 +189,25 @@
         let leftSlicesFound = [];
         let rightSlicesFound = [];
 
-        // 1. Map timeline links
+        // 1. Gather all chronological past items for the current target
         for (let i = 0; i < history.length; i++) {
             if (history[i] === activeTargetNum) {
                 if (i - 1 >= 0) {
                     let rightNeighbor = history[i - 1];
-                    frequencyMap[rightNeighbor] = 1; // Mark existence as mandatory
+                    frequencyMap[rightNeighbor] = 1; 
                     if (!rightSlicesFound.includes(rightNeighbor)) rightSlicesFound.push(rightNeighbor);
                 }
                 if (i + 1 < history.length) {
                     let leftNeighbor = history[i + 1];
-                    frequencyMap[leftNeighbor] = 1; // Mark existence as mandatory
+                    frequencyMap[leftNeighbor] = 1; 
                     if (!leftSlicesFound.includes(leftNeighbor)) leftSlicesFound.push(leftNeighbor);
                 }
             }
         }
 
-        // Output history tracking data
         const monitorDiv = document.getElementById('immediateNeighborsDisplay');
         if (leftSlicesFound.length === 0 && rightSlicesFound.length === 0) {
-            monitorDiv.innerHTML = `<span style="color:#888; font-style:italic; font-size:0.85rem;">First time seeing ${activeTargetNum}. Need more spins to match timeline.</span>`;
+            monitorDiv.innerHTML = `<span style="color:#888; font-style:italic; font-size:0.85rem;">First time seeing ${activeTargetNum}. Enter more points to find chronological links.</span>`;
             document.getElementById('display').innerHTML = `<p>Awaiting more data entries to verify absolute coverage sets...</p>`;
             return;
         } else {
@@ -219,7 +218,6 @@
             `;
         }
 
-        // Sync grid viewboards
         WHEEL.forEach(num => {
             const card = document.getElementById(`pool-card-${num}`);
             const countLabel = document.getElementById(`pool-count-${num}`);
@@ -228,23 +226,21 @@
             card.className = currentVal > 0 ? "pool-item pool-active" : "pool-item";
         });
 
-        // Collect all distinct targets needing mandatory 100% flat layout coverage
         let rawTargetList = Object.keys(frequencyMap).map(n => parseInt(n)).filter(n => frequencyMap[n] > 0);
 
-        // 2. Proximity Range Extractor Loop
+        // 2. Map variable grouping blocks based strictly on physical proximity
         let finalTokens = [];
         let globalBetSheetSet = new Set();
         let alreadySafelySheltered = new Set();
         let auditLogs = [];
 
-        // Loop through all targets until every single one is checked and covered
         rawTargetList.forEach(tNum => {
             if (alreadySafelySheltered.has(tNum)) return;
 
             let tIdx = WHEEL.indexOf(tNum);
             let absoluteBestRange = 0;
 
-            // Dynamically increase neighbor checking radius up to 8 slots wide to absorb nearby targets
+            // Grow outer boundary rings to combine adjacent sequence hits safely
             for (let r = 1; r <= 8; r++) {
                 let leftCheck = WHEEL[(tIdx - r + 37) % 37];
                 let rightCheck = WHEEL[(tIdx + r) % 37];
@@ -254,31 +250,28 @@
                 }
             }
 
-            // Build out the physical layout coverage array for this custom token size configuration
             let computedTokenSector = [];
             for (let i = -absoluteBestRange; i <= absoluteBestRange; i++) {
                 computedTokenSector.push(WHEEL[(tIdx + i + 37) % 37]);
             }
 
-            // Write token labels explicitly to match requested user design output syntax
+            // EXACT CHOSEN NOTATION PATTERN OUTPUT (e.g., 2n4, 1n2, 13)
             let label = absoluteBestRange > 0 ? `${tNum}n${absoluteBestRange}` : `${tNum}`;
             finalTokens.push(label);
-            auditLogs.push(`• Token <b>${label}</b> processed → Absorb entries: [${computedTokenSector.join(', ')}]`);
+            auditLogs.push(`• Custom notation target <b>${label}</b> processed → Absorb entries: [${computedTokenSector.join(', ')}]`);
 
-            // Save layout pockets directly into final master playing registry sheet
             computedTokenSector.forEach(n => {
                 globalBetSheetSet.add(n);
                 if (rawTargetList.includes(n)) {
-                    alreadySafelySheltered.add(n); // Flag item as fully secured
+                    alreadySafelySheltered.add(n);
                 }
             });
         });
 
-        // 3. Max-Ceiling Compression Strategy Safety Check Rules
-        // If a wide timeline pool pushes the unique pocket selection beyond 17 chips, compress neighbor scopes down to fit.
+        // 3. Absolute Hard Ceiling Guardrail
         let finalPlayArray = Array.from(globalBetSheetSet);
         if (finalPlayArray.length > 17) {
-            auditLogs.push(`⚠️ <i>Limit Cap warning: Target list hit ${finalPlayArray.length} slots. Compressing neighbor arcs to respect 17-pocket max constraint.</i>`);
+            auditLogs.push(`⚠️ <i>Limit Cap active: Target list hit ${finalPlayArray.length} slots. Forcing individual base placements to respect 17-pocket max constraint.</i>`);
             
             let compressedSet = new Set();
             finalTokens = [];
@@ -286,7 +279,7 @@
             rawTargetList.forEach(num => {
                 if (compressedSet.size < 17) {
                     compressedSet.add(num);
-                    finalTokens.push(`${num}`); // Force individual base placement to guarantee coverage without overflow leaks
+                    finalTokens.push(`${num}`); 
                 }
             });
             finalPlayArray = Array.from(compressedSet);
@@ -339,7 +332,6 @@
         });
         tokensHtml += `</div>`;
 
-        // Check if anything was missed
         let missedList = allRequired.filter(n => !fullFlatBetList.includes(n));
 
         disp.innerHTML = `
@@ -359,7 +351,7 @@
         path.innerHTML = `
             <strong>Coverage Audit Trail:</strong><br>
             • Extracted absolute target values: <b>[${allRequired.join(', ')}]</b> from timeline occurrences of <b>${last}</b>.<br>
-            • System built custom sectors to group adjacent targets together and standalone slots for isolated ones.<br><br>
+            • System built custom tokens to group adjacent targets together and standalone slots for isolated ones.<br><br>
             <b>Coverage Build Blocks:</b><br>
             ${logs.join('<br>')}
         `;
