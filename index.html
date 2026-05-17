@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Mechanical Signature Air-Pressure Tracker</title>
+    <title>Proximity Cluster & Neighbor Density Tracker</title>
     <style>
-        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --blue: #2980b9; --purple: #8e44ad; }
+        :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --teal: #008080; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
         .container { max-width: 1200px; margin: auto; }
         
@@ -18,20 +18,9 @@
         .n0 { background: var(--green); grid-row: span 3; }
         .nRed { background: var(--red); }
         .nBlack { background: var(--black); }
-        
-        /* Physics Parameters Modifiers */
-        .physics-controls { background: #111; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #222; }
-        .param-group { display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center; }
-        .param-input { width: 60px; background: #000; border: 1px solid var(--gold); color: #fff; padding: 5px; text-align: center; font-weight: bold; border-radius: 4px; }
-
-        /* Direction Controls */
-        .direction-toggle { display: flex; gap: 10px; margin-top: 15px; background: #111; padding: 10px; border-radius: 6px; align-items: center; justify-content: space-between; }
-        .dir-btn { flex: 1; padding: 8px; font-weight: bold; border: none; border-radius: 4px; cursor: pointer; text-align: center; background: #333; color: #aaa; }
-        .dir-btn.active-cw { background: var(--blue); color: white; border: 1px solid var(--gold); }
-        .dir-btn.active-ccw { background: var(--purple); color: white; border: 1px solid var(--gold); }
 
         /* Prediction Styling */
-        .prediction-area { background: linear-gradient(145deg, #1c2833, #111b24); border: 2px solid var(--gold); 
+        .prediction-area { background: linear-gradient(145deg, #112222, #0d1414); border: 2px solid var(--gold); 
                            padding: 20px; border-radius: 15px; text-align: center; margin-top: 10px; }
         .target-num { font-size: 4rem; color: var(--gold); font-weight: 900; line-height: 1; margin: 10px 0; }
         .sector-list { color: #888; font-family: monospace; word-spacing: 5px; background: #000; padding: 10px; border-radius: 5px; font-size: 0.9rem; }
@@ -46,20 +35,19 @@
         button { width: 100%; padding: 12px; margin-top: 10px; background: #333; color: white; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; }
         button:hover { background: #444; }
 
-        .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--gold); }
+        .log-box { font-size: 0.8rem; color: #aaa; background: #111; padding: 10px; border-radius: 5px; margin-top: 10px; border-left: 3px solid var(--teal); }
         
         /* Tracking Log Display Elements */
         .recent-display-container { margin-top: 15px; background: #111; padding: 12px; border-radius: 6px; border: 1px solid #2a2a2a; }
         .recent-display-title { font-size: 0.85rem; color: #888; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
         .recent-chips-wrapper { display: flex; gap: 6px; flex-wrap: wrap; }
-        .recent-chip { min-width: 32px; height: 32px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); color: #fff; position: relative; }
-        .dir-indicator { font-size: 0.5rem; font-weight: 900; margin-top: -2px; opacity: 0.8; }
+        .recent-chip { min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="color: var(--gold);">Auto-Roulette Physical Kinematic Signature Tracker</h2>
+    <h2 style="color: var(--gold);">Proximity Neighbor Cluster Tracker (7-Neighbor Matrix)</h2>
 
     <div class="flex-row">
         <div class="panel">
@@ -67,27 +55,9 @@
             <div id="board" class="board">
                 <div class="cell n0" onclick="inputResult(0)">0</div>
             </div>
-            
-            <div class="direction-toggle">
-                <span style="font-size: 0.85rem; font-weight: bold; color: #888;">NEXT SPIN DIRECTION:</span>
-                <button id="btnCW" class="dir-btn active-cw" onclick="setNextDirection('CW')">CLOCKWISE (CW)</button>
-                <button id="btnCCW" class="dir-btn" onclick="setNextDirection('CCW')">COUNTER (CCW)</button>
-            </div>
 
-            <div class="physics-controls">
-                <div style="font-size:0.8rem; font-weight:bold; color:var(--gold); margin-bottom:10px; text-transform:uppercase;">Air-Pressure/Rotor Matrix Sync</div>
-                <div class="param-group">
-                    <label style="font-size:0.85rem; color:#ccc;">Rotor Speed (Pockets during Flight):</label>
-                    <input type="number" id="paramRotor" class="param-input" value="20" onchange="processDirectionalLogic()">
-                </div>
-                <div class="param-group">
-                    <label style="font-size:0.85rem; color:#ccc;">Ball Drop Skip (Deflector Bounce):</label>
-                    <input type="number" id="paramSkip" class="param-input" value="4" onchange="processDirectionalLogic()">
-                </div>
-            </div>
-
-            <textarea id="bulk" placeholder="Paste history window (Top is latest)..."></textarea>
-            <button onclick="importBulk()">Process Mechanical Window</button>
+            <textarea id="bulk" placeholder="Paste history here (Top is latest, e.g. 23, 10, 5, 24)..."></textarea>
+            <button onclick="importBulk()">Extract & Analyze Neighbors</button>
             
             <div class="recent-display-container">
                 <div class="recent-display-title">Latest 10 Results (Newest → Oldest)</div>
@@ -95,61 +65,51 @@
                     <span style="color:#666; font-size:0.85rem; font-style:italic;">No spins recorded yet</span>
                 </div>
             </div>
-            <button onclick="clearTracker()" style="background: var(--red); margin-top: 15px;">Reset Tracker Calibration</button>
+            <button onclick="clearTracker()" style="background: var(--red); margin-top: 15px;">Reset Data Streams</button>
         </div>
 
         <div class="panel">
-            <h3>Constant Air-Pressure Prediction</h3>
+            <h3>Dense Proximity Target Sector</h3>
             <div id="display" class="prediction-area">
-                <p>Awaiting baseline history data to engage mechanical alignment...</p>
+                <p>Awaiting data to collect spatial left/right distributions...</p>
             </div>
             
             <div id="logicPath" class="log-box">
-                Displacement tracking path calculations will compile here.
+                Proximity calculations and neighbor gathering paths will list here.
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Standard European Wheel Layout Matrix
     const WHEEL = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const REDS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
-    const MAX_ROLLING_HISTORY = 80; 
+    const MAX_ROLLING_HISTORY = 70; 
     const MAX_STREAKS = 10;         
 
     let history = []; 
     let streaks = []; 
     let lastPredictedSector = [];
-    let nextDirection = 'CW'; 
 
-    // Initialize UI Board Elements
+    // Build UI Input Board
     const board = document.getElementById('board');
     const rows = [[3,6,9,12,15,18,21,24,27,30,33,36],[2,5,8,11,14,17,20,23,26,29,32,35],[1,4,7,10,13,16,19,22,25,28,31,34]];
     rows.forEach(r => r.forEach(n => {
         board.innerHTML += `<div class="cell ${REDS.includes(n)?'nRed':'nBlack'}" onclick="inputResult(${n})">${n}</div>`;
     }));
 
-    function setNextDirection(dir) {
-        nextDirection = dir;
-        document.getElementById('btnCW').className = `dir-btn ${dir === 'CW' ? 'active-cw' : ''}`;
-        document.getElementById('btnCCW').className = `dir-btn ${dir === 'CCW' ? 'active-ccw' : ''}`;
-    }
-
-    function toggleDirection() {
-        setNextDirection(nextDirection === 'CW' ? 'CCW' : 'CW');
-    }
-
     function inputResult(n) {
-        let currentSpinDir = nextDirection;
         checkWinLoss(n);
+        history.unshift(n); 
         
-        history.unshift({ number: n, direction: currentSpinDir }); 
-        if (history.length > MAX_ROLLING_HISTORY) history.pop();
+        if (history.length > MAX_ROLLING_HISTORY) {
+            history.pop();
+        }
 
-        toggleDirection(); 
         updateRecentChipsDisplay();
-        processDirectionalLogic();
+        calculateProximityDensity();
     }
 
     function importBulk() {
@@ -158,28 +118,19 @@
         
         if (nums.length === 0) return;
 
-        let startingDirection = nextDirection;
-        let directionalPattern = [];
-        let tempDir = startingDirection;
-        for (let i = 0; i < nums.length; i++) {
-            directionalPattern.push(tempDir);
-            tempDir = (tempDir === 'CW') ? 'CCW' : 'CW';
-        }
-
+        // Process sequentially from bottom up (chronological oldest to newest)
         for (let i = nums.length - 1; i >= 0; i--) {
             const n = nums[i];
-            const dir = directionalPattern[i];
-            
             checkWinLoss(n);
-            history.unshift({ number: n, direction: dir });
-            if (history.length > MAX_ROLLING_HISTORY) history.pop();
+            history.unshift(n);
+            
+            if (history.length > MAX_ROLLING_HISTORY) {
+                history.pop();
+            }
         }
         
-        setNextDirection(directionalPattern[0]);
-        toggleDirection(); 
-
         updateRecentChipsDisplay();
-        processDirectionalLogic();
+        calculateProximityDensity();
         document.getElementById('bulk').value = '';
     }
 
@@ -191,6 +142,7 @@
         }
     }
 
+    // Helper to get 15 pocket window array
     function getSector(center) {
         let idx = WHEEL.indexOf(center);
         let sector = [];
@@ -200,39 +152,57 @@
         return sector;
     }
 
-    // --- RE-ENGINEERED CALIBRATION DISPLACEMENT LOGIC ---
-    function processDirectionalLogic() {
+    // --- NEW PURE PROXIMITY EXTRACTION CALCULATION ENGINE ---
+    function calculateProximityDensity() {
         if (history.length === 0) return;
 
-        let targetChannel = nextDirection; 
-        let channelHistory = history.filter(spin => spin.direction === targetChannel);
+        // Step 1: Collect immediate left and right neighbors for ALL instances in tracking memory
+        let collectedNeighborsPool = [];
 
-        // Fetch User Custom Physical Signatures From Controls
-        let userRotorSpeed = parseInt(document.getElementById('paramRotor').value) || 20;
-        let userBallSkip = parseInt(document.getElementById('paramSkip').value) || 4;
+        history.forEach(num => {
+            let wheelIdx = WHEEL.indexOf(num);
+            if (wheelIdx !== -1) {
+                let leftNeighbor = WHEEL[(wheelIdx - 1 + 37) % 37];
+                let rightNeighbor = WHEEL[(wheelIdx + 1) % 37];
+                
+                collectedNeighborsPool.push(leftNeighbor);
+                collectedNeighborsPool.push(rightNeighbor);
+            }
+        });
 
-        // Base Kinematics Equation for Displacement Calculation
-        // Clockwise and Counter-Clockwise alter how the friction skip applies relative to the passing pockets
-        let baselineDisplacement = (targetChannel === 'CW') ? (userRotorSpeed + userBallSkip) : (userRotorSpeed - userBallSkip);
-        
-        // Ensure standard mathematical safety wrapping over 37 pockets
-        baselineDisplacement = (baselineDisplacement + 37) % 37;
+        // Step 2: Scan the wheel to find the 15-number coverage area containing the most collected pool targets
+        let bestCenterNumber = WHEEL[0];
+        let maxClusterHits = -1;
+        let bestSectorBreakdown = [];
 
-        // Anchor processing to the newest recorded spin within this operational direction block
-        let referenceAnchorNum = history[0].number; 
-        if (channelHistory.length > 0) {
-            referenceAnchorNum = channelHistory[0].number;
-        }
+        WHEEL.forEach(candidateNum => {
+            let candidateSector = getSector(candidateNum);
+            let currentSectorHitsCount = 0;
+            let capturedInThisSector = [];
 
-        let anchorIdx = WHEEL.indexOf(referenceAnchorNum);
-        let targetCenterIdx = (anchorIdx + baselineDisplacement) % 37;
-        let predictedCenter = WHEEL[targetCenterIdx];
+            // Cross-check every item in our collected pool to evaluate structural crowding score
+            collectedNeighborsPool.forEach(poolNum => {
+                if (candidateSector.includes(poolNum)) {
+                    currentSectorHitsCount++;
+                    if (!capturedInThisSector.includes(poolNum)) {
+                        capturedInThisSector.push(poolNum);
+                    }
+                }
+            });
 
-        // Frame target zones (Center + 7 neighbors)
-        let finalPredictionSector = getSector(predictedCenter);
+            // Target selection looks for the highest density overlap score
+            if (currentSectorHitsCount > maxClusterHits) {
+                maxClusterHits = currentSectorHitsCount;
+                bestCenterNumber = candidateNum;
+                bestSectorBreakdown = capturedInThisSector;
+            }
+        });
+
+        // Step 3: Lock final prediction calculations
+        let finalPredictionSector = getSector(bestCenterNumber);
         lastPredictedSector = finalPredictionSector;
 
-        renderPhysicalTracker(referenceAnchorNum, targetChannel, predictedCenter, baselineDisplacement, userRotorSpeed, userBallSkip, finalPredictionSector);
+        renderProximityMetrics(history[0], bestCenterNumber, maxClusterHits, bestSectorBreakdown, finalPredictionSector);
     }
 
     function updateRecentChipsDisplay() {
@@ -244,30 +214,23 @@
 
         const latest10 = history.slice(0, 10);
         let htmlStr = "";
-        latest10.forEach(spin => {
+        latest10.forEach(num => {
             let bgColor = "var(--black)";
-            if (spin.number === 0) bgColor = "var(--green)";
-            else if (REDS.includes(spin.number)) bgColor = "var(--red)";
-            let dirColor = spin.direction === 'CW' ? 'color:var(--blue);' : 'color:var(--purple);';
-            
-            htmlStr += `
-                <span class="recent-chip" style="background:${bgColor};">
-                    <div>${spin.number}</div>
-                    <div class="dir-indicator" style="${dirColor}">${spin.direction}</div>
-                </span>`;
+            if (num === 0) bgColor = "var(--green)";
+            else if (REDS.includes(num)) bgColor = "var(--red)";
+            htmlStr += `<span class="recent-chip" style="background:${bgColor};">${num}</span>`;
         });
         wrapper.innerHTML = htmlStr;
     }
 
     function clearTracker() {
         history = []; streaks = []; lastPredictedSector = [];
-        setNextDirection('CW');
-        document.getElementById('display').innerHTML = `<p>Awaiting baseline history data to engage mechanical alignment...</p>`;
-        document.getElementById('logicPath').innerHTML = `Displacement tracking path calculations will compile here.`;
+        document.getElementById('display').innerHTML = `<p>Awaiting data to collect spatial left/right distributions...</p>`;
+        document.getElementById('logicPath').innerHTML = `Proximity calculations and neighbor gathering paths will list here.`;
         updateRecentChipsDisplay();
     }
 
-    function renderPhysicalTracker(anchor, channel, best, totalDisp, rot, skp, sector) {
+    function renderProximityMetrics(last, best, totalHits, hotSubGroup, sector) {
         const disp = document.getElementById('display');
         const path = document.getElementById('logicPath');
 
@@ -277,27 +240,24 @@
         });
         streakHtml += `</div>`;
 
-        let channelColor = channel === 'CW' ? 'var(--blue)' : 'var(--purple)';
-
         disp.innerHTML = `
             ${streakHtml}
-            <div style="font-size:0.85rem; color:${channelColor}; font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
-                AIR-PRESSURE TRACKING: CHILLING FOR [${channel}] ROUND
+            <div style="font-size:0.85rem; color:var(--teal); font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
+                NEIGHBOR CONCENTRATION BALANCED
             </div>
-            <div style="font-size:0.9rem; color:var(--gold)">PREDICTED LANDING CENTER</div>
+            <div style="font-size:0.9rem; color:var(--gold)">PREDICTED HIGHEST CLUSTER CENTER</div>
             <div class="target-num">${best}</div>
-            <div style="margin-bottom:10px">Rotor Delta: <strong>+${totalDisp} Pockets Shift</strong></div>
+            <div style="margin-bottom:10px">Cluster Overlap Load: <strong>${totalHits} Matches</strong></div>
             <div class="sector-list">${sector.join(' ')}</div>
         `;
 
         path.innerHTML = `
-            <strong>Structural Kinematic Diagnostics:</strong><br>
-            • Direction Reference Anchor: <b>${anchor}</b><br>
-            • Constant Air-Jet Time Parameter: ~25-26 Ball Rotations<br>
-            • Wheel Head Traveling Factor: <b>${rot} Pockets</b><br>
-            • Impact Deflector Deflection Factor: <b>${skp} Pockets Scatter</b><br>
-            • Net Mathematical Projection Target: Index position <b>+${totalDisp}</b> relative to previous launch channel state.<br>
-            • <b>Bet Coverage:</b> Sector centered at number <b>${best}</b>.
+            <strong>Proximity Overlap Trail:</strong><br>
+            • Latest Entry: <b>${last}</b><br>
+            • Processing Extraction: Evaluated immediate physical left/right slices across historical variables.<br>
+            • Proximity Cluster Discovery: The group <b>[${hotSubGroup.join(', ')}]</b> has formed a heavy spatial alignment loop.<br>
+            • Selection Choice: Sector <b>${best}</b> naturally covers the highest configuration density of these bunched numbers.<br>
+            • <b>Instruction:</b> Run ${best} with its 7 left and right wheel neighbors.
         `;
     }
 </script>
