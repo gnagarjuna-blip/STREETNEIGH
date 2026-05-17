@@ -3,76 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dealer Signature Strategy Engine</title>
+    <title>Enterprise Dealer Signature Strategy Engine</title>
     <style>
         :root { 
-            --bg: #0b0f19; 
-            --panel: #161e2d; 
-            --accent: #38bdf8; 
+            --bg: #090d16; 
+            --panel: #131a26; 
+            --accent: #0ea5e9; 
             --green: #10b981; 
             --red: #ef4444; 
             --black: #1e293b; 
-            --text: #f1f5f9; 
-            --gold: #fbbf24;
+            --text: #f8fafc; 
+            --gold: #f59e0b;
+            --purple: #a855f7;
         }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .dashboard { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 420px; gap: 20px; }
+        .dashboard { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 450px; gap: 20px; }
         
-        /* ROULETTE TABLE SECTIONS */
-        .table-section { background: #064e3b; padding: 20px; border-radius: 15px; border: 4px solid #065f46; position: relative; overflow-x: auto; }
+        /* THE ROULETTE BOARD INPUT GRID */
+        .table-section { background: #022c22; padding: 20px; border-radius: 15px; border: 4px solid #064e3b; position: relative; overflow-x: auto; }
         .roulette-board { display: flex; align-items: stretch; min-width: 800px; }
-        
         .zero-container { width: 70px; background: var(--green); border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; cursor: pointer; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 5px; }
-        
         .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; flex-grow: 1; }
-        .cell { height: 60px; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
+        .cell { height: 60px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
         .cell:hover { filter: brightness(1.3); border-color: white; }
         .cell:active { transform: scale(0.95); }
         .r { background: var(--red); }
         .b { background: var(--black); }
 
-        /* Panels */
-        .panel { background: var(--panel); border-radius: 12px; padding: 20px; border: 1px solid #2d3748; margin-bottom: 20px; }
-        .prediction-hero { text-align: center; background: #0f172a; border: 2px solid var(--accent); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        #target-display { font-size: 3.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; margin: 10px 0; }
+        /* Interface Layout UI Panels */
+        .panel { background: var(--panel); border-radius: 12px; padding: 25px; border: 1px solid #1e293b; margin-bottom: 20px; }
+        .prediction-hero { text-align: center; background: #020617; border: 2px solid var(--accent); padding: 25px; border-radius: 12px; margin-bottom: 20px; position: relative; }
+        #target-display { font-size: 4rem; font-weight: 900; color: var(--gold); line-height: 1; margin: 12px 0; text-shadow: 0 0 15px rgba(245,158,11,0.3); }
         
-        /* Neighbors Visualizer */
-        .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 15px 0; overflow-x: auto; padding: 5px 0; }
-        .nb-cell { width: 34px; height: 34px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); color: #fff; }
-        .nb-center { border: 2px solid var(--gold); transform: scale(1.15); box-shadow: 0 0 10px rgba(251,191,36,0.4); }
+        /* Sector Visualization Modules */
+        .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 15px 0; overflow-x: auto; padding: 8px 0; }
+        .nb-cell { width: 34px; height: 34px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+        .nb-center { border: 2px solid var(--gold); transform: scale(1.2); box-shadow: 0 0 15px rgba(245,158,11,0.5); z-index: 10; }
         
-        /* Direction Controls */
-        .direction-panel { display: flex; gap: 10px; margin-bottom: 15px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; justify-content: space-between; align-items: center;}
-        .dir-btn { flex: 1; padding: 10px; border: 1px solid #475569; background: #1e293b; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem;}
-        .dir-btn.active { background: var(--gold); color: #0b0f19; border-color: var(--gold); }
-        .next-indicator { font-size: 0.75rem; color: #94a3b8; font-weight: bold; text-transform: uppercase;}
+        /* Release Vector Navigation Panel */
+        .direction-panel { display: flex; gap: 10px; margin-bottom: 15px; background: #020617; padding: 12px; border-radius: 8px; border: 1px solid #1e293b; justify-content: space-between; align-items: center;}
+        .dir-btn { flex: 1; padding: 12px; border: 1px solid #334155; background: #0f172a; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; letter-spacing: 0.5px; transition: all 0.2s; }
+        .dir-btn.active { background: var(--gold); color: #020617; border-color: var(--gold); box-shadow: 0 0 10px rgba(245,158,11,0.2); }
+        .next-indicator { font-size: 0.75rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* Streak Badges */
+        /* Dynamic Engine Verdict Matrices */
+        .verdict-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent); text-align: left; }
+        .verdict-title { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; }
+        .verdict-value { font-size: 1rem; font-weight: 700; margin-top: 4px; line-height: 1.4; }
+
+        /* Performance Analytics Analytics Data Grids */
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
+        .metric-card { background: #0f172a; border: 1px solid #1e293b; padding: 12px; border-radius: 6px; }
+        .metric-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: bold; }
+        .metric-value { font-size: 1.25rem; font-weight: bold; margin-top: 2px; color: var(--text); }
+
+        /* Historical Logging Tables */
+        .log-wrap { height: 420px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #020617; border: 1px solid #1e293b; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #0f172a; padding: 14px; position: sticky; top: 0; text-align: center; color: #64748b; font-weight: bold; border-bottom: 1px solid #1e293b; }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid #0f172a; }
+
+        /* Interactive Element Configurations */
         .streak-container { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
         .streak-badge { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; }
-        .badge-win { background: var(--green); }
+        .badge-win { background: var(--green); box-shadow: 0 0 8px rgba(16,185,129,0.3); }
         .badge-loss { background: var(--red); }
-        .badge-empty { background: #334155; opacity: 0.4; }
+        .badge-empty { background: #1e293b; opacity: 0.3; }
 
-        /* Advice Block */
-        .verdict-box { background: #1e293b; padding: 12px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent); text-align: left; }
-        .verdict-title { font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: bold; }
-        .verdict-value { font-size: 1rem; font-weight: bold; margin-top: 2px; }
-
-        .log-wrap { height: 400px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0b0f19; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #1e293b; padding: 12px; position: sticky; top: 0; text-align: center; color: #94a3b8; }
-        td { padding: 10px; text-align: center; border-bottom: 1px solid #2d3748; }
-
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.9rem; }
-        .btn-primary { background: var(--accent); color: #0b0f19; }
-        .btn-danger { background: #7f1d1d; color: white; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.9rem; letter-spacing: 0.5px; transition: all 0.2s; }
+        .btn-primary { background: var(--accent); color: #020617; }
+        .btn-primary:hover { filter: brightness(1.1); }
+        .btn-danger { background: #451a03; color: #f97316; border: 1px solid #7c2d12; }
+        .btn-danger:hover { background: #7c2d12; color: #fff; }
         
-        .bulk-area { width: 100%; height: 70px; background: #0b0f19; color: var(--accent); border: 1px solid #475569; border-radius: 6px; padding: 10px; box-sizing: border-box; font-family: monospace; }
+        .bulk-area { width: 100%; height: 90px; background: #020617; color: var(--accent); border: 1px solid #334155; border-radius: 6px; padding: 12px; box-sizing: border-box; font-family: monospace; font-size: 12px; resize: none; }
         .trend-up { color: #4ade80; } 
         .trend-down { color: #f87171; }
-        .trend-stable { color: #e2e8f0; }
-        .warn-text { color: #f59e0b; font-size: 0.8rem; }
+        .trend-stable { color: #94a3b8; }
+        .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -80,7 +88,7 @@
 <div class="dashboard">
     <div>
         <div class="table-section">
-            <h2 style="margin:0 0 15px 0; font-size: 1rem; letter-spacing: 1px; opacity: 0.9;">LIVE REAL-TIME WHEEL DATA INPUT</h2>
+            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; letter-spacing: 1px; color: #cbd5e1;">REAL-TIME ROULETTE TRACKING MODULE</h2>
             <div class="roulette-board">
                 <div class="zero-container" onclick="track(0)">0</div>
                 <div class="numbers-grid" id="boardGrid"></div>
@@ -88,17 +96,17 @@
         </div>
 
         <div class="panel" style="margin-top: 20px;">
-            <h2 style="margin:0; font-size: 1rem; letter-spacing: 0.5px;">DEALER REPEATING PATTERNS & MOMENTUM LOG</h2>
+            <h2 style="margin:0; font-size: 0.9rem; letter-spacing: 0.5px; color: #cbd5e1;">DEALER RUNTIME RHYTHMS & VELOCITY DEVIATION RECORDS</h2>
             <div class="log-wrap">
                 <table>
                     <thead>
                         <tr>
-                            <th>Spin</th>
-                            <th>Result</th>
+                            <th>Spin #</th>
+                            <th>Value</th>
                             <th>Release Vector</th>
                             <th>Pocket Distance</th>
                             <th>Rhythm Momentum</th>
-                            <th>Sector Play Outcome</th>
+                            <th>Session Verdict</th>
                         </tr>
                     </thead>
                     <tbody id="logTable"></tbody>
@@ -117,44 +125,54 @@
         </div>
 
         <div class="prediction-hero">
-            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6; font-weight: bold;">SIGNATURE PREDICTED TARGET SECTOR (7+1+7)</div>
+            <div style="font-size: 0.75rem; letter-spacing: 1px; color: #94a3b8; font-weight: bold;">SIGNATURE PREDICTED TARGET SECTOR (7+1+7)</div>
             <div id="target-display">--</div>
             
             <div class="neighbors-box" id="neighbors-output"></div>
 
-            <div id="trend-text" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 8px;">COLLECTING DATA SECTOR</div>
-            <div id="sample-warning" class="warn-text">Need 3+ spins to evaluate trend curves.</div>
+            <div id="trend-text" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 4px;">ESTABLISHING BASELINE STRATEGY</div>
+            <div id="sample-warning" style="font-size:0.8rem; font-weight: 600; margin-bottom: 10px;">Awaiting entry...</div>
             
-            <div class="verdict-box">
-                <div class="verdict-title">STRATEGY ACTION & RISK SCALE</div>
-                <div id="strategy-verdict" class="verdict-value">Observing Dealer Rhythms...</div>
+            <div class="verdict-box" id="verdict-wrapper">
+                <div class="verdict-title" id="verdict-title-node">STRATEGY ACTION & RISK SCALE</div>
+                <div id="strategy-verdict" class="verdict-value">Tracking baseline parameters... Input numbers or batch paste data sets below.</div>
             </div>
 
-            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 15px; border-top: 1px solid #334155; padding-top: 8px; letter-spacing: 0.5px;">LAST 8 SIGNATURE TARGET TRACKER</div>
+            <div style="font-size: 0.7rem; color: #64748b; margin-top: 15px; border-top: 1px solid #1e293b; padding-top: 10px; letter-spacing: 0.5px; font-weight: bold;">LAST 8 SIGNATURE TARGET TRACKER</div>
             <div class="streak-container" id="streak-output"></div>
         </div>
 
         <div class="panel">
-            <h2 style="margin:0; font-size: 1rem; letter-spacing: 0.5px;">ADVANCED SIGNATURE ANALYTICS</h2>
-            <div style="margin: 15px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.95rem;">
-                    <span>Rolling Signature Range (Last 5):</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00 pock.</span>
+            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; letter-spacing: 0.5px; color: #cbd5e1;">BIG DATA ANALYTICS (FULL SESSION DATA MATRIX)</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Macro Base Average</div>
+                    <div class="metric-value" id="macro-avg" style="color: var(--purple);">0.00</div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.95rem;">
-                    <span>Total Session Samples:</span>
-                    <span id="count-val" style="font-weight: bold;">0 / 30+ recommended</span>
+                <div class="metric-card">
+                    <div class="metric-label">Micro Trend Average</div>
+                    <div class="metric-value" id="micro-avg" style="color: var(--accent);">0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Data Set Volume</div>
+                    <div class="metric-value" id="count-val">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Calculated Offset</div>
+                    <div class="metric-value" id="calculated-offset" style="color: var(--gold);">0</div>
                 </div>
             </div>
             
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste historical strings to isolate rhythms (e.g. 32, 15, 19, 4, 21)"></textarea>
-            <button class="btn btn-primary" onclick="importHistory()">IMPORT BIAS ANALYSIS DATA</button>
-            <button class="btn btn-danger" onclick="resetSession()">PURGE SESSION DATA</button>
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste historical strings to analyze large data sets. (e.g. 14, 22, 0, 32, 15, 19, 4, 21, 2, 25, 17)"></textarea>
+            <button class="btn btn-primary" onclick="importHistory()">PROCESS BATCH DATA SET</button>
+            <button class="btn btn-danger" onclick="resetSession()">PURGE ACTIVE DATA SET</button>
         </div>
     </div>
 </div>
 
 <script>
+    // Traditional European Ring Array Mapping Sequence
     const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     
@@ -237,7 +255,7 @@
         
         history.push(num);
 
-        // Auto-Alternate coming ball trajectory pathing
+        // Auto-Alternate ball launch paths
         currentDirection = currentDirection === 'CW' ? 'CCW' : 'CW';
         updateDirectionUI();
 
@@ -246,7 +264,8 @@
 
     function importHistory() {
         const raw = document.getElementById('bulkData').value;
-        const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        const nums = raw.split(/[\s,;\t\n]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        if(nums.length === 0) return alert("No valid numerical layout parsed. Re-check data formatting configuration.");
         nums.forEach(n => track(n));
         document.getElementById('bulkData').value = '';
     }
@@ -257,88 +276,109 @@
             return updateUI();
         }
 
-        // Window Isolation Analytics
+        // LARGE DATA SET CORE MATH IMPLEMENTATION
+        // Macro Average evaluates the entire historical sample depth to extract real physical signature baseline
+        const macroAvg = dists.reduce((a, b) => a + b, 0) / dists.length;
+        
+        // Micro Trend isolates the recent 5 samples to detect micro-variations or sudden dealer release adaptations
         const recentDists = dists.slice(-5);
-        const avg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
+        const microAvg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
         const lastD = dists[dists.length - 1];
         const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
 
-        let trend = "STABLE PATTERN";
-        let offset = 0;
-        let actionAdvice = "MOMENTUM BALANCED: Place standard neighborhood coverage.";
+        let trend = "STABLE DEVIATION";
+        let actionAdvice = "ESTABLISHING INTERMEDIARY CRITERIA: Awaiting high-capacity data processing.";
+        let riskColor = "var(--accent)";
 
-        // Logic Mapping based on Momentum Shifts & Confidence Boundaries
+        // Macro-to-Micro trend delta computation
+        // Determines how sharply the local momentum is tearing away from long term patterns
+        let rawDeltaOffset = microAvg - macroAvg;
+        let calculatedOffset = Math.round(rawDeltaOffset);
+
         if (lastD > prevD) {
-            trend = "RISING MOMENTUM ↑"; 
-            offset = 1; // Anticipate acceleration push out
-            actionAdvice = "TREND ACCELERATION DETECTED: Scaling up to high-tier target units near average zones.";
+            trend = "RISING MOMENTUM ↑";
         } else if (lastD < prevD) {
             trend = "DYING MOMENTUM ↓";
-            offset = -1; // Anticipate deceleration breakdown drop short
-            actionAdvice = "DEVIATION COMPRESSION: Velocity reduction observed. Play optimized inner-pocket values.";
+        } else {
+            trend = "STABLE MOMENTUM ↔";
         }
 
-        // Automation Risk Filter for Sample Depths 
-        if(history.length < 4) {
-            actionAdvice = "INSUFFICIENT STRATEGY MARGIN: Keep bets small. Accumulating pattern verification.";
-        } else if (history.length > 30) {
-            actionAdvice = `TRUE AVERAGE SECURED (${history.length} Spins): Strategy automation high precision accuracy enabled. Bet with confidence.`;
-        } else if (Math.abs(lastD - avg) > 12) {
-            actionAdvice = "VELOCITY TRAP / RHYTHM BREAK: Wild signature variance encountered. Minimize bets, wait for pattern confirmation.";
+        // DEEP ADVANCED RISK CRITERIA ANALYSIS FOR MULTI-DEALER LARGE SAMPLES
+        if (history.length < 5) {
+            actionAdvice = "COLLECTING RHYTHM BASELINE: Keep stakes zeroed out. Initial sample sizing building.";
+            riskColor = "#64748b";
+        } else if (history.length >= 5 && history.length < 30) {
+            actionAdvice = "INTERMEDIATE PATTERN CAPTURE: Small confirmation unit stakes suggested. Testing long-term macro trend line consistency.";
+            riskColor = var(--gold);
+        } else {
+            // High-capacity strategic execution matrix (>30 spins validated)
+            const sampleVariance = recentDists.map(x => Math.pow(x - microAvg, 2)).reduce((a, b) => a + b, 0) / recentDists.length;
+            
+            if (sampleVariance > 144) { // Variance exceeds 12 pockets deep
+                trend = "TRAP SECTOR DETECTED ⚠";
+                actionAdvice = "CRITICAL COHERENCE BREAKDOWN: Dealer rhythm variance is excessively unstable. Halt betting progression and wait for confirmation.";
+                riskColor = "var(--red)";
+            } else if (Math.abs(rawDeltaOffset) <= 2) {
+                actionAdvice = "MAX STABILITY (TOP METRIC BET): Local micro-rhythm matches all-time macro signature. Deploy primary sector weight allocations.";
+                riskColor = "var(--green)";
+            } else if (rawDeltaOffset > 2) {
+                actionAdvice = "ACCELERATING PATTERN DETECTED: Micro rhythm shifting forward. Tracking calculated target sector allocations.";
+                riskColor = "var(--accent)";
+            } else {
+                actionAdvice = "COMPRESSION/DECELERATION PATTERN: Pocket targeting falling short of baseline. System adjusting target profile inward.";
+                riskColor = "var(--purple)";
+            }
         }
 
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
-        
         let predIdx = 0;
-        let roundedAvgShift = Math.round(avg) + offset;
+        
+        // Core calculation locks prediction against the macro signature, modified dynamically by the micro offset vector
+        let finalSignatureShift = Math.round(macroAvg) + calculatedOffset;
         
         if (currentDirection === 'CW') {
-            predIdx = (lastIdx + roundedAvgShift + 37) % 37;
+            predIdx = (lastIdx + finalSignatureShift + 37) % 37;
         } else {
-            predIdx = (lastIdx - roundedAvgShift + 37) % 37;
+            predIdx = (lastIdx - finalSignatureShift + 37) % 37;
         }
 
         const targetCenter = wheelOrder[predIdx];
         const targetSector = get7Neighbors(targetCenter);
         predictedSectorsLog.push(targetSector);
 
-        updateUI(targetCenter, avg, trend, targetSector, actionAdvice);
+        updateUI(targetCenter, macroAvg, microAvg, trend, targetSector, actionAdvice, calculatedOffset, riskColor);
     }
 
-    function updateUI(prediction = "--", avg = 0, trend = "COLLECTING DATA SECTOR", targetSector = [], advice = "Observing Dealer Rhythms...") {
+    function updateUI(prediction = "--", macroAvg = 0, microAvg = 0, trend = "ESTABLISHING BASELINE STRATEGY", targetSector = [], advice = "", calculatedOffset = 0, riskColor = "var(--accent)") {
         document.getElementById('target-display').innerText = prediction;
-        document.getElementById('avg-val').innerText = `${avg.toFixed(2)} pockets`;
-        document.getElementById('count-val').innerText = `${history.length} spins`;
+        document.getElementById('macro-avg').innerText = `${macroAvg.toFixed(2)} pock.`;
+        document.getElementById('micro-avg').innerText = `${microAvg.toFixed(2)} pock.`;
+        document.getElementById('count-val').innerText = `${history.length} Spins`;
+        document.getElementById('calculated-offset').innerText = calculatedOffset > 0 ? `+${calculatedOffset}` : calculatedOffset;
         
         const trendEl = document.getElementById('trend-text');
         const warnEl = document.getElementById('sample-warning');
         const strategyEl = document.getElementById('strategy-verdict');
+        const wrapperEl = document.getElementById('verdict-wrapper');
         
         trendEl.innerText = trend;
         strategyEl.innerText = advice;
+        wrapperEl.style.borderLeftColor = riskColor;
 
-        if (trend.includes("↑")) {
-            trendEl.className = "trend-up";
-            strategyEl.style.color = "#4ade80";
-        } else if (trend.includes("↓")) {
-            trendEl.className = "trend-down";
-            strategyEl.style.color = "#f87171";
+        // Custom real-time feedback loops based on mathematical sample depth
+        if (history.length >= 30) {
+            warnEl.innerText = "BIG DATA DATASET ACTIVE: Statistical convergence automated.";
+            warnEl.style.color = "var(--green)";
+            trendEl.style.color = riskColor;
+        } else if (history.length >= 5) {
+            warnEl.innerText = `PRE-BASELINE RUNTIME: Sample build phase (${history.length}/30 spins).`;
+            warnEl.style.color = "var(--gold)";
+            trendEl.className = trend.includes("↑") ? "trend-up" : (trend.includes("↓") ? "trend-down" : "trend-stable");
         } else {
-            trendEl.className = "trend-stable";
-            strategyEl.style.color = "#fbbf24";
-        }
-
-        // Interactive Warnings Based on Volume
-        if(history.length >= 30) {
-            warnEl.innerText = "Target dataset verified. High stability profile automated.";
-            warnEl.style.color = "#10b981";
-        } else if(history.length >= 3) {
-            warnEl.innerText = "Intermediary signature tracking active. (Low data pool risk)";
-            warnEl.style.color = "#f59e0b";
-        } else {
-            warnEl.innerText = "Need 3+ spins to evaluate trend curves.";
-            warnEl.style.color = "#ef4444";
+            warnEl.innerText = "CRITICAL DEPTH MINIMUM: Tracking logic dormant until sample baseline met.";
+            warnEl.style.color = "var(--red)";
+            trendEl.style.color = "var(--text)";
         }
 
         const neighborsBox = document.getElementById('neighbors-output');
@@ -374,23 +414,25 @@
             const distance = dists[actualIdx - 1] ?? "-";
             const loggedDirection = spinDirections[actualIdx] || "-";
             
-            let status = "-";
+            let status = '<span class="status-badge" style="background:#334155; color:#94a3b8">STABLE baseline</span>';
             if (actualIdx > 1) {
-                status = dists[actualIdx-1] > dists[actualIdx-2] ? '<span class="trend-up">RHYTHM GAIN ↑</span>' : '<span class="trend-down">RHYTHM LOSS ↓</span>';
+                status = dists[actualIdx-1] > dists[actualIdx-2] 
+                    ? '<span class="status-badge" style="background:#064e3b; color:#4ade80">V-GAIN +</span>' 
+                    : '<span class="status-badge" style="background:#451a03; color:#f87171">V-DROP -</span>';
             }
             
-            let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
+            let outcomeVerdict = '<span style="opacity: 0.3;">-</span>';
             if (outcomesLog[actualIdx] !== null && outcomesLog[actualIdx] !== undefined) {
                 outcomeVerdict = outcomesLog[actualIdx] === 'W' 
-                    ? '<span class="trend-up" style="font-weight:bold;">SECTOR HIT (WIN)</span>' 
-                    : '<span class="trend-down">SECTOR MISS</span>';
+                    ? '<span class="trend-up" style="font-weight:900; letter-spacing:0.5px;">TARGET WIN HIT</span>' 
+                    : '<span class="trend-down" style="opacity:0.6;">MISS</span>';
             }
 
             tbody.innerHTML += `<tr>
-                <td>${actualIdx + 1}</td>
+                <td><b>#${actualIdx + 1}</b></td>
                 <td><b>${n}</b></td>
-                <td><span style="font-size:0.8rem; font-weight:bold; color:#94a3b8">${loggedDirection} Vector</span></td>
-                <td><b>${distance}</b> pock.</td>
+                <td><span style="font-size:0.8rem; font-weight:700; color:#cbd5e1">${loggedDirection} Vector</span></td>
+                <td><b>${distance}</b> pockets</td>
                 <td>${status}</td>
                 <td>${outcomeVerdict}</td>
             </tr>`;
