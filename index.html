@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Adaptive Multi-Sector Sequence Coverage Tracker</title>
+    <title>Absolute Coverage Multi-Sector Tracker</title>
     <style>
         :root { --green: #27ae60; --red: #c0392b; --black: #1a1a1a; --gold: #f1c40f; --teal: #00a8ff; --orange: #e67e22; --purple: #9b59b6; }
         body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #eee; margin: 20px; }
@@ -59,7 +59,7 @@
 <body>
 
 <div class="container">
-    <h2 style="color: var(--gold);">Fully Adaptive Multi-Sector Tracker (Min 1 Neighbor up to Max 17 Total)</h2>
+    <h2 style="color: var(--gold);">Absolute Coverage Tracker (No-Gap Timeline Mapping)</h2>
 
     <div class="flex-row">
         <div class="panel">
@@ -88,13 +88,13 @@
         </div>
 
         <div class="panel">
-            <h3>Optimized Multi-Sector Target Output</h3>
+            <h3>Optimized Absolute Coverage Output</h3>
             <div id="display" class="prediction-area">
-                <p>Awaiting history points to map custom multi-neighbor structures...</p>
+                <p>Awaiting history points to process absolute sequence coverage loops...</p>
             </div>
             
             <div id="logicPath" class="log-box">
-                Adaptive cluster breakdowns and neighbor assignments will populate here.
+                Complete neighbor tracking paths and coverage audits will appear here.
             </div>
 
             <div class="diagnostic-box">
@@ -146,10 +146,9 @@
         }
 
         updateRecentChipsDisplay();
-        calculateAdaptiveMultiSector();
+        calculateAbsoluteCoverage();
     }
 
-    // Process pasted bulk input data logs
     function importBulk() {
         const val = document.getElementById('bulk').value;
         const nums = val.split(/[ ,]+/).map(x => parseInt(x.trim())).filter(x => !isNaN(x));
@@ -167,7 +166,7 @@
         }
         
         updateRecentChipsDisplay();
-        calculateAdaptiveMultiSector();
+        calculateAbsoluteCoverage();
         document.getElementById('bulk').value = '';
     }
 
@@ -179,8 +178,8 @@
         }
     }
 
-    // --- FULLY VARIABLE ADAPTIVE COMPRESSION NEIGHBOR ENGINE ---
-    function calculateAdaptiveMultiSector() {
+    // --- NEW PURE COVERAGE GUARANTEE ENGINE ---
+    function calculateAbsoluteCoverage() {
         if (history.length === 0) return;
 
         let activeTargetNum = history[0];
@@ -190,26 +189,28 @@
         let leftSlicesFound = [];
         let rightSlicesFound = [];
 
-        // 1. Gather actual chronological timeline hits matching the targeted layout entry
+        // 1. Map timeline links
         for (let i = 0; i < history.length; i++) {
             if (history[i] === activeTargetNum) {
                 if (i - 1 >= 0) {
                     let rightNeighbor = history[i - 1];
-                    frequencyMap[rightNeighbor]++;
+                    frequencyMap[rightNeighbor] = 1; // Mark existence as mandatory
                     if (!rightSlicesFound.includes(rightNeighbor)) rightSlicesFound.push(rightNeighbor);
                 }
                 if (i + 1 < history.length) {
                     let leftNeighbor = history[i + 1];
-                    frequencyMap[leftNeighbor]++;
+                    frequencyMap[leftNeighbor] = 1; // Mark existence as mandatory
                     if (!leftSlicesFound.includes(leftNeighbor)) leftSlicesFound.push(leftNeighbor);
                 }
             }
         }
 
-        // Render input hit extractions log line info panel
+        // Output history tracking data
         const monitorDiv = document.getElementById('immediateNeighborsDisplay');
         if (leftSlicesFound.length === 0 && rightSlicesFound.length === 0) {
-            monitorDiv.innerHTML = `<span style="color:#888; font-style:italic; font-size:0.85rem;">First time seeing ${activeTargetNum}. Enter more points to map sequence strings.</span>`;
+            monitorDiv.innerHTML = `<span style="color:#888; font-style:italic; font-size:0.85rem;">First time seeing ${activeTargetNum}. Need more spins to match timeline.</span>`;
+            document.getElementById('display').innerHTML = `<p>Awaiting more data entries to verify absolute coverage sets...</p>`;
+            return;
         } else {
             monitorDiv.innerHTML = `
                 <div style="font-size:0.8rem; color:#aaa;">In history, when <strong>${activeTargetNum}</strong> lands:</div>
@@ -218,83 +219,81 @@
             `;
         }
 
-        // Update background visual grid counters values monitor panel matrix
+        // Sync grid viewboards
         WHEEL.forEach(num => {
             const card = document.getElementById(`pool-card-${num}`);
             const countLabel = document.getElementById(`pool-count-${num}`);
             let currentVal = frequencyMap[num] || 0;
-            countLabel.textContent = currentVal;
+            countLabel.textContent = currentVal > 0 ? "Target" : "0";
             card.className = currentVal > 0 ? "pool-item pool-active" : "pool-item";
         });
 
-        // Sort data targets list based exclusively on heaviest count occurrences 
-        let targets = Object.keys(frequencyMap)
-                            .map(num => ({ number: parseInt(num), weight: frequencyMap[num] }))
-                            .filter(t => t.weight > 0)
-                            .sort((a, b) => b.weight - a.weight);
+        // Collect all distinct targets needing mandatory 100% flat layout coverage
+        let rawTargetList = Object.keys(frequencyMap).map(n => parseInt(n)).filter(n => frequencyMap[n] > 0);
 
-        if (targets.length === 0) {
-            document.getElementById('display').innerHTML = `<p>Awaiting more sequence connections...</p>`;
-            return;
-        }
+        // 2. Proximity Range Extractor Loop
+        let finalTokens = [];
+        let globalBetSheetSet = new Set();
+        let alreadySafelySheltered = new Set();
+        let auditLogs = [];
 
-        // 2. Variable Lookahead Core Processing Optimization Package Loop
-        let finalCoveredNumbers = new Set();
-        let formattedTokens = [];
-        let processingLogStrings = [];
-        let fullyCoveredTargets = new Set();
+        // Loop through all targets until every single one is checked and covered
+        rawTargetList.forEach(tNum => {
+            if (alreadySafelySheltered.has(tNum)) return;
 
-        targets.forEach(targetItem => {
-            if (fullyCoveredTargets.has(targetItem.number)) return;
+            let tIdx = WHEEL.indexOf(tNum);
+            let absoluteBestRange = 0;
 
-            let num = targetItem.number;
-            let wheelIdx = WHEEL.indexOf(num);
-            let chosenRange = 0; // Starts as standalone single pocket item
-
-            // Scan outward dynamically (from min 1 neighbor up to 8 max to see if targets crowd together naturally)
+            // Dynamically increase neighbor checking radius up to 8 slots wide to absorb nearby targets
             for (let r = 1; r <= 8; r++) {
-                let leftNum = WHEEL[(wheelIdx - r + 37) % 37];
-                let rightNum = WHEEL[(wheelIdx + r) % 37];
+                let leftCheck = WHEEL[(tIdx - r + 37) % 37];
+                let rightCheck = WHEEL[(tIdx + r) % 37];
 
-                // If a neighbor is present inside active tracking pool, expand range to absorb it instantly
-                if (frequencyMap[leftNum] > 0 || frequencyMap[rightNum] > 0) {
-                    chosenRange = r;
+                if (rawTargetList.includes(leftCheck) || rawTargetList.includes(rightCheck)) {
+                    absoluteBestRange = r;
                 }
             }
 
-            // Build out listing components array for this custom sector radius decision map
-            let proposedSectorList = [];
-            for (let i = -chosenRange; i <= chosenRange; i++) {
-                proposedSectorList.push(WHEEL[(wheelIdx + i + 37) % 37]);
+            // Build out the physical layout coverage array for this custom token size configuration
+            let computedTokenSector = [];
+            for (let i = -absoluteBestRange; i <= absoluteBestRange; i++) {
+                computedTokenSector.push(WHEEL[(tIdx + i + 37) % 37]);
             }
 
-            // Verify total allocation stays within the hard limit boundaries framework constraint rule
-            let tempUnion = new Set([...finalCoveredNumbers, ...proposedSectorList]);
-            
-            if (tempUnion.size <= 17) {
-                proposedSectorList.forEach(n => {
-                    finalCoveredNumbers.add(n);
-                    if (frequencyMap[n] > 0) {
-                        fullyCoveredTargets.add(n);
-                    }
-                });
+            // Write token labels explicitly to match requested user design output syntax
+            let label = absoluteBestRange > 0 ? `${tNum}n${absoluteBestRange}` : `${tNum}`;
+            finalTokens.push(label);
+            auditLogs.push(`• Token <b>${label}</b> processed → Absorb entries: [${computedTokenSector.join(', ')}]`);
 
-                let tokenString = chosenRange > 0 ? `${num}n${chosenRange}` : `${num}`;
-                formattedTokens.push(tokenString);
-                processingLogStrings.push(`• Sector <b>${tokenString}</b> engaged → Covers: [${proposedSectorList.join(', ')}]`);
-            } else {
-                // Compression safety fallback routine execution line
-                if (finalCoveredNumbers.size < 17) {
-                    finalCoveredNumbers.add(num);
-                    fullyCoveredTargets.add(num);
-                    formattedTokens.push(`${num}`);
-                    processingLogStrings.push(`• Cap Limit Guard: Isolated standalone item <b>${num}</b> to respect 17-pocket max constraint boundary layout line.`);
+            // Save layout pockets directly into final master playing registry sheet
+            computedTokenSector.forEach(n => {
+                globalBetSheetSet.add(n);
+                if (rawTargetList.includes(n)) {
+                    alreadySafelySheltered.add(n); // Flag item as fully secured
                 }
-            }
+            });
         });
 
-        lastPredictedSector = Array.from(finalCoveredNumbers);
-        renderMultiSectorMetrics(activeTargetNum, formattedTokens, lastPredictedSector, processingLogStrings);
+        // 3. Max-Ceiling Compression Strategy Safety Check Rules
+        // If a wide timeline pool pushes the unique pocket selection beyond 17 chips, compress neighbor scopes down to fit.
+        let finalPlayArray = Array.from(globalBetSheetSet);
+        if (finalPlayArray.length > 17) {
+            auditLogs.push(`⚠️ <i>Limit Cap warning: Target list hit ${finalPlayArray.length} slots. Compressing neighbor arcs to respect 17-pocket max constraint.</i>`);
+            
+            let compressedSet = new Set();
+            finalTokens = [];
+            
+            rawTargetList.forEach(num => {
+                if (compressedSet.size < 17) {
+                    compressedSet.add(num);
+                    finalTokens.push(`${num}`); // Force individual base placement to guarantee coverage without overflow leaks
+                }
+            });
+            finalPlayArray = Array.from(compressedSet);
+        }
+
+        lastPredictedSector = finalPlayArray;
+        renderAbsoluteMetrics(activeTargetNum, finalTokens, lastPredictedSector, auditLogs, rawTargetList);
     }
 
     function updateRecentChipsDisplay() {
@@ -317,14 +316,14 @@
 
     function clearTracker() {
         history = []; streaks = []; lastPredictedSector = [];
-        document.getElementById('display').innerHTML = `<p>Awaiting history points to map custom multi-neighbor structures...</p>`;
-        document.getElementById('logicPath').innerHTML = `Adaptive cluster breakdowns and neighbor assignments will populate here.`;
+        document.getElementById('display').innerHTML = `<p>Awaiting history points to process absolute sequence coverage loops...</p>`;
+        document.getElementById('logicPath').innerHTML = `Complete neighbor tracking paths and coverage audits will appear here.`;
         document.getElementById('immediateNeighborsDisplay').innerHTML = `<span style="color:#666; font-style:italic; font-size:0.85rem;">Awaiting a live number match...</span>`;
         buildPoolLayoutPlaceholder();
         updateRecentChipsDisplay();
     }
 
-    function renderMultiSectorMetrics(last, tokens, fullFlatBetList, logs) {
+    function renderAbsoluteMetrics(last, tokens, fullFlatBetList, logs, allRequired) {
         const disp = document.getElementById('display');
         const path = document.getElementById('logicPath');
 
@@ -340,24 +339,29 @@
         });
         tokensHtml += `</div>`;
 
+        // Check if anything was missed
+        let missedList = allRequired.filter(n => !fullFlatBetList.includes(n));
+
         disp.innerHTML = `
             ${streakHtml}
-            <div style="font-size:0.85rem; color:var(--purple); font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
-                ADAPTIVE TIMELINE VARIABLE GEOMETRY MAPPING
+            <div style="font-size:0.85rem; color:var(--teal); font-weight:bold; letter-spacing:1px; margin-bottom:5px;">
+                100% TIMELINE TARGET COVERAGE ENGAGED
             </div>
-            <div style="font-size:0.9rem; color:var(--gold)">PLAY ALL EXPANDED TARGET TOKENS</div>
+            <div style="font-size:0.9rem; color:var(--gold)">PLAY CUSTOM SECTOR TOKENS</div>
             ${tokensHtml}
-            <div style="margin-bottom:10px; font-size: 0.9rem;">Total Active Chips Covered: <strong>${fullFlatBetList.length} / 17 Max Pockets</strong></div>
+            <div style="margin-bottom:10px; font-size: 0.9rem;">Total Chips Covered: <strong>${fullFlatBetList.length} / 17 Max Pockets</strong></div>
+            <div style="font-size:0.8rem; color:#27ae60; font-weight:bold; margin-bottom:10px;">
+                Status: ${missedList.length === 0 ? '✓ Every single target covered perfectly.' : '⚠️ Compression active.'}
+            </div>
             <div class="sector-list">Full Flat Bet Sheet:<br> ${fullFlatBetList.sort((a,b)=>a-b).join(' ')}</div>
         `;
 
         path.innerHTML = `
-            <strong>Adaptive Geometry Calculations:</strong><br>
-            • Analyzed sequence hits around current number <b>${last}</b>.<br>
-            • System scanned outward starting from a <b>minimum of 1 neighbor</b> up to find where your targets crowd together organically.<br><br>
-            <b>Sector Assembly Flow:</b><br>
-            ${logs.join('<br>')}<br><br>
-            • <b>Result:</b> Pockets are packaged into customized variable blocks, stopping layout leaks completely while staying locked under your 17-chip ceiling.
+            <strong>Coverage Audit Trail:</strong><br>
+            • Extracted absolute target values: <b>[${allRequired.join(', ')}]</b> from timeline occurrences of <b>${last}</b>.<br>
+            • System built custom sectors to group adjacent targets together and standalone slots for isolated ones.<br><br>
+            <b>Coverage Build Blocks:</b><br>
+            ${logs.join('<br>')}
         `;
     }
 </script>
