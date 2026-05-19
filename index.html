@@ -6,8 +6,8 @@
     <title>Enterprise Dealer Signature Strategy Engine</title>
     <style>
         :root { 
-            --bg: #090d16; 
-            --panel: #131a26; 
+            --bg: #11141a; 
+            --panel: #181d26; 
             --accent: #0ea5e9; 
             --green: #10b981; 
             --red: #ef4444; 
@@ -15,65 +15,71 @@
             --text: #f8fafc; 
             --gold: #f59e0b;
             --purple: #a855f7;
+            --card-sub: #12161f;
         }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .dashboard { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: 1fr 450px; gap: 20px; }
+        .dashboard { max-width: 1600px; margin: 0 auto; display: grid; grid-template-columns: 1fr 500px; gap: 20px; }
         
         /* THE ROULETTE BOARD INPUT GRID */
-        .table-section { background: #022c22; padding: 20px; border-radius: 15px; border: 4px solid #064e3b; position: relative; overflow-x: auto; }
-        .roulette-board { display: flex; align-items: stretch; min-width: 800px; }
-        .zero-container { width: 70px; background: var(--green); border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; cursor: pointer; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 5px; }
-        .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; flex-grow: 1; }
-        .cell { height: 60px; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
-        .cell:hover { filter: brightness(1.3); border-color: white; box-shadow: 0 0 8px rgba(255,255,255,0.2); }
+        .table-section { background: #0b1a14; padding: 20px; border-radius: 12px; border: 1px solid #142e23; position: relative; }
+        .roulette-board { display: flex; align-items: stretch; margin-bottom: 15px; }
+        .zero-container { width: 60px; background: var(--green); border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; cursor: pointer; border-top-left-radius: 8px; border-bottom-left-radius: 8px; margin-right: 4px; }
+        .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 4px; flex-grow: 1; }
+        .cell { height: 50px; border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 4px; }
+        .cell:hover { filter: brightness(1.3); border-color: white; }
         .cell:active { transform: scale(0.95); }
         .r { background: var(--red); color: white; }
-        .b { background: var(--black); color: white; }
+        .b { background: #262f3e; color: white; }
 
         /* Interface Layout UI Panels */
-        .panel { background: var(--panel); border-radius: 12px; padding: 25px; border: 1px solid #1e293b; margin-bottom: 20px; }
-        .prediction-hero { text-align: center; background: #020617; border: 2px solid var(--accent); padding: 25px; border-radius: 12px; margin-bottom: 20px; position: relative; }
-        #target-display { font-size: 4rem; font-weight: 900; color: var(--gold); line-height: 1; margin: 12px 0; text-shadow: 0 0 15px rgba(245,158,11,0.3); }
+        .panel { background: var(--panel); border-radius: 12px; padding: 20px; border: 1px solid #232a37; margin-bottom: 20px; }
         
-        /* Sector Visualization Modules */
+        /* Configuration Inputs Form Framework */
+        .config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.8rem; color: #94a3b8; font-weight: 500; }
+        .input-group input { background: #0b0f17; border: 1px solid #2d3748; color: #fff; padding: 10px; border-radius: 6px; font-size: 1rem; font-weight: bold; }
+        .input-group input:focus { border-color: var(--accent); outline: none; }
+
+        /* Monitor / Standby Header Box */
+        .status-hero-box { background: #0c0f16; border: 1px solid #232a37; padding: 30px 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; font-weight: bold; letter-spacing: 1px; }
+        .status-standby { color: #fff; font-size: 1.4rem; text-transform: uppercase; }
+        .status-sub { font-size: 0.9rem; color: #64748b; margin-top: 5px; font-weight: normal; }
+
+        /* Financial Ledger Blocks */
+        .bankroll-display-card { background: #12161f; border: 1px solid #222b3c; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 15px; }
+        .bankroll-label { font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; }
+        .bankroll-value { font-size: 2.2rem; font-weight: 900; color: #22c55e; margin-top: 5px; }
+
+        .fin-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; }
+        .fin-card { background: #12161f; border: 1px solid #222b3c; padding: 12px; border-radius: 8px; text-align: center; }
+        .fin-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; font-weight: bold; }
+        .fin-value { font-size: 1.3rem; font-weight: bold; margin-top: 4px; }
+        
+        .cost-card { background: #12161f; border: 1px solid #222b3c; padding: 15px; border-radius: 8px; text-align: center; }
+        .cost-value { font-size: 1.4rem; font-weight: 900; color: #38bdf8; margin-top: 2px; }
+
+        /* Layout Management Subcomponents */
         .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 15px 0; overflow-x: auto; padding: 8px 0; }
-        .nb-cell { width: 34px; height: 34px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
-        .nb-center { border: 2px solid var(--gold); transform: scale(1.2); box-shadow: 0 0 15px rgba(245,158,11,0.5); z-index: 10; }
+        .nb-cell { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; border: 1px solid rgba(255,255,255,0.15); color: #fff; }
+        .nb-center { border: 2px solid var(--gold); transform: scale(1.15); z-index: 10; }
 
-        /* Dynamic Engine Verdict Matrices */
-        .verdict-box { background: #0f172a; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid var(--accent); text-align: left; }
-        .verdict-title { font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; }
-        .verdict-value { font-size: 1rem; font-weight: 700; margin-top: 4px; line-height: 1.4; }
-
-        /* Performance Analytics Data Grids */
-        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px 0; }
-        .metric-card { background: #0f172a; border: 1px solid #1e293b; padding: 12px; border-radius: 6px; }
-        .metric-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: bold; }
-        .metric-value { font-size: 1.25rem; font-weight: bold; margin-top: 2px; color: var(--text); }
-
-        /* Historical Logging Tables */
-        .log-wrap { height: 420px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #020617; border: 1px solid #1e293b; }
+        .log-wrap { height: 300px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0c0f16; border: 1px solid #232a37; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #0f172a; padding: 14px; position: sticky; top: 0; text-align: center; color: #64748b; font-weight: bold; border-bottom: 1px solid #1e293b; }
-        td { padding: 12px; text-align: center; border-bottom: 1px solid #0f172a; }
+        th { background: #12161f; padding: 12px; position: sticky; top: 0; text-align: center; color: #94a3b8; font-weight: bold; border-bottom: 1px solid #232a37; }
+        td { padding: 10px; text-align: center; border-bottom: 1px solid #12161f; }
 
-        /* Interactive Element Configurations */
-        .streak-container { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-        .streak-badge { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; }
-        .badge-win { background: var(--green); box-shadow: 0 0 8px rgba(16,185,129,0.3); }
-        .badge-loss { background: var(--red); }
-        .badge-empty { background: #1e293b; opacity: 0.3; }
-
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.9rem; letter-spacing: 0.5px; transition: all 0.2s; }
-        .btn-primary { background: var(--accent); color: #020617; }
-        .btn-primary:hover { filter: brightness(1.1); }
-        .btn-danger { background: #451a03; color: #f97316; border: 1px solid #7c2d12; }
-        .btn-danger:hover { background: #7c2d12; color: #fff; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 0.95rem; letter-spacing: 0.5px; transition: all 0.2s; text-transform: uppercase; }
+        .btn-primary { background: #0ea5e9; color: #fff; }
+        .btn-primary:hover { background: #0284c7; }
+        .btn-secondary { background: #38bdf8; color: #0f172a; }
+        .btn-secondary:hover { background: #0ea5e9; }
+        .btn-purple { background: #a855f7; color: #fff; }
+        .btn-purple:hover { background: #9333ea; }
+        .btn-gray { background: #475569; color: #fff; }
+        .btn-gray:hover { background: #334155; }
         
-        .bulk-area { width: 100%; height: 90px; background: #020617; color: var(--accent); border: 1px solid #334155; border-radius: 6px; padding: 12px; box-sizing: border-box; font-family: monospace; font-size: 12px; resize: none; }
-        .trend-up { color: #4ade80; } 
-        .trend-down { color: #f87171; }
-        .trend-stable { color: #94a3b8; }
+        .bulk-area { width: 100%; height: 80px; background: #0c0f16; color: var(--accent); border: 1px solid #334155; border-radius: 6px; padding: 12px; box-sizing: border-box; font-family: monospace; font-size: 13px; resize: none; margin-top: 10px; }
         .status-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
     </style>
 </head>
@@ -81,12 +87,41 @@
 
 <div class="dashboard">
     <div>
+        <div class="panel">
+            <h2 style="margin:0 0 15px 0; font-size: 1.1rem; letter-spacing: 0.5px; color: #e2e8f0;">Session & Bankroll Configuration</h2>
+            
+            <div class="config-grid">
+                <div class="input-group">
+                    <label>Starting Bankroll ($)</label>
+                    <input type="number" id="startBankroll" value="1000" min="1">
+                </div>
+                <div class="input-group">
+                    <label>Base Unit Size ($)</label>
+                    <input type="number" id="baseUnit" value="1" min="1">
+                </div>
+                <div class="input-group">
+                    <label>On Loss Increase (Units)</label>
+                    <input type="number" id="lossIncrease" value="1" min="0">
+                </div>
+                <div class="input-group">
+                    <label>On Win Decrease (Units)</label>
+                    <input type="number" id="winDecrease" value="2" min="0">
+                </div>
+            </div>
+            
+            <button class="btn btn-gray" onclick="resetMetricsAndBankroll()">Reset Metrics & Bankroll</button>
+        </div>
+
         <div class="table-section">
-            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; letter-spacing: 1px; color: #cbd5e1;">REAL-TIME EUROPEAN ROULETTE TRACKING MODULE</h2>
+            <h2 style="margin:0 0 15px 0; font-size: 1rem; color: #cbd5e1; font-weight: bold;">Input History (Top = Latest / Click to enter Live)</h2>
             <div class="roulette-board">
                 <div class="zero-container" onclick="track(0)">0</div>
                 <div class="numbers-grid" id="boardGrid"></div>
             </div>
+            
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste numbers here (Top is newest, Bottom is oldest)..."></textarea>
+            <button class="btn btn-secondary" onclick="importHistory()">Initialize with Data (As Block)</button>
+            <button class="btn btn-purple" onclick="runFinancialSimulation()">Run Financial Simulation</button>
         </div>
 
         <div class="panel" style="margin-top: 20px;">
@@ -109,62 +144,78 @@
     </div>
 
     <div>
-        <div class="prediction-hero" style="margin-top: 0;">
-            <div style="font-size: 0.75rem; letter-spacing: 1px; color: #94a3b8; font-weight: bold;">SIGNATURE PREDICTED TARGET SECTOR (7+1+7)</div>
-            <div id="target-display">--</div>
+        <div class="status-hero-box">
+            <div id="status-title" class="status-standby">STANDBY</div>
+            <div id="status-desc" class="status-sub">Awaiting Data Analysis...</div>
             
+            <div style="margin-top: 15px; font-size: 0.8rem; color: #94a3b8;">TARGET SECTOR WHEEL MATRIX</div>
             <div class="neighbors-box" id="neighbors-output"></div>
-
-            <div id="trend-text" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 4px;">ESTABLISHING BASELINE STRATEGY</div>
-            <div id="sample-warning" style="font-size:0.8rem; font-weight: 600; margin-bottom: 10px;">Awaiting entry...</div>
-            
-            <div class="verdict-box" id="verdict-wrapper">
-                <div class="verdict-title" id="verdict-title-node">STRATEGY ACTION & RISK SCALE</div>
-                <div id="strategy-verdict" class="verdict-value">Tracking baseline parameters... Input numbers or batch paste data sets below.</div>
-            </div>
-
-            <div style="font-size: 0.7rem; color: #64748b; margin-top: 15px; border-top: 1px solid #1e293b; padding-top: 10px; letter-spacing: 0.5px; font-weight: bold;">LAST 8 SIGNATURE TARGET TRACKER</div>
-            <div class="streak-container" id="streak-output"></div>
         </div>
 
         <div class="panel">
-            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; letter-spacing: 0.5px; color: #cbd5e1;">BIG DATA ANALYTICS (FULL SESSION DATA MATRIX)</h2>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-label">Macro Base Average</div>
-                    <div class="metric-value" id="macro-avg" style="color: var(--purple);">0.00</div>
+            <div class="bankroll-display-card">
+                <div class="bankroll-label">Current Bankroll Balance</div>
+                <div class="bankroll-value" id="currBankrollDisplay">$1,000.00</div>
+            </div>
+
+            <div class="fin-stats-grid">
+                <div class="fin-card">
+                    <div class="fin-label">Max Peak Revenue</div>
+                    <div class="fin-value" id="maxPeakDisplay" style="color: #10b981;">$0.00</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Micro Trend Average</div>
-                    <div class="metric-value" id="micro-avg" style="color: var(--accent);">0.00</div>
+                <div class="fin-card">
+                    <div class="fin-label">Max Drawdown</div>
+                    <div class="fin-value" id="maxDrawdownDisplay" style="color: #ef4444;">$0.00</div>
                 </div>
-                <div class="metric-card">
-                    <div class="metric-label">Data Set Volume</div>
-                    <div class="metric-value" id="count-val">0</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-label">Calculated Offset</div>
-                    <div class="metric-value" id="calculated-offset" style="color: var(--gold);">0</div>
+                <div class="fin-stats-grid" style="grid-column: span 2; margin-bottom: 0; gap: 12px;">
+                    <div class="fin-card">
+                        <div class="fin-label">Max Win Streak</div>
+                        <div class="fin-value" id="maxWinStreakDisplay" style="color: #f59e0b;">0</div>
+                    </div>
+                    <div class="fin-card">
+                        <div class="fin-label">Max Loss Streak</div>
+                        <div class="fin-value" id="maxLossStreakDisplay" style="color: #f59e0b;">0</div>
+                    </div>
                 </div>
             </div>
-            
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste history (Top line is latest, e.g.&#10;32&#10;15&#10;19&#10;4)"></textarea>
-            <button class="btn btn-primary" onclick="importHistory()">PROCESS BATCH DATA SET</button>
-            <button class="btn btn-danger" onclick="resetSession()">PURGE ACTIVE DATA SET</button>
+
+            <div class="cost-card">
+                <div class="fin-label">Next Bet Cost (15 Numbers)</div>
+                <div class="cost-value" id="nextBetCostDisplay">0 Units</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2 style="margin:0 0 15px 0; font-size: 0.9rem; color: #cbd5e1; text-transform: uppercase;">Engine Parameter Offsets</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.85rem;">
+                <div style="background:#12161f; padding: 10px; border-radius: 4px;">Macro Avg: <span id="macro-avg" style="font-weight:bold; color:var(--purple);">0.00</span></div>
+                <div style="background:#12161f; padding: 10px; border-radius: 4px;">Micro Avg: <span id="micro-avg" style="font-weight:bold; color:var(--accent);">0.00</span></div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Traditional European Ring Array Mapping Sequence
     const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     
+    // Core Engine Vectors
     let history = [];
     let dists = [];
     let predictedSectorsLog = []; 
     let outcomesLog = []; 
+
+    // Simulation Bankroll Ledger Parameters
+    let runningBankroll = 1000;
+    let maxPeakRevenue = 0;
+    let maxDrawdown = 0;
+    let peakBankroll = 1000;
+    let currentUnitsSize = 1;
+    
+    let currentWinStreak = 0;
+    let currentLossStreak = 0;
+    let maxWinStreak = 0;
+    let maxLossStreak = 0;
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
@@ -186,7 +237,7 @@
         });
     }
 
-    function get7Neighbors(centerNumber) {
+    function get15SectorNeighbors(centerNumber) {
         if(centerNumber === null || centerNumber === undefined) return [];
         let idx = wheelOrder.indexOf(centerNumber);
         let sector = [];
@@ -198,164 +249,147 @@
     }
 
     function track(num) {
-        let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[predictedSectorsLog.length - 1] : [];
+        const baseUnitValue = parseFloat(document.getElementById('baseUnit').value) || 1;
+        const lossInc = parseInt(document.getElementById('lossIncrease').value) || 0;
+        const winDec = parseInt(document.getElementById('winDecrease').value) || 0;
 
-        if (currentActivePredictionSector.length > 0) {
-            if (currentActivePredictionSector.includes(num)) {
+        let activePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[predictedSectorsLog.length - 1] : [];
+
+        if (activePredictionSector.length > 0) {
+            const betCostThisSpin = currentUnitsSize * baseUnitValue * 15;
+            runningBankroll -= betCostThisSpin;
+
+            if (activePredictionSector.includes(num)) {
                 outcomesLog.push("W");
+                const payout = currentUnitsSize * baseUnitValue * 36;
+                runningBankroll += payout;
+
+                // Track Streaks
+                currentWinStreak++;
+                currentLossStreak = 0;
+                if(currentWinStreak > maxWinStreak) maxWinStreak = currentWinStreak;
+
+                // Adjust progression units size
+                currentUnitsSize = Math.max(1, currentUnitsSize - winDec);
             } else {
                 outcomesLog.push("L");
+                
+                // Track Streaks
+                currentLossStreak++;
+                currentWinStreak = 0;
+                if(currentLossStreak > maxLossStreak) maxLossStreak = currentLossStreak;
+
+                // Adjust progression units size
+                currentUnitsSize += lossInc;
             }
         } else {
             outcomesLog.push(null); 
         }
 
+        // Maintain Peaks and Drawdowns
+        if (runningBankroll > peakBankroll) {
+            peakBankroll = runningBankroll;
+        }
+        const calculatedRevenue = runningBankroll - parseFloat(document.getElementById('startBankroll').value);
+        if (calculatedRevenue > maxPeakRevenue) maxPeakRevenue = calculatedRevenue;
+
+        const currentDrawdown = peakBankroll - runningBankroll;
+        if (currentDrawdown > maxDrawdown) maxDrawdown = currentDrawdown;
+
         if (history.length > 0) {
             const lastNum = history[history.length - 1];
-            const idxCurrent = wheelOrder.indexOf(num);
-            const idxLast = wheelOrder.indexOf(lastNum);
-            
-            // Absolute uniform linear array parsing
-            let travel = (idxCurrent - idxLast + 37) % 37;
+            let travel = (wheelOrder.indexOf(num) - wheelOrder.indexOf(lastNum) + 37) % 37;
             dists.push(travel);
         }
         
         history.push(num);
-        process();
+        processEngineCalculations();
     }
 
     function importHistory() {
         const raw = document.getElementById('bulkData').value;
         let nums = raw.split(/[\s,;\t\n]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        if(nums.length === 0) return alert("No valid numerical layout parsed.");
+        if(nums.length === 0) return alert("No valid sequence parsed.");
         
-        // Keeps chronological ordering clean when top line of string source is latest
-        nums.reverse();
-        
+        nums.reverse(); // Standardizes layout translation rules
         nums.forEach(n => track(n));
         document.getElementById('bulkData').value = '';
     }
 
-    function process() {
+    function runFinancialSimulation() {
+        const raw = document.getElementById('bulkData').value;
+        let nums = raw.split(/[\s,;\t\n]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
+        if(nums.length === 0) return alert("Provide historic values in the context viewport to calculate simulation.");
+        
+        resetMetricsAndBankroll();
+        nums.reverse();
+        nums.forEach(n => track(n));
+    }
+
+    function processEngineCalculations() {
         if (history.length < 2) {
             predictedSectorsLog.push([]);
             return updateUI();
         }
 
-        // BIG DATA MATHEMATICAL ALLOCATIONS
         const macroAvg = dists.reduce((a, b) => a + b, 0) / dists.length;
         const recentDists = dists.slice(-5);
         const microAvg = recentDists.reduce((a, b) => a + b, 0) / recentDists.length;
         
-        const lastD = dists[dists.length - 1];
-        const prevD = dists.length > 1 ? dists[dists.length - 2] : lastD;
-
-        let trend = "STABLE DEVIATION";
-        let actionAdvice = "ESTABLISHING BASELINE: Awaiting higher capacity dataset arrays.";
-        let riskColor = "var(--accent)";
-
         let rawDeltaOffset = microAvg - macroAvg;
         let calculatedOffset = Math.round(rawDeltaOffset);
-
-        if (lastD > prevD) {
-            trend = "RISING MOMENTUM ↑";
-        } else if (lastD < prevD) {
-            trend = "DYING MOMENTUM ↓";
-        } else {
-            trend = "STABLE MOMENTUM ↔";
-        }
-
-        if (history.length < 5) {
-            actionAdvice = "COLLECTING RHYTHM BASELINE: Keep stakes zeroed out. Initial sample sizing building.";
-            riskColor = "#64748b";
-        } else if (history.length >= 5 && history.length < 30) {
-            actionAdvice = "INTERMEDIATE PATTERN CAPTURE: Small confirmation stakes suggested. Validating trend stability.";
-            riskColor = "var(--gold)";
-        } else {
-            const sampleVariance = recentDists.map(x => Math.pow(x - microAvg, 2)).reduce((a, b) => a + b, 0) / recentDists.length;
-            
-            if (sampleVariance > 144) { 
-                trend = "TRAP SECTOR DETECTED ⚠";
-                actionAdvice = "CRITICAL COHERENCE BREAKDOWN: Excessively high variance. Halt progression models immediately.";
-                riskColor = "var(--red)";
-            } else if (Math.abs(rawDeltaOffset) <= 2) {
-                actionAdvice = "MAX STABILITY (TOP METRIC BET): Micro rhythm matches macro physical signatures. Deploy maximum target units.";
-                riskColor = "var(--green)";
-            } else if (rawDeltaOffset > 2) {
-                actionAdvice = "ACCELERATING PATTERN DETECTED: Rhythm pushing outward. Betting rising average values.";
-                riskColor = "var(--accent)";
-            } else {
-                actionAdvice = "COMPRESSION PATTERN: Pocket distances falling short. Adjusting allocation matrix downward.";
-                riskColor = "var(--purple)";
-            }
-        }
 
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
         let finalSignatureShift = Math.round(macroAvg) + calculatedOffset;
         let predIdx = (lastIdx + finalSignatureShift + 37) % 37;
 
         const targetCenter = wheelOrder[predIdx];
-        const targetSector = get7Neighbors(targetCenter);
+        const targetSector = get15SectorNeighbors(targetCenter);
         predictedSectorsLog.push(targetSector);
 
-        updateUI(targetCenter, macroAvg, microAvg, trend, targetSector, actionAdvice, calculatedOffset, riskColor);
+        updateUI(targetCenter, macroAvg, microAvg, targetSector);
     }
 
-    function updateUI(prediction = "--", macroAvg = 0, microAvg = 0, trend = "ESTABLISHING BASELINE STRATEGY", targetSector = [], advice = "", calculatedOffset = 0, riskColor = "var(--accent)") {
-        document.getElementById('target-display').innerText = prediction;
-        document.getElementById('macro-avg').innerText = `${macroAvg.toFixed(2)} pock.`;
-        document.getElementById('micro-avg').innerText = `${microAvg.toFixed(2)} pock.`;
-        document.getElementById('count-val').innerText = `${history.length} Spins`;
-        document.getElementById('calculated-offset').innerText = calculatedOffset > 0 ? `+${calculatedOffset}` : calculatedOffset;
+    function updateUI(prediction = "--", macroAvg = 0, microAvg = 0, targetSector = []) {
+        // Status Messaging Box Engines
+        const statusTitle = document.getElementById('status-title');
+        const statusDesc = document.getElementById('status-desc');
         
-        const trendEl = document.getElementById('trend-text');
-        const warnEl = document.getElementById('sample-warning');
-        const strategyEl = document.getElementById('strategy-verdict');
-        const wrapperEl = document.getElementById('verdict-wrapper');
-        
-        trendEl.innerText = trend;
-        strategyEl.innerText = advice;
-        wrapperEl.style.borderLeftColor = riskColor;
-
-        if (history.length >= 30) {
-            warnEl.innerText = "BIG DATA DATASET ACTIVE: Statistical convergence automated.";
-            warnEl.style.color = "var(--green)";
-            trendEl.style.color = riskColor;
-        } else if (history.length >= 5) {
-            warnEl.innerText = `PRE-BASELINE RUNTIME: Sample build phase (${history.length}/30 spins).`;
-            warnEl.style.color = "var(--gold)";
-            trendEl.className = trend.includes("↑") ? "trend-up" : (trend.includes("↓") ? "trend-down" : "trend-stable");
+        if(history.length === 0) {
+            statusTitle.innerText = "STANDBY";
+            statusTitle.style.color = "#fff";
+            statusDesc.innerText = "Awaiting Data Analysis...";
         } else {
-            warnEl.innerText = "CRITICAL DEPTH MINIMUM: Tracking logic dormant until sample baseline met.";
-            warnEl.style.color = "var(--red)";
-            trendEl.style.color = "var(--text)";
+            statusTitle.innerText = `SIGNAL HIT: ${prediction}`;
+            statusTitle.style.color = "var(--green)";
+            statusDesc.innerText = `Active Signature Array Center Target mapped to pocket [${prediction}]`;
         }
 
+        // Metrics Engine Output Mappings
+        document.getElementById('macro-avg').innerText = macroAvg.toFixed(2);
+        document.getElementById('micro-avg').innerText = microAvg.toFixed(2);
+        
+        // Ledger Display Hooks
+        document.getElementById('currBankrollDisplay').innerText = `$${runningBankroll.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('maxPeakDisplay').innerText = `$${maxPeakRevenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('maxDrawdownDisplay').innerText = `$${maxDrawdown.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        
+        document.getElementById('maxWinStreakDisplay').innerText = maxWinStreak;
+        document.getElementById('maxLossStreakDisplay').innerText = maxLossStreak;
+        document.getElementById('nextBetCostDisplay').innerText = `${currentUnitsSize} Units`;
+
+        // Sector Matrix Grid Rendering Pipeline
         const neighborsBox = document.getElementById('neighbors-output');
         neighborsBox.innerHTML = '';
         if (targetSector.length > 0) {
             targetSector.forEach((num, index) => {
-                const colorClass = num === 0 ? 'var(--green)' : (reds.includes(num) ? 'var(--red)' : 'var(--black)');
+                const colorClass = num === 0 ? 'var(--green)' : (reds.includes(num) ? 'var(--red)' : '#262f3e');
                 const isCenter = index === 7 ? 'nb-center' : '';
                 neighborsBox.innerHTML += `<div class="nb-cell ${isCenter}" style="background: ${colorClass};">${num}</div>`;
             });
         }
 
-        const streakBox = document.getElementById('streak-output');
-        streakBox.innerHTML = '';
-        const validOutcomes = outcomesLog.filter(o => o !== null);
-        const lastEight = validOutcomes.slice(-8);
-        
-        for (let i = 0; i < 8; i++) {
-            if (i < lastEight.length) {
-                const outcome = lastEight[i];
-                const badgeClass = outcome === 'W' ? 'badge-win' : 'badge-loss';
-                streakBox.innerHTML += `<div class="streak-badge ${badgeClass}">${outcome}</div>`;
-            } else {
-                streakBox.innerHTML += `<div class="streak-badge badge-empty">-</div>`;
-            }
-        }
-
+        // System Diagnostic Tables
         const tbody = document.getElementById('logTable');
         tbody.innerHTML = '';
         
@@ -363,7 +397,7 @@
             const actualIdx = history.length - 1 - i;
             const distance = dists[actualIdx - 1] ?? "-";
             
-            let status = '<span class="status-badge" style="background:#334155; color:#94a3b8">STABLE baseline</span>';
+            let status = '<span class="status-badge" style="background:#334155; color:#94a3b8">BASELINE</span>';
             if (actualIdx > 1) {
                 status = dists[actualIdx-1] > dists[actualIdx-2] 
                     ? '<span class="status-badge" style="background:#064e3b; color:#4ade80">V-GAIN +</span>' 
@@ -373,8 +407,8 @@
             let outcomeVerdict = '<span style="opacity: 0.3;">-</span>';
             if (outcomesLog[actualIdx] !== null && outcomesLog[actualIdx] !== undefined) {
                 outcomeVerdict = outcomesLog[actualIdx] === 'W' 
-                    ? '<span class="trend-up" style="font-weight:900; letter-spacing:0.5px;">TARGET WIN HIT</span>' 
-                    : '<span class="trend-down" style="opacity:0.6;">MISS</span>';
+                    ? '<span style="color:#4ade80; font-weight:900;">WIN HIT</span>' 
+                    : '<span style="color:#ef4444; opacity:0.6;">MISS</span>';
             }
 
             tbody.innerHTML += `<tr>
@@ -387,11 +421,21 @@
         });
     }
 
-    function resetSession() {
+    function resetMetricsAndBankroll() {
+        const startValue = parseFloat(document.getElementById('startBankroll').value) || 1000;
         history = []; 
         dists = [];
         predictedSectorsLog = [];
         outcomesLog = [];
+        runningBankroll = startValue;
+        maxPeakRevenue = 0;
+        maxDrawdown = 0;
+        peakBankroll = startValue;
+        currentUnitsSize = 1;
+        currentWinStreak = 0;
+        currentLossStreak = 0;
+        maxWinStreak = 0;
+        maxLossStreak = 0;
         updateUI();
     }
 
