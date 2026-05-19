@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual Progression Roulette Strategy Tracker</title>
+    <title>Target-Specific Roulette Strategy Tracker</title>
     <style>
         body {
             background-color: #064e26;
@@ -104,19 +104,24 @@
             position: relative;
             user-select: none;
         }
+        .cell:hover {
+            opacity: 0.8;
+            background-color: #ffd700;
+            color: black;
+        }
         .red { background-color: #d32f2f; }
         .black { background-color: #1a1a1a; }
 
         /* Absolute Placed Chips Overlay */
         .chip {
             position: absolute;
-            width: 26px;
-            height: 26px;
+            width: 32px;
+            height: 32px;
             background: #0d47a1;
             border: 2px dashed #fff;
             border-radius: 50%;
             color: white;
-            font-size: 9px;
+            font-size: 11px;
             font-weight: bold;
             display: flex;
             align-items: center;
@@ -136,47 +141,13 @@
         #chip-high-split  { left: calc(65px + (10 * 65px)); top: 135px; }       /* Grid line between 28 & 31 */
         #chip-high-street { left: calc(65px + (7 * 65px)); top: 165px; }        /* Bottom line of 19 (Street 19,20,21) */
 
-        /* Engine Controls Layout */
-        .action-bar {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            background: #111;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            border: 1px solid #333;
-        }
-        .action-bar label {
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .action-bar input {
-            width: 90px;
-            padding: 10px;
-            font-size: 20px;
+        /* Instruction text styling */
+        .instruction-note {
             text-align: center;
-            border-radius: 4px;
-            border: 2px solid #00ff66;
-            background: #000;
-            color: #00ff66;
+            font-size: 14px;
+            color: #ffd700;
+            margin-bottom: 15px;
             font-weight: bold;
-        }
-        .action-bar button {
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            background: #00ff66;
-            color: #000;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-        .action-bar button:hover {
-            background: #00cc52;
         }
 
         /* Display panels split */
@@ -215,7 +186,7 @@
             background: #000;
             padding: 15px;
             border-radius: 6px;
-            height: 140px;
+            height: 160px;
             overflow-y: auto;
             font-family: monospace;
             font-size: 13px;
@@ -223,8 +194,8 @@
             border: 1px solid #222;
         }
         .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #222; padding-bottom: 4px;}
-        .log-win-low { color: #2196f3; }
-        .log-win-high { color: #00ff66; }
+        .log-win-low { color: #2196f3; font-weight: bold; }
+        .log-win-high { color: #00ff66; font-weight: bold; }
         .log-loss-both { color: #ff9800; font-weight: bold; }
     </style>
 </head>
@@ -232,6 +203,7 @@
 
 <div class="container">
     <h2>Dual Dynamic Roulette Strategy Engine</h2>
+    <div class="instruction-note">⚡ Click directly on any number on the board below to instantly run the spin!</div>
 
     <div class="dashboard">
         <div class="dash-item">
@@ -239,7 +211,7 @@
             <input type="number" id="balanceInput" value="1000" step="10">
         </div>
         <div class="dash-item">
-            <label>Base Bet Size (Units)</label>
+            <label>Base Bet Size ($ Amount)</label>
             <input type="number" id="baseSizeInput" value="10" onchange="syncBaseSize()">
         </div>
     </div>
@@ -254,36 +226,30 @@
         <div class="chip" id="chip-high-street" title="High Street">10</div>
 
         <div class="roulette-board">
-            <div class="zero-box" onclick="setSpinNumber(0)">0</div>
+            <div class="zero-box" onclick="executeSpinEngine(0)">0</div>
             <div class="grid-container" id="boardGrid"></div>
         </div>
-    </div>
-
-    <div class="action-bar">
-        <label for="spinNumberInput">ENTER NEXT SPIN OUTCOME:</label>
-        <input type="number" id="spinNumberInput" min="0" max="36" placeholder="?">
-        <button onclick="executeSpinEngine()">Submit Spin</button>
     </div>
 
     <div class="panels-grid">
         <div class="status-panel">
             <h3>LOW SIDE (Dynamic Progression)</h3>
-            <div class="data-row"><span>Corner (9,12,8,11) [+1 on 1 Loss]:</span><span class="data-val" id="lbl-low-corner">10 Units</span></div>
-            <div class="data-row"><span>Street (16,17,18) [+1 on 2 Losses]:</span><span class="data-val" id="lbl-low-street">10 Units</span></div>
-            <div class="data-row"><span>Split (10,13) [+1 on 3 Losses]:</span><span class="data-val" id="lbl-low-split">10 Units</span></div>
+            <div class="data-row"><span>Corner (8,9,11,12) [+$Base on 1 Loss]:</span><span class="data-val" id="lbl-low-corner">10</span></div>
+            <div class="data-row"><span>Street (16,17,18) [+$Base on 2 Losses]:</span><span class="data-val" id="lbl-low-street">10</span></div>
+            <div class="data-row"><span>Split (10,13) [+$Base on 3 Losses]:</span><span class="data-val" id="lbl-low-split">10</span></div>
             <div class="data-row" style="color: #81c784;"><span>Consecutive Low Losses:</span><span class="data-val" id="lbl-low-losses" style="color: #81c784;">0</span></div>
         </div>
         
         <div class="status-panel">
             <h3>HIGH SIDE (Dynamic Progression)</h3>
-            <div class="data-row"><span>Corner (26,27,29,30) [+1 on 1 Loss]:</span><span class="data-val" id="lbl-high-corner">10 Units</span></div>
-            <div class="data-row"><span>Street (19,20,21) [+1 on 2 Losses]:</span><span class="data-val" id="lbl-high-street">10 Units</span></div>
-            <div class="data-row"><span>Split (28,31) [+1 on 3 Losses]:</span><span class="data-val" id="lbl-high-split">10 Units</span></div>
+            <div class="data-row"><span>Corner (26,27,29,30) [+$Base on 1 Loss]:</span><span class="data-val" id="lbl-high-corner">10</span></div>
+            <div class="data-row"><span>Street (19,20,21) [+$Base on 2 Losses]:</span><span class="data-val" id="lbl-high-street">10</span></div>
+            <div class="data-row"><span>Split (28,31) [+$Base on 3 Losses]:</span><span class="data-val" id="lbl-high-split">10</span></div>
             <div class="data-row" style="color: #81c784;"><span>Consecutive High Losses:</span><span class="data-val" id="lbl-high-losses" style="color: #81c784;">0</span></div>
         </div>
     </div>
 
-    <div class="log-container" id="logPanel">System ready. Enter spin outcome to calculate dual progressions...</div>
+    <div class="log-container" id="logPanel">System ready. Click any number above to instantly record results...</div>
 </div>
 
 <script>
@@ -294,6 +260,10 @@
     ];
     const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
+    // DEFINING TARGET ARRAYS DIRECTLY FROM USER ATTACHMENT
+    const lowTargets = [8, 9, 10, 11, 12, 13, 16, 17, 18];
+    const highTargets = [19, 20, 21, 26, 27, 28, 29, 30, 31];
+
     // Tracker Engine Variable State Values
     let baseSize = 10;
     
@@ -301,13 +271,13 @@
     let lowCornerValue = 10;
     let lowStreetValue = 10;
     let lowSplitValue = 10;
-    let lowSideLosses = 0; // Tracks consecutive losses for the Low Side bets
+    let lowSideLosses = 0; 
 
     // High Side Values
     let highCornerValue = 10;
     let highStreetValue = 10;
     let highSplitValue = 10;
-    let highSideLosses = 0; // Tracks consecutive losses for the High Side bets
+    let highSideLosses = 0; 
 
     function buildInteractiveBoard() {
         const grid = document.getElementById('boardGrid');
@@ -319,14 +289,10 @@
                 const cell = document.createElement('div');
                 cell.className = `cell ${colorClass}`;
                 cell.innerText = num;
-                cell.onclick = () => setSpinNumber(num);
+                cell.onclick = () => executeSpinEngine(num);
                 grid.appendChild(cell);
             }
         }
-    }
-
-    function setSpinNumber(num) {
-        document.getElementById('spinNumberInput').value = num;
     }
 
     function syncBaseSize() {
@@ -341,7 +307,7 @@
     }
 
     function updateUIElements() {
-        // Update labels inside visual chip components overlaid on table layout map positions
+        // Update labels inside visual chip components
         document.getElementById('chip-low-corner').innerText = lowCornerValue;
         document.getElementById('chip-low-street').innerText = lowStreetValue;
         document.getElementById('chip-low-split').innerText = lowSplitValue;
@@ -351,85 +317,78 @@
         document.getElementById('chip-high-split').innerText = highSplitValue;
 
         // Update technical status panels metrics readout labels text values
-        document.getElementById('lbl-low-corner').innerText = lowCornerValue + " Units";
-        document.getElementById('lbl-low-street').innerText = lowStreetValue + " Units";
-        document.getElementById('lbl-low-split').innerText = lowSplitValue + " Units";
+        document.getElementById('lbl-low-corner').innerText = lowCornerValue;
+        document.getElementById('lbl-low-street').innerText = lowStreetValue;
+        document.getElementById('lbl-low-split').innerText = lowSplitValue;
         document.getElementById('lbl-low-losses').innerText = lowSideLosses;
 
-        document.getElementById('lbl-high-corner').innerText = highCornerValue + " Units";
-        document.getElementById('lbl-high-street').innerText = highStreetValue + " Units";
-        document.getElementById('lbl-high-split').innerText = highSplitValue + " Units";
+        document.getElementById('lbl-high-corner').innerText = highCornerValue;
+        document.getElementById('lbl-high-street').innerText = highStreetValue;
+        document.getElementById('lbl-high-split').innerText = highSplitValue;
         document.getElementById('lbl-high-losses').innerText = highSideLosses;
     }
 
-    function executeSpinEngine() {
-        const inputField = document.getElementById('spinNumberInput');
-        const num = parseInt(inputField.value);
+    function executeSpinEngine(num) {
         let balance = parseFloat(document.getElementById('balanceInput').value) || 0;
 
-        if (isNaN(num) || num < 0 || num > 36) {
-            alert("Please input a valid single zero roulette number entry (0-36).");
-            return;
-        }
-
-        const isLowNum = (num >= 1 && num <= 18);
-        const isHighNum = (num >= 19 && num <= 36);
-        const isZero = (num === 0);
+        // Exact Hit Verification Based on Bet Coverage Map Arrays
+        const isLowWin = lowTargets.includes(num);
+        const isHighWin = highTargets.includes(num);
         
         let logText = `Result: Num ${num} -> `;
 
-        if (isLowNum) {
-            // Low Side Wins! 
-            logText += `<span class="log-win-low">[WIN AT LOW SIDE]</span>. `;
+        if (isLowWin) {
+            logText += `<span class="log-win-low">[WIN OCCURRED AT LOW SIDE]</span>. `;
             
             // 1. Low Side Decrements (Wins logic path)
-            lowCornerValue = Math.max(baseSize, lowCornerValue - 1);
-            lowStreetValue = Math.max(baseSize, lowStreetValue - 2);
-            lowSplitValue  = Math.max(baseSize, lowSplitValue - 3);
-            lowSideLosses = 0; // Reset consecutive low loss tracking counter
+            lowCornerValue = Math.max(baseSize, lowCornerValue - (1 * baseSize));
+            lowStreetValue = Math.max(baseSize, lowStreetValue - (2 * baseSize));
+            lowSplitValue  = Math.max(baseSize, lowSplitValue - (3 * baseSize));
+            lowSideLosses = 0; // Reset low loss tracking counter
 
             // 2. High Side Increments (Loss logic path)
             highSideLosses++;
-            highCornerValue += 1; // Corner increments every 1 loss
-            if (highSideLosses % 2 === 0) highStreetValue += 1; // Street increments every 2 losses
-            if (highSideLosses % 3 === 0) highSplitValue += 1;  // Split increments every 3 losses
-            logText += `High Side Losses: ${highSideLosses}.`;
+            highCornerValue += baseSize; 
+            if (highSideLosses % 2 === 0) highStreetValue += baseSize; 
+            if (highSideLosses % 3 === 0) highSplitValue += baseSize;  
+            
+            logText += `High Side consecutive losses: ${highSideLosses}.`;
         } 
-        else if (isHighNum) {
-            // High Side Wins!
-            logText += `<span class="log-win-high">[WIN AT HIGH SIDE]</span>. `;
+        else if (isHighWin) {
+            logText += `<span class="log-win-high">[WIN OCCURRED AT HIGH SIDE]</span>. `;
 
             // 1. High Side Decrements (Wins logic path)
-            highCornerValue = Math.max(baseSize, highCornerValue - 1);
-            highStreetValue = Math.max(baseSize, highStreetValue - 2);
-            highSplitValue  = Math.max(baseSize, highSplitValue - 3);
-            highSideLosses = 0; // Reset consecutive high loss tracking counter
+            highCornerValue = Math.max(baseSize, highCornerValue - (1 * baseSize));
+            highStreetValue = Math.max(baseSize, highStreetValue - (2 * baseSize));
+            highSplitValue  = Math.max(baseSize, highSplitValue - (3 * baseSize));
+            highSideLosses = 0; // Reset high loss tracking counter
 
             // 2. Low Side Increments (Loss logic path)
             lowSideLosses++;
-            lowCornerValue += 1; // Corner increments every 1 loss
-            if (lowSideLosses % 2 === 0) lowStreetValue += 1; // Street increments every 2 losses
-            if (lowSideLosses % 3 === 0) lowSplitValue += 1;  // Split increments every 3 losses
-            logText += `Low Side Losses: ${lowSideLosses}.`;
-        } 
-        else if (isZero) {
-            // Both Sides Lose (Total loss on layout table)
-            logText += `<span class="log-loss-both">[TOTAL LOSS - ZERO]</span>. Both sides incremented. `;
+            lowCornerValue += baseSize; 
+            if (lowSideLosses % 2 === 0) lowStreetValue += baseSize; 
+            if (lowSideLosses % 3 === 0) lowSplitValue += baseSize;  
             
-            // Increment Low Side Losses and Values
+            logText += `Low Side consecutive losses: ${lowSideLosses}.`;
+        } 
+        else {
+            // TOTAL LOSS TRIGGERED (Hit uncovered numbers like 0, 1, 2, 3, 4, 5, 6, 7, 14, 15, 22, 23, 24, 25, 32, 33, 34, 35, 36)
+            logText += `<span class="log-loss-both">[TOTAL LOSS ON BOTH SIDES]</span>. Both sides progressed. `;
+            
+            // Increment Low Side Losses and Scaled Values
             lowSideLosses++;
-            lowCornerValue += 1;
-            if (lowSideLosses % 2 === 0) lowStreetValue += 1;
-            if (lowSideLosses % 3 === 0) lowSplitValue += 1;
+            lowCornerValue += baseSize;
+            if (lowSideLosses % 2 === 0) lowStreetValue += baseSize;
+            if (lowSideLosses % 3 === 0) lowSplitValue += baseSize;
 
-            // Increment High Side Losses and Values
+            // Increment High Side Losses and Scaled Values
             highSideLosses++;
-            highCornerValue += 1;
-            if (highSideLosses % 2 === 0) highStreetValue += 1;
-            if (highSideLosses % 3 === 0) highSplitValue += 1;
+            highCornerValue += baseSize;
+            if (highSideLosses % 2 === 0) highStreetValue += baseSize;
+            if (highSideLosses % 3 === 0) highSplitValue += baseSize;
         }
 
-        // Calculate operational table deduction cost totals
+        // Calculate total stakes placed on the layout for history logs deductions
         let totalBetCost = lowCornerValue + lowStreetValue + lowSplitValue + highCornerValue + highStreetValue + highSplitValue;
         balance -= totalBetCost;
         document.getElementById('balanceInput').value = balance;
@@ -441,9 +400,6 @@
         const logPanel = document.getElementById('logPanel');
         if(logPanel.innerHTML.includes("System ready")) logPanel.innerHTML = "";
         logPanel.innerHTML = `<div class="log-entry">${logText}</div>` + logPanel.innerHTML;
-
-        // Reset input interface safely
-        inputField.value = "";
     }
 
     window.onload = () => {
