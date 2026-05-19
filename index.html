@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Target-Specific Roulette Strategy Tracker</title>
+    <title>Target-Specific Roulette Strategy Tracker & Simulator</title>
     <style>
         body {
             background-color: #064e26;
@@ -133,17 +133,14 @@
         }
 
         /* --- STABILIZED CHIP POSITIONING ADJUSTMENTS --- */
-        /* Low Side Placements */
-        #chip-low-corner { left: calc(10px + 65px + (3 * 65px)); top: calc(10px + 55px); }                       /* Crosshair intersection of 8,9,11,12 */
-        #chip-low-split  { left: calc(10px + 65px + (4* 65px)); top: calc(10px + 133px); }                     /* Strictly centered on the vertical grid line between 10 & 13 */
-        #chip-low-street { left: calc(10px + 65px + (5 * 65px) + 32.5px); top: calc(10px + 165px); }             /* Outer bottom border centered under 16,17,18 block */
+        #chip-low-corner { left: calc(10px + 65px + (3 * 65px)); top: calc(10px + 55px); }                       
+        #chip-low-split  { left: calc(10px + 65px + (4 * 65px)); top: calc(10px + 134px); }                     
+        #chip-low-street { left: calc(10px + 65px + (5 * 65px) + 32.5px); top: calc(10px + 165px); }             
         
-        /* High Side Placements */
-        #chip-high-corner { left: calc(10px + 65px + (9 * 65px)); top: calc(10px + 55px); }                      /* Crosshair intersection of 26,27,29,30 */
-        #chip-high-split  { left: calc(10px + 65px + (10 * 65px)); top: calc(10px + 133px); }                    /* Strictly centered on the vertical grid line between 28 & 31 */
-        #chip-high-street { left: calc(10px + 65px + (6 * 65px) + 32.5px); top: calc(10px + 165px); }             /* Outer bottom border centered under 19,20,21 block */
+        #chip-high-corner { left: calc(10px + 65px + (9 * 65px)); top: calc(10px + 55px); }                      
+        #chip-high-split  { left: calc(10px + 65px + (10 * 65px)); top: calc(10px + 134px); }                    
+        #chip-high-street { left: calc(10px + 65px + (6 * 65px) + 32.5px); top: calc(10px + 165px); }             
 
-        /* Instruction text styling */
         .instruction-note {
             text-align: center;
             font-size: 14px;
@@ -184,16 +181,76 @@
             color: #00ff66;
         }
 
+        /* Simulation Suite Layout styling */
+        .sim-suite {
+            background: #021a0c;
+            border: 2px solid #00ff66;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+        .sim-suite h3 {
+            margin-top: 0;
+            color: #00ff66;
+            text-transform: uppercase;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        .sim-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .sim-btn {
+            background: #00ff66;
+            color: black;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .sim-btn:hover {
+            background: #00cc52;
+        }
+        .sim-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .sim-card {
+            background: #052613;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #096131;
+            text-align: center;
+        }
+        .sim-card div:first-child {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #81c784;
+            margin-bottom: 4px;
+        }
+        .sim-card div:last-child {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .profit-up { color: #00ff66; }
+        .loss-down { color: #ff3d3d; }
+
         .log-container {
             background: #000;
             padding: 15px;
             border-radius: 6px;
-            height: 160px;
+            height: 140px;
             overflow-y: auto;
             font-family: monospace;
             font-size: 13px;
             color: #888;
             border: 1px solid #222;
+            margin-top: 20px;
         }
         .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #222; padding-bottom: 4px;}
         .log-win-low { color: #2196f3; font-weight: bold; }
@@ -205,7 +262,7 @@
 
 <div class="container">
     <h2>Dual Dynamic Roulette Strategy Engine</h2>
-    <div class="instruction-note">⚡ Click directly on any number on the board below to instantly run the spin!</div>
+    <div class="instruction-note">⚡ Click directly on any number on the board below to instantly run a real live spin!</div>
 
     <div class="dashboard">
         <div class="dash-item">
@@ -251,6 +308,33 @@
         </div>
     </div>
 
+    <div class="sim-suite">
+        <h3>⚡ Strategy Performance Mass Simulator</h3>
+        <div class="sim-controls">
+            <label style="font-size: 13px; font-weight: bold;">Number of Spins:</label>
+            <input type="number" id="simSpinsInput" value="1000" style="background:#111; border:1px solid #00ff66; color:#00ff66; padding:6px; width:90px; text-align:center; font-weight:bold; border-radius:4px;">
+            <button class="sim-btn" onclick="runMassSimulation()">Run Simulation</button>
+        </div>
+        <div class="sim-grid">
+            <div class="sim-card">
+                <div>Max Profit Reached (Peak Balance)</div>
+                <div id="simPeakProfit" class="profit-up">$0</div>
+            </div>
+            <div class="sim-card">
+                <div>Max Loss Hit (Deepest Drop)</div>
+                <div id="simDeepestLoss" class="loss-down">$0</div>
+            </div>
+            <div class="sim-card">
+                <div>Ending Bankroll</div>
+                <div id="simEndingBankroll" style="color:white;">$0</div>
+            </div>
+            <div class="sim-card">
+                <div>Win/Loss Analytics</div>
+                <div id="simWinRatio" style="font-size:14px !important; padding-top:4px; color:#aaa; font-family:monospace;">Low: 0 | High: 0 | Loss: 0</div>
+            </div>
+        </div>
+    </div>
+
     <div class="log-container" id="logPanel">System ready. Click any number above to instantly record results...</div>
 </div>
 
@@ -262,7 +346,7 @@
     ];
     const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-    // EXACT TARGET DETECTIONS
+    // Target Definition Maps
     const lowCornerNums = [8, 9, 11, 12];
     const lowSplitNums  = [10, 13];
     const lowStreetNums = [16, 17, 18];
@@ -271,20 +355,10 @@
     const highSplitNums  = [28, 31];
     const highStreetNums = [19, 20, 21];
 
-    // Tracker Engine Variable State Values
     let baseSize = 10;
     
-    // Low Side Values
-    let lowCornerValue = 10;
-    let lowStreetValue = 10;
-    let lowSplitValue = 10;
-    let lowSideLosses = 0; 
-
-    // High Side Values
-    let highCornerValue = 10;
-    let highStreetValue = 10;
-    let highSplitValue = 10;
-    let highSideLosses = 0; 
+    let lowCornerValue = 10; let lowStreetValue = 10; let lowSplitValue = 10; let lowSideLosses = 0; 
+    let highCornerValue = 10; let highStreetValue = 10; let highSplitValue = 10; let highSideLosses = 0; 
 
     function buildInteractiveBoard() {
         const grid = document.getElementById('boardGrid');
@@ -305,10 +379,12 @@
     function syncBaseSize() {
         const val = parseInt(document.getElementById('baseSizeInput').value) || 10;
         baseSize = val;
-        
-        lowCornerValue = val; lowStreetValue = val; lowSplitValue = val; lowSideLosses = 0;
-        highCornerValue = val; highStreetValue = val; highSplitValue = val; highSideLosses = 0;
-        
+        resetTrackerState();
+    }
+
+    function resetTrackerState() {
+        lowCornerValue = baseSize; lowStreetValue = baseSize; lowSplitValue = baseSize; lowSideLosses = 0;
+        highCornerValue = baseSize; highStreetValue = baseSize; highSplitValue = baseSize; highSideLosses = 0;
         updateUIElements();
     }
 
@@ -334,14 +410,9 @@
 
     function executeSpinEngine(num) {
         let balance = parseFloat(document.getElementById('balanceInput').value) || 0;
-
-        // Deduced Active Bet Cost for current active spin
         let totalBetCost = lowCornerValue + lowStreetValue + lowSplitValue + highCornerValue + highStreetValue + highSplitValue;
         
-        // Deduct current bets from starting balance
         balance -= totalBetCost;
-
-        // Check payouts (European Rules: Corner=8:1, Street=11:1, Split=17:1) + returns original bet back on top
         let roundPayout = 0;
 
         const lowHit = lowCornerNums.includes(num) || lowSplitNums.includes(num) || lowStreetNums.includes(num);
@@ -350,53 +421,39 @@
         let logText = `Result: Num ${num} -> `;
 
         if (lowHit) {
-            logText += `<span class="log-win-low">[WIN OCCURRED AT LOW SIDE]</span>. `;
-            
-            // Calculate real winning profit accruals
+            logText += `<span class="log-win-low">[WIN LOW SIDE]</span>. `;
             if (lowCornerNums.includes(num)) roundPayout = lowCornerValue * 9;
             if (lowStreetNums.includes(num)) roundPayout = lowStreetValue * 12;
             if (lowSplitNums.includes(num))  roundPayout = lowSplitValue * 18;
 
-            // 1. Low Side Decrements (Wins logic path)
-            lowCornerValue = Math.max(baseSize, lowCornerValue - (1 * baseSize));
+            lowCornerValue = Math.max(baseSize, lowCornerValue - baseSize);
             lowStreetValue = Math.max(baseSize, lowStreetValue - (2 * baseSize));
             lowSplitValue  = Math.max(baseSize, lowSplitValue - (3 * baseSize));
             lowSideLosses = 0; 
 
-            // 2. High Side Increments (Loss logic path)
             highSideLosses++;
             highCornerValue += baseSize; 
             if (highSideLosses % 2 === 0) highStreetValue += baseSize; 
             if (highSideLosses % 3 === 0) highSplitValue += baseSize;  
-            
-            logText += `High Side consecutive losses: ${highSideLosses}.`;
         } 
         else if (highHit) {
-            logText += `<span class="log-win-high">[WIN OCCURRED AT HIGH SIDE]</span>. `;
-
-            // Calculate real winning profit accruals
+            logText += `<span class="log-win-high">[WIN HIGH SIDE]</span>. `;
             if (highCornerNums.includes(num)) roundPayout = highCornerValue * 9;
             if (highStreetNums.includes(num)) roundPayout = highStreetValue * 12;
             if (highSplitNums.includes(num))  roundPayout = highSplitValue * 18;
 
-            // 1. High Side Decrements (Wins logic path)
-            highCornerValue = Math.max(baseSize, highCornerValue - (1 * baseSize));
+            highCornerValue = Math.max(baseSize, highCornerValue - baseSize);
             highStreetValue = Math.max(baseSize, highStreetValue - (2 * baseSize));
             highSplitValue  = Math.max(baseSize, highSplitValue - (3 * baseSize));
             highSideLosses = 0; 
 
-            // 2. Low Side Increments (Loss logic path)
             lowSideLosses++;
             lowCornerValue += baseSize; 
             if (lowSideLosses % 2 === 0) lowStreetValue += baseSize; 
             if (lowSideLosses % 3 === 0) lowSplitValue += baseSize;  
-            
-            logText += `Low Side consecutive losses: ${lowSideLosses}.`;
         } 
         else {
-            // Uncovered Total Loss numbers
-            logText += `<span class="log-loss-both">[TOTAL LOSS ON BOTH SIDES]</span>. Both sides progressed. `;
-            
+            logText += `<span class="log-loss-both">[TOTAL LOSS]</span>. Both progressed. `;
             lowSideLosses++;
             lowCornerValue += baseSize;
             if (lowSideLosses % 2 === 0) lowStreetValue += baseSize;
@@ -408,18 +465,102 @@
             if (highSideLosses % 3 === 0) highSplitValue += baseSize;
         }
 
-        // Add back any calculated winnings directly to the live rolling bankroll 
         balance += roundPayout;
         document.getElementById('balanceInput').value = balance;
-
         let dynamicProfitSummary = roundPayout - totalBetCost;
-        logText += ` [Net Net Round P&L: ${dynamicProfitSummary >= 0 ? '+' : ''}${dynamicProfitSummary}$]`;
+        logText += ` [Net: ${dynamicProfitSummary >= 0 ? '+' : ''}${dynamicProfitSummary}$]`;
 
         updateUIElements();
 
         const logPanel = document.getElementById('logPanel');
         if(logPanel.innerHTML.includes("System ready")) logPanel.innerHTML = "";
         logPanel.innerHTML = `<div class="log-entry">${logText}</div>` + logPanel.innerHTML;
+    }
+
+    // MASS SIMULATION SUITE ENGINE
+    function runMassSimulation() {
+        const totalSpins = parseInt(document.getElementById('simSpinsInput').value) || 1000;
+        const initialBankroll = parseFloat(document.getElementById('balanceInput').value) || 1000;
+        const base = parseInt(document.getElementById('baseSizeInput').value) || 10;
+
+        // Isolated temporary simulation engine copies of strategy tracking variables
+        let simBalance = initialBankroll;
+        let maxProfitReached = initialBankroll;
+        let deepestLossHit = initialBankroll;
+
+        let sLowCorner = base, sLowStreet = base, sLowSplit = base, sLowLosses = 0;
+        let sHighCorner = base, sHighStreet = base, sHighSplit = base, sHighLosses = 0;
+
+        let countLowWins = 0, countHighWins = 0, countTotalLosses = 0;
+
+        for (let i = 0; i < totalSpins; i++) {
+            // Generate standard random European roulette number (0 to 36)
+            let rolledNum = Math.floor(Math.random() * 37);
+
+            let currentBetCost = sLowCorner + sLowStreet + sLowSplit + sHighCorner + sHighStreet + sHighSplit;
+            simBalance -= currentBetCost;
+
+            const isLow = lowCornerNums.includes(rolledNum) || lowSplitNums.includes(rolledNum) || lowStreetNums.includes(rolledNum);
+            const isHigh = highCornerNums.includes(rolledNum) || highSplitNums.includes(rolledNum) || highStreetNums.includes(rolledNum);
+
+            if (isLow) {
+                countLowWins++;
+                if (lowCornerNums.includes(rolledNum)) simBalance += (sLowCorner * 9);
+                if (lowStreetNums.includes(rolledNum)) simBalance += (sLowStreet * 12);
+                if (lowSplitNums.includes(rolledNum))  simBalance += (sLowSplit * 18);
+
+                sLowCorner = Math.max(base, sLowCorner - base);
+                sLowStreet = Math.max(base, sLowStreet - (2 * base));
+                sLowSplit  = Math.max(base, sLowSplit - (3 * base));
+                sLowLosses = 0;
+
+                sHighLosses++;
+                sHighCorner += base;
+                if (sHighLosses % 2 === 0) sHighStreet += base;
+                if (sHighLosses % 3 === 0) sHighSplit += base;
+            } 
+            else if (isHigh) {
+                countHighWins++;
+                if (highCornerNums.includes(rolledNum)) simBalance += (sHighCorner * 9);
+                if (highStreetNums.includes(rolledNum)) simBalance += (sHighStreet * 12);
+                if (highSplitNums.includes(rolledNum))  simBalance += (sHighSplit * 18);
+
+                sHighCorner = Math.max(base, sHighCorner - base);
+                sHighStreet = Math.max(base, sHighStreet - (2 * base));
+                sHighSplit  = Math.max(base, sHighSplit - (3 * base));
+                sHighLosses = 0;
+
+                sLowLosses++;
+                sLowCorner += base;
+                if (sLowLosses % 2 === 0) sLowStreet += base;
+                if (sLowLosses % 3 === 0) sLowSplit += base;
+            } 
+            else {
+                countTotalLosses++;
+                sLowLosses++;
+                sLowCorner += base;
+                if (sLowLosses % 2 === 0) sLowStreet += base;
+                if (sLowLosses % 3 === 0) sLowSplit += base;
+
+                sHighLosses++;
+                sHighCorner += base;
+                if (sHighLosses % 2 === 0) sHighStreet += base;
+                if (sHighLosses % 3 === 0) sHighSplit += base;
+            }
+
+            // Track peaks and troughs
+            if (simBalance > maxProfitReached) maxProfitReached = simBalance;
+            if (simBalance < deepestLossHit) deepestLossHit = simBalance;
+        }
+
+        // Output Calculated Metric Updates into View panels
+        document.getElementById('simPeakProfit').innerText = `$${Math.round(maxProfitReached)}`;
+        document.getElementById('simDeepestLoss').innerText = `$${Math.round(deepestLossHit)}`;
+        document.getElementById('simEndingBankroll').innerText = `$${Math.round(simBalance)}`;
+        document.getElementById('simWinRatio').innerHTML = `Low: ${countLowWins} | High: ${countHighWins} | Loss: ${countTotalLosses}`;
+
+        const logPanel = document.getElementById('logPanel');
+        logPanel.innerHTML = `<div class="log-entry" style="color: #00ff66; font-weight:bold;">[SIMULATION COMPLETE] Executed ${totalSpins} spins. Peak reached: $${Math.round(maxProfitReached)} | Lowest drop: $${Math.round(deepestLossHit)}</div>` + logPanel.innerHTML;
     }
 
     window.onload = () => {
