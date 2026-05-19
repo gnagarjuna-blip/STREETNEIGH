@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Roulette Strategy Tracker</title>
+    <title>Dual Progression Roulette Strategy Tracker</title>
     <style>
         body {
             background-color: #064e26;
@@ -90,7 +90,6 @@
         }
         .grid-container {
             display: grid;
-            /* 12 columns, matching standard layout */
             grid-template-columns: repeat(12, 65px);
             grid-template-rows: repeat(3, 55px);
         }
@@ -108,7 +107,7 @@
         .red { background-color: #d32f2f; }
         .black { background-color: #1a1a1a; }
 
-        /* Absolute Placed Custom Chips based on User Image Coordinate Rules */
+        /* Absolute Placed Chips Overlay */
         .chip {
             position: absolute;
             width: 26px;
@@ -128,8 +127,7 @@
             pointer-events: none;
         }
 
-        /* Precise CSS Coordinate Map to replicate drawing points */
-        /* Columns: width=65px. Rows: height=55px. Offset 65px for the Zero Box */
+        /* Precise CSS Coordinate Map from Image */
         #chip-low-corner { left: calc(65px + (3 * 65px)); top: 55px; }         /* Intersection 8,9,11,12 */
         #chip-low-split  { left: calc(65px + (4 * 65px)); top: 135px; }        /* Grid line between 10 & 13 */
         #chip-low-street { left: calc(65px + (6 * 65px)); top: 165px; }        /* Bottom line of 16 (Street 16,17,18) */
@@ -181,7 +179,7 @@
             background: #00cc52;
         }
 
-        /* Displays panels split */
+        /* Display panels split */
         .panels-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -217,22 +215,23 @@
             background: #000;
             padding: 15px;
             border-radius: 6px;
-            height: 120px;
+            height: 140px;
             overflow-y: auto;
             font-family: monospace;
             font-size: 13px;
             color: #888;
             border: 1px solid #222;
         }
-        .log-entry { margin-bottom: 4px; }
-        .log-win { color: #00ff66; }
-        .log-loss { color: #ff3333; }
+        .log-entry { margin-bottom: 4px; border-bottom: 1px dashed #222; padding-bottom: 4px;}
+        .log-win-low { color: #2196f3; }
+        .log-win-high { color: #00ff66; }
+        .log-loss-both { color: #ff9800; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>European Roulette Strategy Interactive Engine</h2>
+    <h2>Dual Dynamic Roulette Strategy Engine</h2>
 
     <div class="dashboard">
         <div class="dash-item">
@@ -256,7 +255,6 @@
 
         <div class="roulette-board">
             <div class="zero-box" onclick="setSpinNumber(0)">0</div>
-            
             <div class="grid-container" id="boardGrid"></div>
         </div>
     </div>
@@ -269,27 +267,26 @@
 
     <div class="panels-grid">
         <div class="status-panel">
-            <h3>LOW SIDE (Fixed Strategy Status)</h3>
-            <div class="data-row"><span>Corner (9,12,8,11):</span><span class="data-val" id="lbl-low-corner">10 Units</span></div>
-            <div class="data-row"><span>Split (10,13):</span><span class="data-val" id="lbl-low-split">10 Units</span></div>
-            <div class="data-row"><span>Street (16,17,18):</span><span class="data-val" id="lbl-low-street">10 Units</span></div>
+            <h3>LOW SIDE (Dynamic Progression)</h3>
+            <div class="data-row"><span>Corner (9,12,8,11) [+1 on 1 Loss]:</span><span class="data-val" id="lbl-low-corner">10 Units</span></div>
+            <div class="data-row"><span>Street (16,17,18) [+1 on 2 Losses]:</span><span class="data-val" id="lbl-low-street">10 Units</span></div>
+            <div class="data-row"><span>Split (10,13) [+1 on 3 Losses]:</span><span class="data-val" id="lbl-low-split">10 Units</span></div>
+            <div class="data-row" style="color: #81c784;"><span>Consecutive Low Losses:</span><span class="data-val" id="lbl-low-losses" style="color: #81c784;">0</span></div>
         </div>
+        
         <div class="status-panel">
-            <h3>HIGH SIDE (Dynamic Progression Status)</h3>
+            <h3>HIGH SIDE (Dynamic Progression)</h3>
             <div class="data-row"><span>Corner (26,27,29,30) [+1 on 1 Loss]:</span><span class="data-val" id="lbl-high-corner">10 Units</span></div>
             <div class="data-row"><span>Street (19,20,21) [+1 on 2 Losses]:</span><span class="data-val" id="lbl-high-street">10 Units</span></div>
             <div class="data-row"><span>Split (28,31) [+1 on 3 Losses]:</span><span class="data-val" id="lbl-high-split">10 Units</span></div>
+            <div class="data-row" style="color: #81c784;"><span>Consecutive High Losses:</span><span class="data-val" id="lbl-high-losses" style="color: #81c784;">0</span></div>
         </div>
     </div>
 
-    <div class="log-container" id="logPanel">System ready. Enter spin outcome to track modifications...</div>
+    <div class="log-container" id="logPanel">System ready. Enter spin outcome to calculate dual progressions...</div>
 </div>
 
 <script>
-    // System Layout Definition Arrays matching precise structural grid mapping rows:
-    // Row 3 (Top):    3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36
-    // Row 2 (Middle): 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35
-    // Row 1 (Bottom): 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34
     const structuralRows = [
         [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
         [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
@@ -299,12 +296,18 @@
 
     // Tracker Engine Variable State Values
     let baseSize = 10;
+    
+    // Low Side Values
+    let lowCornerValue = 10;
+    let lowStreetValue = 10;
+    let lowSplitValue = 10;
+    let lowSideLosses = 0; // Tracks consecutive losses for the Low Side bets
+
+    // High Side Values
     let highCornerValue = 10;
     let highStreetValue = 10;
     let highSplitValue = 10;
-
-    // Track sequential consecutive losses specifically for High-Side staggered rules
-    let consecutiveLosses = 0;
+    let highSideLosses = 0; // Tracks consecutive losses for the High Side bets
 
     function buildInteractiveBoard() {
         const grid = document.getElementById('boardGrid');
@@ -330,32 +333,33 @@
         const val = parseInt(document.getElementById('baseSizeInput').value) || 10;
         baseSize = val;
         
-        // Reset dynamic values back to matching your base configuration
-        highCornerValue = val;
-        highStreetValue = val;
-        highSplitValue = val;
-        consecutiveLosses = 0;
+        // Reset all states back to default setup base values
+        lowCornerValue = val; lowStreetValue = val; lowSplitValue = val; lowSideLosses = 0;
+        highCornerValue = val; highStreetValue = val; highSplitValue = val; highSideLosses = 0;
+        
         updateUIElements();
     }
 
     function updateUIElements() {
-        // Update labels inside the chip circles overlaid on the table image coordinates
-        document.getElementById('chip-low-corner').innerText = baseSize;
-        document.getElementById('chip-low-split').innerText = baseSize;
-        document.getElementById('chip-low-street').innerText = baseSize;
+        // Update labels inside visual chip components overlaid on table layout map positions
+        document.getElementById('chip-low-corner').innerText = lowCornerValue;
+        document.getElementById('chip-low-street').innerText = lowStreetValue;
+        document.getElementById('chip-low-split').innerText = lowSplitValue;
 
         document.getElementById('chip-high-corner').innerText = highCornerValue;
         document.getElementById('chip-high-street').innerText = highStreetValue;
         document.getElementById('chip-high-split').innerText = highSplitValue;
 
-        // Update technical status overview metrics elements text strings
-        document.getElementById('lbl-low-corner').innerText = baseSize + " Units";
-        document.getElementById('lbl-low-split').innerText = baseSize + " Units";
-        document.getElementById('lbl-low-street').innerText = baseSize + " Units";
+        // Update technical status panels metrics readout labels text values
+        document.getElementById('lbl-low-corner').innerText = lowCornerValue + " Units";
+        document.getElementById('lbl-low-street').innerText = lowStreetValue + " Units";
+        document.getElementById('lbl-low-split').innerText = lowSplitValue + " Units";
+        document.getElementById('lbl-low-losses').innerText = lowSideLosses;
 
         document.getElementById('lbl-high-corner').innerText = highCornerValue + " Units";
         document.getElementById('lbl-high-street').innerText = highStreetValue + " Units";
         document.getElementById('lbl-high-split').innerText = highSplitValue + " Units";
+        document.getElementById('lbl-high-losses').innerText = highSideLosses;
     }
 
     function executeSpinEngine() {
@@ -368,69 +372,80 @@
             return;
         }
 
-        const isLowWin = (num >= 1 && num <= 18);
-        const isHighWin = (num >= 19 && num <= 36);
+        const isLowNum = (num >= 1 && num <= 18);
+        const isHighNum = (num >= 19 && num <= 36);
+        const isZero = (num === 0);
         
         let logText = `Result: Num ${num} -> `;
 
-        if (isLowWin) {
-            // Outcome is low: This means a Loss condition occurred for the High Side.
-            consecutiveLosses++;
-            logText += `<span class="log-win">[WIN OCCURRED AT LOW SIDE]</span>. High Side Losses: ${consecutiveLosses}. `;
+        if (isLowNum) {
+            // Low Side Wins! 
+            logText += `<span class="log-win-low">[WIN AT LOW SIDE]</span>. `;
+            
+            // 1. Low Side Decrements (Wins logic path)
+            lowCornerValue = Math.max(baseSize, lowCornerValue - 1);
+            lowStreetValue = Math.max(baseSize, lowStreetValue - 2);
+            lowSplitValue  = Math.max(baseSize, lowSplitValue - 3);
+            lowSideLosses = 0; // Reset consecutive low loss tracking counter
 
-            // Apply specific loss progression increments to High Side options:
-            // 1) Corner increments 1 unit on every single loss
-            highCornerValue += 1;
-
-            // 2) Street increments 1 unit on every 2 losses
-            if (consecutiveLosses % 2 === 0) {
-                highStreetValue += 1;
-                logText += `Street increased. `;
-            }
-
-            // 3) Split increments 1 unit on every 3 losses
-            if (consecutiveLosses % 3 === 0) {
-                highSplitValue += 1;
-                logText += `Split increased. `;
-            }
+            // 2. High Side Increments (Loss logic path)
+            highSideLosses++;
+            highCornerValue += 1; // Corner increments every 1 loss
+            if (highSideLosses % 2 === 0) highStreetValue += 1; // Street increments every 2 losses
+            if (highSideLosses % 3 === 0) highSplitValue += 1;  // Split increments every 3 losses
+            logText += `High Side Losses: ${highSideLosses}.`;
         } 
-        else if (isHighWin) {
-            // Outcome is high: This means a Win condition occurred for the High Side.
-            logText += `<span class="log-loss">[WIN OCCURRED AT HIGH SIDE]</span>. `;
-            consecutiveLosses = 0; // Reset tracking metric counter upon direct conversion hits
+        else if (isHighNum) {
+            // High Side Wins!
+            logText += `<span class="log-win-high">[WIN AT HIGH SIDE]</span>. `;
 
-            // Apply explicit decrement logic paths
+            // 1. High Side Decrements (Wins logic path)
             highCornerValue = Math.max(baseSize, highCornerValue - 1);
             highStreetValue = Math.max(baseSize, highStreetValue - 2);
-            highSplitValue = Math.max(baseSize, highSplitValue - 3);
+            highSplitValue  = Math.max(baseSize, highSplitValue - 3);
+            highSideLosses = 0; // Reset consecutive high loss tracking counter
+
+            // 2. Low Side Increments (Loss logic path)
+            lowSideLosses++;
+            lowCornerValue += 1; // Corner increments every 1 loss
+            if (lowSideLosses % 2 === 0) lowStreetValue += 1; // Street increments every 2 losses
+            if (lowSideLosses % 3 === 0) lowSplitValue += 1;  // Split increments every 3 losses
+            logText += `Low Side Losses: ${lowSideLosses}.`;
         } 
-        else {
-            // House Green Zero Event Edge Condition
-            consecutiveLosses++;
-            logText += `[ZERO EDGE TRIGGERED]. All units incremented standard baseline step. `;
+        else if (isZero) {
+            // Both Sides Lose (Total loss on layout table)
+            logText += `<span class="log-loss-both">[TOTAL LOSS - ZERO]</span>. Both sides incremented. `;
+            
+            // Increment Low Side Losses and Values
+            lowSideLosses++;
+            lowCornerValue += 1;
+            if (lowSideLosses % 2 === 0) lowStreetValue += 1;
+            if (lowSideLosses % 3 === 0) lowSplitValue += 1;
+
+            // Increment High Side Losses and Values
+            highSideLosses++;
             highCornerValue += 1;
-            highStreetValue += 1;
-            highSplitValue += 1;
+            if (highSideLosses % 2 === 0) highStreetValue += 1;
+            if (highSideLosses % 3 === 0) highSplitValue += 1;
         }
 
-        // Standardized simulated mathematical calculation adjustments for bankroll parameters
-        let operationalCost = (baseSize * 3) + highCornerValue + highStreetValue + highSplitValue;
-        balance -= operationalCost; 
+        // Calculate operational table deduction cost totals
+        let totalBetCost = lowCornerValue + lowStreetValue + lowSplitValue + highCornerValue + highStreetValue + highSplitValue;
+        balance -= totalBetCost;
         document.getElementById('balanceInput').value = balance;
 
-        // Render visual states alterations back to the view layouts
+        // Render variables adjustments changes back to view displays elements nodes
         updateUIElements();
 
-        // Print history changes lines smoothly to bottom log window terminal
+        // Print logs tracking entries strings updates line components smoothly
         const logPanel = document.getElementById('logPanel');
         if(logPanel.innerHTML.includes("System ready")) logPanel.innerHTML = "";
         logPanel.innerHTML = `<div class="log-entry">${logText}</div>` + logPanel.innerHTML;
 
-        // Reset input area safely
+        // Reset input interface safely
         inputField.value = "";
     }
 
-    // Run structural assembly builds upon initial page initialization loads
     window.onload = () => {
         buildInteractiveBoard();
         updateUIElements();
