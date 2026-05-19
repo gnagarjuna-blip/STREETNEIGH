@@ -133,17 +133,15 @@
         }
 
         /* --- PRECISE CHIP POSITIONING ADJUSTMENTS --- */
-        /* Columns: width=65px. Rows: height=55px. Outer wrapper padding=10px. Zero box width=65px */
-        
         /* Low Side Placements */
-        #chip-low-corner { left: calc(10px + 65px + (3 * 65px)); top: calc(10px + 55px); }          /* Crosshair intersection of 8,9,11,12 */
-        #chip-low-split  { left: calc(10px + 65px + (4 * 65px)); top: calc(10px + 110px); }         /* Grid line directly between 10 & 13 */
-        #chip-low-street { left: calc(10px + 65px + (5 * 65px) + 32.5px); top: calc(10px + 165px); } /* Outer border line centered under 16,17,18 block */
+        #chip-low-corner { left: calc(10px + 65px + (3 * 65px)); top: calc(10px + 55px); }                       /* Intersecting 8,9,11,12 */
+        #chip-low-split  { left: calc(10px + 65px + (3 * 65px) + 32.5px); top: calc(10px + 110px); }             /* Center line separating 10 and 13 */
+        #chip-low-street { left: calc(10px + 65px + (5 * 65px) + 32.5px); top: calc(10px + 165px); }             /* Outer border centered under 16,17,18 block */
         
         /* High Side Placements */
-        #chip-high-corner { left: calc(10px + 65px + (9 * 65px)); top: calc(10px + 55px); }         /* Crosshair intersection of 26,27,29,30 */
-        #chip-high-split  { left: calc(10px + 65px + (10 * 65px)); top: calc(10px + 110px); }       /* Grid line directly between 28 & 31 */
-        #chip-high-street { left: calc(10px + 65px + (6 * 65px) + 32.5px); top: calc(10px + 165px); } /* Outer border line centered under 19,20,21 block */
+        #chip-high-corner { left: calc(10px + 65px + (9 * 65px)); top: calc(10px + 55px); }                      /* Intersecting 26,27,29,30 */
+        #chip-high-split  { left: calc(10px + 65px + (9 * 65px) + 32.5px); top: calc(10px + 110px); }             /* Center line separating 28 and 31 */
+        #chip-high-street { left: calc(10px + 65px + (6 * 65px) + 32.5px); top: calc(10px + 165px); }             /* Outer border centered under 19,20,21 block */
 
         /* Instruction text styling */
         .instruction-note {
@@ -211,7 +209,7 @@
 
     <div class="dashboard">
         <div class="dash-item">
-            <label>Editable Balance ($)</label>
+            <label>Real-Time Balance ($)</label>
             <input type="number" id="balanceInput" value="1000" step="10">
         </div>
         <div class="dash-item">
@@ -264,9 +262,14 @@
     ];
     const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
 
-    // COVERED NUMBER ARRAYS MATCHING CORRESPONDING GRAPHICS TARGETS EXACTLY
-    const lowTargets = [8, 9, 10, 11, 12, 13, 16, 17, 18];
-    const highTargets = [19, 20, 21, 26, 27, 28, 29, 30, 31];
+    // EXACT TARGET DETECTIONS
+    const lowCornerNums = [8, 9, 11, 12];
+    const lowSplitNums  = [10, 13];
+    const lowStreetNums = [16, 17, 18];
+
+    const highCornerNums = [26, 27, 29, 30];
+    const highSplitNums  = [28, 31];
+    const highStreetNums = [19, 20, 21];
 
     // Tracker Engine Variable State Values
     let baseSize = 10;
@@ -303,7 +306,6 @@
         const val = parseInt(document.getElementById('baseSizeInput').value) || 10;
         baseSize = val;
         
-        // Reset all states back to default setup base values
         lowCornerValue = val; lowStreetValue = val; lowSplitValue = val; lowSideLosses = 0;
         highCornerValue = val; highStreetValue = val; highSplitValue = val; highSideLosses = 0;
         
@@ -311,7 +313,6 @@
     }
 
     function updateUIElements() {
-        // Update labels inside visual chip components
         document.getElementById('chip-low-corner').innerText = lowCornerValue;
         document.getElementById('chip-low-street').innerText = lowStreetValue;
         document.getElementById('chip-low-split').innerText = lowSplitValue;
@@ -320,7 +321,6 @@
         document.getElementById('chip-high-street').innerText = highStreetValue;
         document.getElementById('chip-high-split').innerText = highSplitValue;
 
-        // Update technical status panels metrics readout labels text values
         document.getElementById('lbl-low-corner').innerText = lowCornerValue;
         document.getElementById('lbl-low-street').innerText = lowStreetValue;
         document.getElementById('lbl-low-split').innerText = lowSplitValue;
@@ -335,20 +335,33 @@
     function executeSpinEngine(num) {
         let balance = parseFloat(document.getElementById('balanceInput').value) || 0;
 
-        // Exact Hit Verification Based on Bet Coverage Map Arrays
-        const isLowWin = lowTargets.includes(num);
-        const isHighWin = highTargets.includes(num);
+        // Deduced Active Bet Cost for current active spin
+        let totalBetCost = lowCornerValue + lowStreetValue + lowSplitValue + highCornerValue + highStreetValue + highSplitValue;
+        
+        // Deduct current bets from starting balance
+        balance -= totalBetCost;
+
+        // Check payouts (European Rules: Corner=8:1, Street=11:1, Split=17:1) + returns original bet back on top
+        let roundPayout = 0;
+
+        const lowHit = lowCornerNums.includes(num) || lowSplitNums.includes(num) || lowStreetNums.includes(num);
+        const highHit = highCornerNums.includes(num) || highSplitNums.includes(num) || highStreetNums.includes(num);
         
         let logText = `Result: Num ${num} -> `;
 
-        if (isLowWin) {
+        if (lowHit) {
             logText += `<span class="log-win-low">[WIN OCCURRED AT LOW SIDE]</span>. `;
             
+            // Calculate real winning profit accruals
+            if (lowCornerNums.includes(num)) roundPayout = lowCornerValue * 9;
+            if (lowStreetNums.includes(num)) roundPayout = lowStreetValue * 12;
+            if (lowSplitNums.includes(num))  roundPayout = lowSplitValue * 18;
+
             // 1. Low Side Decrements (Wins logic path)
             lowCornerValue = Math.max(baseSize, lowCornerValue - (1 * baseSize));
             lowStreetValue = Math.max(baseSize, lowStreetValue - (2 * baseSize));
             lowSplitValue  = Math.max(baseSize, lowSplitValue - (3 * baseSize));
-            lowSideLosses = 0; // Reset low loss tracking counter
+            lowSideLosses = 0; 
 
             // 2. High Side Increments (Loss logic path)
             highSideLosses++;
@@ -358,14 +371,19 @@
             
             logText += `High Side consecutive losses: ${highSideLosses}.`;
         } 
-        else if (isHighWin) {
+        else if (highHit) {
             logText += `<span class="log-win-high">[WIN OCCURRED AT HIGH SIDE]</span>. `;
+
+            // Calculate real winning profit accruals
+            if (highCornerNums.includes(num)) roundPayout = highCornerValue * 9;
+            if (highStreetNums.includes(num)) roundPayout = highStreetValue * 12;
+            if (highSplitNums.includes(num))  roundPayout = highSplitValue * 18;
 
             // 1. High Side Decrements (Wins logic path)
             highCornerValue = Math.max(baseSize, highCornerValue - (1 * baseSize));
             highStreetValue = Math.max(baseSize, highStreetValue - (2 * baseSize));
             highSplitValue  = Math.max(baseSize, highSplitValue - (3 * baseSize));
-            highSideLosses = 0; // Reset high loss tracking counter
+            highSideLosses = 0; 
 
             // 2. Low Side Increments (Loss logic path)
             lowSideLosses++;
@@ -376,31 +394,29 @@
             logText += `Low Side consecutive losses: ${lowSideLosses}.`;
         } 
         else {
-            // TOTAL LOSS TRIGGERED (Hit uncovered numbers)
+            // Uncovered Total Loss numbers
             logText += `<span class="log-loss-both">[TOTAL LOSS ON BOTH SIDES]</span>. Both sides progressed. `;
             
-            // Increment Low Side Losses and Scaled Values
             lowSideLosses++;
             lowCornerValue += baseSize;
             if (lowSideLosses % 2 === 0) lowStreetValue += baseSize;
             if (lowSideLosses % 3 === 0) lowSplitValue += baseSize;
 
-            // Increment High Side Losses and Scaled Values
             highSideLosses++;
             highCornerValue += baseSize;
             if (highSideLosses % 2 === 0) highStreetValue += baseSize;
             if (highSideLosses % 3 === 0) highSplitValue += baseSize;
         }
 
-        // Calculate total stakes placed on the layout for history logs deductions
-        let totalBetCost = lowCornerValue + lowStreetValue + lowSplitValue + highCornerValue + highStreetValue + highSplitValue;
-        balance -= totalBetCost;
+        // Add back any calculated winnings directly to the live rolling bankroll 
+        balance += roundPayout;
         document.getElementById('balanceInput').value = balance;
 
-        // Render variables adjustments changes back to view displays elements nodes
+        let dynamicProfitSummary = roundPayout - totalBetCost;
+        logText += ` [Net Net Round P&L: ${dynamicProfitSummary >= 0 ? '+' : ''}${dynamicProfitSummary}$]`;
+
         updateUIElements();
 
-        // Print logs tracking entries strings updates line components smoothly
         const logPanel = document.getElementById('logPanel');
         if(logPanel.innerHTML.includes("System ready")) logPanel.innerHTML = "";
         logPanel.innerHTML = `<div class="log-entry">${logText}</div>` + logPanel.innerHTML;
