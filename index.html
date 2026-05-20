@@ -293,17 +293,17 @@
     <div class="panels-grid">
         <div class="status-panel">
             <h3>LOW SIDE (Dynamic Progression)</h3>
-            <div class="data-row"><span>Corner (8,9,11,12) [-2 Units on Win | +1 Unit on Loss]:</span><span class="data-val" id="lbl-low-corner">10</span></div>
-            <div class="data-row"><span>Street (16,17,18) [-2 Units on Win | +1 Unit on Loss]:</span><span class="data-val" id="lbl-low-street">10</span></div>
-            <div class="data-row"><span>Split (10,13) [-4 Units on Win | +1 Unit on Loss]:</span><span class="data-val" id="lbl-low-split">10</span></div>
+            <div class="data-row"><span>Corner (8,9,11,12) [-4 on Split Win | -2 on Others]:</span><span class="data-val" id="lbl-low-corner">10</span></div>
+            <div class="data-row"><span>Street (16,17,18) [-4 on Split Win | -2 on Others]:</span><span class="data-val" id="lbl-low-street">10</span></div>
+            <div class="data-row"><span>Split (10,13) [-4 on Split Win | -2 on Others]:</span><span class="data-val" id="lbl-low-split">10</span></div>
             <div class="data-row" style="color: #81c784;"><span>Consecutive Low Losses:</span><span class="data-val" id="lbl-low-losses" style="color: #81c784;">0</span></div>
         </div>
         
         <div class="status-panel">
             <h3>HIGH SIDE (Dynamic Progression)</h3>
-            <div class="data-row"><span>Corner (26,27,29,30) [-2 Units on Win | +1 Unit on Loss]:</span><span class="data-val" id="lbl-high-corner">10</span></div>
-            <div class="data-row"><span>Street (19,20,21) [-2 Units on Win | +1 Unit on Loss]:</span><span class="data-val" id="lbl-high-street">10</span></div>
-            <div class="data-row"><span>Split (28,31) [-4 Units on Win | +1 Unit on Loss]:</span><span class="data-val" id="lbl-high-split">10</span></div>
+            <div class="data-row"><span>Corner (26,27,29,30) [-4 on Split Win | -2 on Others]:</span><span class="data-val" id="lbl-high-corner">10</span></div>
+            <div class="data-row"><span>Street (19,20,21) [-4 on Split Win | -2 on Others]:</span><span class="data-val" id="lbl-high-street">10</span></div>
+            <div class="data-row"><span>Split (28,31) [-4 on Split Win | -2 on Others]:</span><span class="data-val" id="lbl-high-split">10</span></div>
             <div class="data-row" style="color: #81c784;"><span>Consecutive High Losses:</span><span class="data-val" id="lbl-high-losses" style="color: #81c784;">0</span></div>
         </div>
     </div>
@@ -422,17 +422,22 @@
 
         if (lowHit) {
             logText += `<span class="log-win-low">[WIN LOW SIDE]</span>. `;
+            let reductionUnits = 2; // Default for Corner / Street win
+            
             if (lowCornerNums.includes(num)) roundPayout = lowCornerValue * 9;
             if (lowStreetNums.includes(num)) roundPayout = lowStreetValue * 12;
-            if (lowSplitNums.includes(num))  roundPayout = lowSplitValue * 18;
+            if (lowSplitNums.includes(num))  {
+                roundPayout = lowSplitValue * 18;
+                reductionUnits = 4; // Drop 4 units on exact split win
+            }
 
-            // Target adjustments for winning side (Low Side)
-            lowCornerValue = Math.max(baseSize, lowCornerValue - (2 * baseSize));
-            lowStreetValue = Math.max(baseSize, lowStreetValue - (2 * baseSize));
-            lowSplitValue  = Math.max(baseSize, lowSplitValue - (4 * baseSize));
+            // Apply dynamic win reductions to all 3 categories
+            lowCornerValue = Math.max(baseSize, lowCornerValue - (reductionUnits * baseSize));
+            lowStreetValue = Math.max(baseSize, lowStreetValue - (reductionUnits * baseSize));
+            lowSplitValue  = Math.max(baseSize, lowSplitValue - (reductionUnits * baseSize));
             lowSideLosses = 0; 
 
-            // Loss adjustments for losing side (High Side) -> Increase ALL by 1 unit
+            // Loss progression for high side (+1 unit flat)
             highSideLosses++;
             highCornerValue += baseSize; 
             highStreetValue += baseSize; 
@@ -440,17 +445,22 @@
         } 
         else if (highHit) {
             logText += `<span class="log-win-high">[WIN HIGH SIDE]</span>. `;
+            let reductionUnits = 2; // Default for Corner / Street win
+            
             if (highCornerNums.includes(num)) roundPayout = highCornerValue * 9;
             if (highStreetNums.includes(num)) roundPayout = highStreetValue * 12;
-            if (highSplitNums.includes(num))  roundPayout = highSplitValue * 18;
+            if (highSplitNums.includes(num))  {
+                roundPayout = highSplitValue * 18;
+                reductionUnits = 4; // Drop 4 units on exact split win
+            }
 
-            // Target adjustments for winning side (High Side)
-            highCornerValue = Math.max(baseSize, highCornerValue - (2 * baseSize));
-            highStreetValue = Math.max(baseSize, highStreetValue - (2 * baseSize));
-            highSplitValue  = Math.max(baseSize, highSplitValue - (4 * baseSize));
+            // Apply dynamic win reductions to all 3 categories
+            highCornerValue = Math.max(baseSize, highCornerValue - (reductionUnits * baseSize));
+            highStreetValue = Math.max(baseSize, highStreetValue - (reductionUnits * baseSize));
+            highSplitValue  = Math.max(baseSize, highSplitValue - (reductionUnits * baseSize));
             highSideLosses = 0; 
 
-            // Loss adjustments for losing side (Low Side) -> Increase ALL by 1 unit
+            // Loss progression for low side (+1 unit flat)
             lowSideLosses++;
             lowCornerValue += baseSize; 
             lowStreetValue += baseSize; 
@@ -458,7 +468,7 @@
         } 
         else {
             logText += `<span class="log-loss-both">[TOTAL LOSS]</span>. Both progressed. `;
-            // Both sides lost -> Increase everything by 1 unit flatly
+            // Total loss -> flat 1 unit increases everywhere
             lowSideLosses++;
             lowCornerValue += baseSize;
             lowStreetValue += baseSize;
@@ -488,7 +498,6 @@
         const initialBankroll = parseFloat(document.getElementById('balanceInput').value) || 1000;
         const base = parseInt(document.getElementById('baseSizeInput').value) || 10;
 
-        // Isolated temporary simulation engine copies of strategy tracking variables
         let simBalance = initialBankroll;
         let maxProfitReached = initialBankroll;
         let deepestLossHit = initialBankroll;
@@ -499,7 +508,6 @@
         let countLowWins = 0, countHighWins = 0, countTotalLosses = 0;
 
         for (let i = 0; i < totalSpins; i++) {
-            // Generate standard random European roulette number (0 to 36)
             let rolledNum = Math.floor(Math.random() * 37);
 
             let currentBetCost = sLowCorner + sLowStreet + sLowSplit + sHighCorner + sHighStreet + sHighSplit;
@@ -510,17 +518,20 @@
 
             if (isLow) {
                 countLowWins++;
+                let simReduction = 2;
+                
                 if (lowCornerNums.includes(rolledNum)) simBalance += (sLowCorner * 9);
                 if (lowStreetNums.includes(rolledNum)) simBalance += (sLowStreet * 12);
-                if (lowSplitNums.includes(rolledNum))  simBalance += (sLowSplit * 18);
+                if (lowSplitNums.includes(rolledNum))  {
+                    simBalance += (sLowSplit * 18);
+                    simReduction = 4;
+                }
 
-                // Apply new win scale reductions
-                sLowCorner = Math.max(base, sLowCorner - (2 * base));
-                sLowStreet = Math.max(base, sLowStreet - (2 * base));
-                sLowSplit  = Math.max(base, sLowSplit - (4 * base));
+                sLowCorner = Math.max(base, sLowCorner - (simReduction * base));
+                sLowStreet = Math.max(base, sLowStreet - (simReduction * base));
+                sLowSplit  = Math.max(base, sLowSplit - (simReduction * base));
                 sLowLosses = 0;
 
-                // High side lost -> flat 1 unit increases
                 sHighLosses++;
                 sHighCorner += base;
                 sHighStreet += base;
@@ -528,17 +539,20 @@
             } 
             else if (isHigh) {
                 countHighWins++;
+                let simReduction = 2;
+                
                 if (highCornerNums.includes(rolledNum)) simBalance += (sHighCorner * 9);
                 if (highStreetNums.includes(rolledNum)) simBalance += (sHighStreet * 12);
-                if (highSplitNums.includes(rolledNum))  simBalance += (sHighSplit * 18);
+                if (highSplitNums.includes(rolledNum))  {
+                    simBalance += (sHighSplit * 18);
+                    simReduction = 4;
+                }
 
-                // Apply new win scale reductions
-                sHighCorner = Math.max(base, sHighCorner - (2 * base));
-                sHighStreet = Math.max(base, sHighStreet - (2 * base));
-                sHighSplit  = Math.max(base, sHighSplit - (4 * base));
+                sHighCorner = Math.max(base, sHighCorner - (simReduction * base));
+                sHighStreet = Math.max(base, sHighStreet - (simReduction * base));
+                sHighSplit  = Math.max(base, sHighSplit - (simReduction * base));
                 sHighLosses = 0;
 
-                // Low side lost -> flat 1 unit increases
                 sLowLosses++;
                 sLowCorner += base;
                 sLowStreet += base;
@@ -546,7 +560,6 @@
             } 
             else {
                 countTotalLosses++;
-                // Both lost -> everything increases by 1 unit flat
                 sLowLosses++;
                 sLowCorner += base;
                 sLowStreet += base;
@@ -558,12 +571,10 @@
                 sHighSplit  += base;
             }
 
-            // Track peaks and troughs
             if (simBalance > maxProfitReached) maxProfitReached = simBalance;
             if (simBalance < deepestLossHit) deepestLossHit = simBalance;
         }
 
-        // Output Calculated Metric Updates into View panels
         document.getElementById('simPeakProfit').innerText = `$${Math.round(maxProfitReached)}`;
         document.getElementById('simDeepestLoss').innerText = `$${Math.round(deepestLossHit)}`;
         document.getElementById('simEndingBankroll').innerText = `$${Math.round(simBalance)}`;
