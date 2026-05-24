@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>European Roulette Advanced Section Tracker</title>
+    <title>European Roulette Direct Section Tracker</title>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -113,10 +113,6 @@
             border: 2px dashed var(--accent-yellow);
             box-shadow: 0 0 8px var(--accent-yellow);
         }
-        .cell.neighbor-target {
-            background-image: linear-gradient(rgba(255,209,102,0.15), rgba(255,209,102,0.15));
-            border: 2px dotted #fff;
-        }
 
         .predictions-panel {
             background: #112a1f;
@@ -152,18 +148,17 @@
         }
 
         .numbers-inline {
-            font-size: 18px;
+            font-size: 14px;
             font-weight: bold;
             color: var(--accent-yellow);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            word-wrap: break-word;
         }
 
-        .neighbors-inline {
+        .side-label {
+            color: #fff;
             font-size: 11px;
-            color: #bbb;
-            margin-top: 3px;
+            text-transform: uppercase;
+            margin-top: 2px;
         }
 
         .dashboard-split {
@@ -238,17 +233,35 @@
     </div>
 
     <div class="panel predictions-panel">
-        <h3 style="margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">⚡ ACTIVE TARGET BET DASHBOARD ⚡</h3>
+        <h3 style="margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">⚡ ACTIVE DIRECT 4+4 STRATEGY DASHBOARD ⚡</h3>
         <div class="pred-horizontal-container">
             <div class="section-card">
-                <div class="section-title">Track A (0 to 23 Segment)</div>
-                <div class="numbers-inline" id="box-num-0">-</div>
-                <div class="neighbors-inline" id="box-nei-0">Left/Right: -</div>
+                <div class="section-title">Tier</div>
+                <div class="side-label">Left Side (4):</div>
+                <div class="numbers-inline" id="tier-left">-</div>
+                <div class="side-label" id="tier-right-label">Right Side (4):</div>
+                <div class="numbers-inline" id="tier-right">-</div>
             </div>
             <div class="section-card">
-                <div class="section-title">Track B (10 to 26 Segment)</div>
-                <div class="numbers-inline" id="box-num-1">-</div>
-                <div class="neighbors-inline" id="box-nei-1">Left/Right: -</div>
+                <div class="section-title">Orphiline</div>
+                <div class="side-label">Left Side (4):</div>
+                <div class="numbers-inline" id="orph-left">-</div>
+                <div class="side-label" id="orph-right-label">Right Side (4):</div>
+                <div class="numbers-inline" id="orph-right">-</div>
+            </div>
+            <div class="section-card">
+                <div class="section-title">Voision</div>
+                <div class="side-label">Left Side (4):</div>
+                <div class="numbers-inline" id="vois-left">-</div>
+                <div class="side-label" id="vois-right-label">Right Side (4):</div>
+                <div class="numbers-inline" id="vois-right">-</div>
+            </div>
+            <div class="section-card">
+                <div class="section-title">Zero Section</div>
+                <div class="side-label">Left Side (4):</div>
+                <div class="numbers-inline" id="zero-left">-</div>
+                <div class="side-label" id="zero-right-label">Right Side (4):</div>
+                <div class="numbers-inline" id="zero-right">-</div>
             </div>
         </div>
     </div>
@@ -262,11 +275,11 @@
     <div class="dashboard-split">
         
         <div class="panel">
-            <h3>Wheel Tracks Analytics (Max 70 Spins Window)</h3>
+            <h3>Wheel Sections Analytics (Max 70 Spins Window)</h3>
             <table class="stats-table">
                 <thead>
                     <tr>
-                        <th>Section Segment</th>
+                        <th>Section</th>
                         <th>Cold Numbers (Least → Most)</th>
                         <th>Hot Numbers (Most → Least)</th>
                     </tr>
@@ -282,7 +295,7 @@
                 <div class="performance-grid">
                     <div class="perf-item"><div style="font-size:11px; color:#aaa;">SPINS</div><strong id="statTotalSpins" style="font-size:18px;">0</strong></div>
                     <div class="perf-item"><div style="font-size:11px; color:#aaa;">WINS</div><strong id="statWins" style="font-size:18px; color:var(--accent-blue);">0</strong></div>
-                    <div class="perf-item"><div style="font-size:11px; color:#aaa;">NEIGHBORS RETAINED</div><strong id="statLevel" style="font-size:18px; color:var(--accent-yellow);">1</strong></div>
+                    <div class="perf-item"><div style="font-size:11px; color:#aaa;">ACTIVE SIDES</div><strong id="statLevel" style="font-size:18px; color:var(--accent-yellow);">Both Sides</strong></div>
                 </div>
             </div>
 
@@ -296,22 +309,32 @@
 </div>
 
 <script>
-    const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    
-    // Segment 1: From 0 to 23
-    const TRACK_A = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23];
-    // Segment 2: From 10 to 26
-    const TRACK_B = [10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    
-    const SECTIONS = [TRACK_A, TRACK_B];
-    const SECTION_NAMES = ["TRACK A (0-23)", "TRACK B (10-26)"];
+    // Balanced Left/Right directional parsing of natural wheel configurations
+    const TIER_L = [27, 13, 36, 11, 30, 8];
+    const TIER_R = [23, 10, 5, 24, 16, 33];
+
+    const ORPH_L = [17, 34, 6, 1];
+    const ORPH_R = [20, 14, 31, 9];
+
+    const VOIS_L = [22, 18, 29, 7, 28];
+    const VOIS_R = [19, 4, 21, 2, 25];
+
+    const ZERO_L = [15, 32, 0];
+    const ZERO_R = [26, 3, 35, 12];
+
+    const SECTIONS_CONFIG = [
+        { name: "TIER", left: TIER_L, right: TIER_R, complete: [...TIER_L, ...TIER_R] },
+        { name: "ORPHILINE", left: ORPH_L, right: ORPH_R, complete: [...ORPH_L, ...ORPH_R] },
+        { name: "VOISION", left: VOIS_L, right: VOIS_R, complete: [...VOIS_L, ...VOIS_R] },
+        { name: "ZERO", left: ZERO_L, right: ZERO_R, complete: [...ZERO_L, ...ZERO_R] }
+    ];
+
     const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
     let spinResults = [];
     let occurrenceMap = {};
-    let currentPredictionsBySection = [[], []];
-    let currentWinningNumbersZone = [];
-    let retainNeighbors = true; // Flips to false on loss to remove 1 neighbor entry path
+    let activeTargets = [];
+    let retainRightSide = true; // Flips to false on loss to completely eliminate right side predictions
     let winCount = 0;
     let liveSpinsCount = 0;
 
@@ -358,21 +381,13 @@
         }
     }
 
-    function getWheelNeighbors(num) {
-        const index = WHEEL_ORDER.indexOf(num);
-        if (index === -1) return [];
-        const leftNeighbor = WHEEL_ORDER[(index - 1 + WHEEL_ORDER.length) % WHEEL_ORDER.length];
-        const rightNeighbor = WHEEL_ORDER[(index + 1) % WHEEL_ORDER.length];
-        return [leftNeighbor, rightNeighbor];
-    }
-
     function processInitialSpins() {
         const inputString = document.getElementById('initialNumbers').value.trim();
         if(!inputString) return alert("Please paste database elements first!");
 
         resetOccurrenceMap();
         spinResults = [];
-        retainNeighbors = true;
+        retainRightSide = true;
         
         let rawParts = inputString.split(/[\n,;\s]+/);
         let parsedNumbers = [];
@@ -386,10 +401,10 @@
 
         if(parsedNumbers.length === 0) return alert("No valid roulette numbers parsed.");
         
-        // Data read from bottom to top as top is latest
+        // Data parsed from bottom to top as top is latest
         parsedNumbers.reverse();
 
-        // Enforce 70 spins limit threshold condition rule
+        // Enforce max 70 spins evaluation limit window
         if(parsedNumbers.length > 70) {
             parsedNumbers = parsedNumbers.slice(-70);
         }
@@ -398,15 +413,14 @@
             spinResults.push(num);
         });
 
-        recalculateOccurrencesFromHistory();
-        logToConsole(`Imported dataset down-selected to ${parsedNumbers.length} working window items.`);
+        recalculateOccurrences();
+        logToConsole(`Imported dataset processed bottom-to-top. ${parsedNumbers.length} spins active.`);
         calculateNextBets();
         updateUI();
     }
 
-    function recalculateOccurrencesFromHistory() {
+    function recalculateOccurrences() {
         resetOccurrenceMap();
-        // Limit historical lookup parameters to last 70 items max
         let workingData = spinResults.slice(-70);
         workingData.forEach(num => {
             occurrenceMap[num] = (occurrenceMap[num] || 0) + 1;
@@ -417,19 +431,17 @@
         liveSpinsCount++;
         spinResults.push(num);
         
-        recalculateOccurrencesFromHistory();
+        recalculateOccurrences();
 
-        let totalZonePredictions = [...currentWinningNumbersZone];
-        
-        if (totalZonePredictions.length > 0) {
-            if (totalZonePredictions.includes(num)) {
+        if (activeTargets.length > 0) {
+            if (activeTargets.includes(num)) {
                 winCount++;
-                logToConsole(`<span style="color:#06d6a0; font-weight:bold;">[WIN] ${num} Hit! Neighbors restored.</span>`);
+                logToConsole(`<span style="color:#06d6a0; font-weight:bold;">[WIN] ${num} Hit! Right side tracking restored.</span>`);
                 showStatusBadge(true, num);
-                retainNeighbors = true; 
+                retainRightSide = true; 
             } else {
-                retainNeighbors = false; // On loss, don't add on and remove 1 neighbor path directly
-                logToConsole(`<span style="color:#ff4d4d;">[LOSS] ${num} Miss. Dropping 1 neighbor prediction zone node.</span>`);
+                retainRightSide = false; // Strategy adjustment rule on loss: drop right side completely
+                logToConsole(`<span style="color:#ff4d4d;">[LOSS] ${num} Miss. Dropped right side numbers directly. No expansion.</span>`);
                 showStatusBadge(false, num);
             }
         }
@@ -438,94 +450,87 @@
         updateUI();
     }
 
+    function getColdestFromList(list, count) {
+        let mapped = list.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
+        mapped.sort((a, b) => a.count - b.count);
+        return mapped.slice(0, count).map(item => item.number);
+    }
+
     function calculateNextBets() {
-        currentPredictionsBySection = [[], []];
-        currentWinningNumbersZone = [];
+        activeTargets = [];
 
-        for (let i = 0; i < SECTIONS.length; i++) {
-            const section = SECTIONS[i];
-            let sectionData = section.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
-            // Get coldest item
-            sectionData.sort((a, b) => a.count - b.count);
+        SECTIONS_CONFIG.forEach(sec => {
+            sec.currentLeft = getColdestFromList(sec.left, 4);
+            sec.currentRight = getColdestFromList(sec.right, 4);
 
-            if(sectionData.length > 0) {
-                let targetNum = sectionData[0].number;
-                currentPredictionsBySection[i].push(targetNum);
-                
-                if (!currentWinningNumbersZone.includes(targetNum)) {
-                    currentWinningNumbersZone.push(targetNum);
-                }
-                
-                let neighbors = getWheelNeighbors(targetNum);
-                if (neighbors.length >= 2) {
-                    if (retainNeighbors) {
-                        // Regular flow: Add both left and right side target numbers
-                        if (!currentWinningNumbersZone.includes(neighbors[0])) currentWinningNumbersZone.push(neighbors[0]);
-                        if (!currentWinningNumbersZone.includes(neighbors[1])) currentWinningNumbersZone.push(neighbors[1]);
-                    } else {
-                        // Loss Rule execution: Remove 1 neighbor directly (Retain only Left Side neighbor)
-                        if (!currentWinningNumbersZone.includes(neighbors[0])) currentWinningNumbersZone.push(neighbors[0]);
-                    }
-                }
+            sec.currentLeft.forEach(n => { if(!activeTargets.includes(n)) activeTargets.push(n); });
+            
+            if (retainRightSide) {
+                sec.currentRight.forEach(n => { if(!activeTargets.includes(n)) activeTargets.push(n); });
             }
-        }
+        });
     }
 
     function updateUI() {
-        for(let i = 0; i < 2; i++) {
-            const numBox = document.getElementById(`box-num-${i}`);
-            const neiBox = document.getElementById(`box-nei-${i}`);
-            
-            if(currentPredictionsBySection[i].length > 0) {
-                let primaryTarget = currentPredictionsBySection[i][0];
-                numBox.innerText = primaryTarget;
-                
-                let neighbors = getWheelNeighbors(primaryTarget);
-                if(retainNeighbors) {
-                    neiBox.innerText = `Left/Right Neighbors: ${neighbors[0]}, ${neighbors[1]}`;
+        const ids = [
+            { left: 'tier-left', right: 'tier-right', label: 'tier-right-label' },
+            { left: 'orph-left', right: 'orph-right', label: 'orph-right-label' },
+            { left: 'vois-left', right: 'vois-right', label: 'vois-right-label' },
+            { left: 'zero-left', right: 'zero-right', label: 'zero-right-label' }
+        ];
+
+        SECTIONS_CONFIG.forEach((sec, idx) => {
+            const leftBox = document.getElementById(ids[idx].left);
+            const rightBox = document.getElementById(ids[idx].right);
+            const rightLabel = document.getElementById(ids[idx].label);
+
+            if(sec.currentLeft && sec.currentLeft.length > 0) {
+                leftBox.innerText = sec.currentLeft.join(', ');
+                if(retainRightSide) {
+                    rightBox.innerText = sec.currentRight.join(', ');
+                    rightBox.style.display = "block";
+                    rightLabel.style.display = "block";
                 } else {
-                    neiBox.innerText = `Modified (Left Only): ${neighbors[0]}`;
+                    rightBox.innerText = "-";
+                    rightBox.style.display = "none";
+                    rightLabel.style.display = "none";
                 }
             } else {
-                numBox.innerText = "-";
-                neiBox.innerText = "Left/Right: -";
+                leftBox.innerText = "-";
+                rightBox.innerText = "-";
             }
-        }
+        });
 
         document.querySelectorAll('.cell').forEach(cell => {
-            cell.classList.remove('bet-target', 'neighbor-target');
+            cell.classList.remove('bet-target');
             const cellNum = parseInt(cell.getAttribute('data-number'), 10);
-            
-            if (currentPredictionsBySection.flat().includes(cellNum)) {
+            if (activeTargets.includes(cellNum)) {
                 cell.classList.add('bet-target');
-            } else if (currentWinningNumbersZone.includes(cellNum)) {
-                cell.classList.add('neighbor-target');
             }
         });
 
         const tableBody = document.getElementById('sectionsTableBody');
         tableBody.innerHTML = '';
-        for (let i = 0; i < SECTIONS.length; i++) {
-            const section = SECTIONS[i];
-            let sectionData = section.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
+        SECTIONS_CONFIG.forEach(sec => {
+            let sectionData = sec.complete.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
             let coldSorted = [...sectionData].sort((a, b) => a.count - b.count).map(item => `${item.number}(${item.count})`).join(', ');
             let hotSorted = [...sectionData].sort((a, b) => b.count - a.count).map(item => `${item.number}(${item.count})`).join(', ');
 
             const row = document.createElement('tr');
-            row.innerHTML = `<td><strong>${SECTION_NAMES[i]}</strong></td><td style="color:#ffd166;">${coldSorted}</td><td style="color:#4ea8de;">${hotSorted}</td>`;
+            row.innerHTML = `<td><strong>${sec.name}</strong></td><td style="color:#ffd166;">${coldSorted}</td><td style="color:#4ea8de;">${hotSorted}</td>`;
             tableBody.appendChild(row);
-        }
+        });
 
         document.getElementById('statTotalSpins').innerText = spinResults.length;
         document.getElementById('statWins').innerText = winCount;
-        document.getElementById('statLevel').innerText = retainNeighbors ? "Both Sides (Full)" : "1 Side Only (Reduced)";
+        document.getElementById('statLevel').innerText = retainRightSide ? "Both Sides (4+4)" : "Left Side Only (4)";
     }
 
     function showStatusBadge(isWin, num) {
         const targetDiv = document.getElementById('winLossIndicator');
         targetDiv.innerHTML = isWin ? 
             `<span class="badge win">HIT WIN ON ${num}!</span>` : 
-            `<span class="badge loss">MISS ON ${num} (Dropped 1 Neighbor)</span>`;
+            `<span class="badge loss">MISS ON ${num} (Dropped Right Side Targets)</span>`;
     }
 
     function logToConsole(message) {
