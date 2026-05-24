@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dealer Signature Travel Tracker</title>
+    <title>Dual-Averaging Dealer Signature Tracker</title>
     <style>
         :root { --bg: #0b0f19; --panel: #161e2d; --accent: #38bdf8; --green: #10b981; --red: #ef4444; --black: #1e293b; --text: #f1f5f9; }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -56,6 +56,9 @@
         
         .bulk-area { width: 100%; height: 60px; background: #0b0f19; color: var(--accent); border: 1px solid #475569; border-radius: 6px; padding: 10px; box-sizing: border-box; }
         .trend-val { color: var(--accent); font-weight: bold; }
+        .dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; background: #0f172a; padding: 10px; border-radius: 6px; }
+        .dg-title { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
+        .dg-val { font-size: 1.1rem; font-weight: bold; color: #fff; }
     </style>
 </head>
 <body>
@@ -98,23 +101,31 @@
             
             <div class="neighbors-box" id="neighbors-output"></div>
 
-            <div style="font-size: 0.85rem; opacity: 0.8;">Current Travel Average: <span id="status-trend" class="trend-val">0.00</span></div>
+            <div style="font-size: 0.82rem; opacity: 0.8;">Active Target Mode: <span id="status-trend" class="trend-val">None</span></div>
             
             <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px;">LAST 8 SPINS STREAK</div>
             <div class="streak-container" id="streak-output"></div>
         </div>
 
         <div class="panel">
-            <h2 style="margin:0; font-size: 1rem;">DEALER SIGNATURE ANALYTICS</h2>
-            <div style="margin: 15px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Travel Average (All Spins):</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
+            <h2 style="margin:0; font-size: 1rem;">ISOLATED SIGNATURE ANALYTICS</h2>
+            
+            <div class="dual-grid">
+                <div>
+                    <div class="dg-title">↻ CW Average</div>
+                    <div class="dg-val" id="cw-avg-val">0.00</div>
+                    <div style="font-size:0.65rem; color:#64748b;">Spins: <span id="cw-count-val">0</span></div>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Total Spins Collected:</span>
-                    <span id="count-val">0</span>
+                <div>
+                    <div class="dg-title">↺ CCW Average</div>
+                    <div class="dg-val" id="ccw-avg-val">0.00</div>
+                    <div style="font-size:0.65rem; color:#64748b;">Spins: <span id="ccw-count-val">0</span></div>
                 </div>
+            </div>
+
+            <div style="margin: 15px 0; font-size: 13px; display: flex; justify-content: space-between; border-top: 1px solid #2d3748; padding-top: 10px;">
+                <span>Total Combined Spins:</span>
+                <span id="count-val" style="font-weight: bold;">0</span>
             </div>
             
             <textarea id="bulkData" class="bulk-area" placeholder="Paste history numbers (e.g. 32, 15, 19, 4)"></textarea>
@@ -129,10 +140,17 @@
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     
     let history = [];
-    let dists = [];
     let spinDirections = []; 
+    let computedDistances = []; // To keep in track for ui logs
     let predictedSectorsLog = []; 
     let outcomesLog = []; 
+
+    // Isolated tracking blocks to avoid cross-contamination
+    let cwDists = [];
+    let ccwDists = [];
+    
+    let lastCwNum = null;
+    let lastCcwNum = null;
 
     let currentDirection = 'CW'; 
 
@@ -190,21 +208,27 @@
         }
 
         spinDirections.push(currentDirection);
+        let travel = "-";
 
-        if (history.length > 0) {
-            const lastNum = history[history.length - 1];
-            const idxCurrent = wheelOrder.indexOf(num);
-            const idxLast = wheelOrder.indexOf(lastNum);
-            
-            let travel = 0;
-            if (currentDirection === 'CW') {
-                travel = (idxCurrent - idxLast + 37) % 37;
-            } else {
-                travel = (idxLast - idxCurrent + 37) % 37;
+        const idxCurrent = wheelOrder.indexOf(num);
+
+        if (currentDirection === 'CW') {
+            if (lastCwNum !== null) {
+                const idxLastCw = wheelOrder.indexOf(lastCwNum);
+                travel = (idxCurrent - idxLastCw + 37) % 37;
+                cwDists.push(travel);
             }
-            dists.push(travel);
+            lastCwNum = num; // Update the reference for next CW calculations
+        } else {
+            if (lastCcwNum !== null) {
+                const idxLastCcw = wheelOrder.indexOf(lastCcwNum);
+                travel = (idxLastCcw - idxCurrent + 37) % 37;
+                ccwDists.push(travel);
+            }
+            lastCcwNum = num; // Update the reference for next CCW calculations
         }
         
+        computedDistances.push(travel);
         history.push(num);
 
         // Standard sequence tracking alternates coming layout spin directions
@@ -222,38 +246,51 @@
     }
 
     function process() {
-        if (history.length < 2) {
-            predictedSectorsLog.push([]);
-            return updateUI();
-        }
-
-        // True Signature Formula: Sum of all distances / Total spins collected
-        const totalTravelSum = dists.reduce((a, b) => a + b, 0);
-        const avg = totalTravelSum / dists.length;
+        const cwAvg = cwDists.length > 0 ? (cwDists.reduce((a, b) => a + b, 0) / cwDists.length) : 0;
+        const ccwAvg = ccwDists.length > 0 ? (ccwDists.reduce((a, b) => a + b, 0) / ccwDists.length) : 0;
 
         const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
         
         let predIdx = 0;
-        let roundedAvgShift = Math.round(avg);
-        
-        // Project center target node based precisely on active spin orientation configuration
+        let activeAvgUsed = 0;
+        let validPredictionPossible = false;
+
         if (currentDirection === 'CW') {
-            predIdx = (lastIdx + roundedAvgShift + 37) % 37;
+            if (cwDists.length > 0) {
+                activeAvgUsed = cwAvg;
+                let roundedAvgShift = Math.round(cwAvg);
+                predIdx = (lastIdx + roundedAvgShift + 37) % 37;
+                validPredictionPossible = true;
+            }
         } else {
-            predIdx = (lastIdx - roundedAvgShift + 37) % 37;
+            if (ccwDists.length > 0) {
+                activeAvgUsed = ccwAvg;
+                let roundedAvgShift = Math.round(ccwAvg);
+                predIdx = (lastIdx - roundedAvgShift + 37) % 37;
+                validPredictionPossible = true;
+            }
         }
 
-        const targetCenter = wheelOrder[predIdx];
-        const targetSector = get7Neighbors(targetCenter);
-        predictedSectorsLog.push(targetSector);
-
-        updateUI(targetCenter, avg, targetSector);
+        if (validPredictionPossible) {
+            const targetCenter = wheelOrder[predIdx];
+            const targetSector = get7Neighbors(targetCenter);
+            predictedSectorsLog.push(targetSector);
+            updateUI(targetCenter, cwAvg, ccwAvg, `${currentDirection} Avg Mode (${activeAvgUsed.toFixed(2)})`, targetSector);
+        } else {
+            predictedSectorsLog.push([]);
+            updateUI("--", cwAvg, ccwAvg, `Need more reference ${currentDirection} spins`, []);
+        }
     }
 
-    function updateUI(prediction = "--", avg = 0, targetSector = []) {
+    function updateUI(prediction = "--", cwAvg = 0, ccwAvg = 0, statusMode = "None", targetSector = []) {
         document.getElementById('target-display').innerText = prediction;
-        document.getElementById('avg-val').innerText = avg.toFixed(2);
-        document.getElementById('status-trend').innerText = avg.toFixed(2);
+        document.getElementById('cw-avg-val').innerText = cwAvg.toFixed(2);
+        document.getElementById('ccw-avg-val').innerText = ccwAvg.toFixed(2);
+        
+        document.getElementById('cw-count-val').innerText = cwDists.length;
+        document.getElementById('ccw-count-val').innerText = ccwDists.length;
+        
+        document.getElementById('status-trend').innerText = statusMode;
         document.getElementById('count-val').innerText = history.length;
 
         const neighborsBox = document.getElementById('neighbors-output');
@@ -286,7 +323,7 @@
         
         history.slice().reverse().forEach((n, i) => {
             const actualIdx = history.length - 1 - i;
-            const distance = dists[actualIdx - 1] ?? "-";
+            const distance = computedDistances[actualIdx] ?? "-";
             const loggedDirection = spinDirections[actualIdx] || "-";
             
             let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
@@ -308,10 +345,14 @@
 
     function resetSession() {
         history = []; 
-        dists = [];
         spinDirections = [];
+        computedDistances = [];
         predictedSectorsLog = [];
         outcomesLog = [];
+        cwDists = [];
+        ccwDists = [];
+        lastCwNum = null;
+        lastCcwNum = null;
         currentDirection = 'CW';
         updateDirectionUI();
         updateUI();
