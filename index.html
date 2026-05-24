@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>European Roulette 4+4 Continuous Progression Tracker</title>
+    <title>European Roulette Left vs Right Track Tracker</title>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -29,7 +29,7 @@
             margin: 0 auto;
         }
 
-        h1, h3 {
+        h3 {
             text-align: center;
             color: #f1f1f1;
             margin-top: 0;
@@ -136,26 +136,28 @@
 
         .section-card {
             background: rgba(0,0,0,0.4);
-            padding: 12px;
+            padding: 15px;
             border-radius: 6px;
             border-left: 4px solid var(--accent-yellow);
+            text-align: center;
         }
 
         .section-title {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
             color: #aaa;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             border-bottom: 1px solid #444;
             padding-bottom: 3px;
         }
 
         .numbers-inline {
-            font-size: 18px;
+            font-size: 24px;
             font-weight: bold;
             color: var(--accent-yellow);
+            letter-spacing: 1px;
         }
 
         .dashboard-split {
@@ -224,13 +226,13 @@
 <div class="container">
     
     <div class="panel">
-        <h3 style="margin-bottom: 10px;">1. Paste Initial Dataset (Top Number = Latest Spin)</h3>
+        <h3>1. Paste Initial Dataset (Top Number = Latest Spin)</h3>
         <textarea id="initialNumbers" placeholder="Paste data row string list..."></textarea>
         <button onclick="processInitialSpins()">Initialize Matrix</button>
     </div>
 
     <div class="panel predictions-panel">
-        <h3 style="margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">⚡ ACTIVE 4+4 PERMANENT ALL-BETS TARGET DASHBOARD ⚡</h3>
+        <h3 style="margin: 0; font-size: 15px; text-transform: uppercase; letter-spacing: 1px;">⚡ ACTIVE WHEEL HALF CONFIGURATION (4 COLD FROM EACH SIDE) ⚡</h3>
         
         <div style="text-align: center; margin-top: 10px; font-size: 20px; font-weight: bold; color: var(--accent-yellow);">
             CURRENT BET SIZE PER NUMBER: <span id="currentBetUnits" style="color: #fff; background: #000; padding: 2px 10px; border-radius: 4px;">1</span> UNIT(S)
@@ -238,42 +240,16 @@
 
         <div class="pred-horizontal-container">
             <div class="side-block-wrapper">
-                <h4 style="margin:5px 0; text-align:center; color: var(--accent-blue); font-size:13px;">LEFT SIDE TARGETS (4)</h4>
                 <div class="section-card" style="border-left-color: var(--accent-blue);">
-                    <div class="section-title">Tier Left Coldest (1)</div>
-                    <div class="numbers-inline" id="tier-left">-</div>
-                </div>
-                <div class="section-card" style="border-left-color: var(--accent-blue);">
-                    <div class="section-title">Orphiline Left Coldest (1)</div>
-                    <div class="numbers-inline" id="orph-left">-</div>
-                </div>
-                <div class="section-card" style="border-left-color: var(--accent-blue);">
-                    <div class="section-title">Voision Left Coldest (1)</div>
-                    <div class="numbers-inline" id="vois-left">-</div>
-                </div>
-                <div class="section-card" style="border-left-color: var(--accent-blue);">
-                    <div class="section-title">Zero Left Coldest (1)</div>
-                    <div class="numbers-inline" id="zero-left">-</div>
+                    <div class="section-title" style="color: var(--accent-blue);">LEFT SIDE COLD TARGETS (0 to 23)</div>
+                    <div class="numbers-inline" id="left-targets-box">-</div>
                 </div>
             </div>
 
             <div class="side-block-wrapper">
-                <h4 style="margin:5px 0; text-align:center; color: var(--accent-yellow); font-size:13px;">RIGHT SIDE TARGETS (4)</h4>
                 <div class="section-card" style="border-left-color: var(--accent-yellow);">
-                    <div class="section-title">Tier Right Coldest (1)</div>
-                    <div class="numbers-inline" id="tier-right">-</div>
-                </div>
-                <div class="section-card" style="border-left-color: var(--accent-yellow);">
-                    <div class="section-title">Orphiline Right Coldest (1)</div>
-                    <div class="numbers-inline" id="orph-right">-</div>
-                </div>
-                <div class="section-card" style="border-left-color: var(--accent-yellow);">
-                    <div class="section-title">Voision Right Coldest (1)</div>
-                    <div class="numbers-inline" id="vois-right">-</div>
-                </div>
-                <div class="section-card" style="border-left-color: var(--accent-yellow);">
-                    <div class="section-title">Zero Right Coldest (1)</div>
-                    <div class="numbers-inline" id="zero-right">-</div>
+                    <div class="section-title" style="color: var(--accent-yellow);">RIGHT SIDE COLD TARGETS (10 to 26)</div>
+                    <div class="numbers-inline" id="right-targets-box">-</div>
                 </div>
             </div>
         </div>
@@ -288,12 +264,12 @@
     <div class="dashboard-split">
         
         <div class="panel">
-            <h3>Wheel Sections Breakdown (Max 70 Spins Window)</h3>
+            <h3>Wheel Half-Zone Breakdown (Max 70 Spins Window)</h3>
             <table class="stats-table">
                 <thead>
                     <tr>
-                        <th>Section Half</th>
-                        <th>Cold Numbers (Least → Most)</th>
+                        <th>Wheel Half Zone</th>
+                        <th>Cold Numbers Ranking (Least → Most Hits)</th>
                     </tr>
                 </thead>
                 <tbody id="sectionsTableBody"></tbody>
@@ -321,35 +297,18 @@
 </div>
 
 <script>
-    const TIER_L = [27, 13, 36, 11, 30, 8];
-    const TIER_R = [23, 10, 5, 24, 16, 33];
-
-    const ORPH_L = [17, 34, 6, 1];
-    const ORPH_R = [20, 14, 31, 9];
-
-    const VOIS_L = [22, 18, 29, 7, 28];
-    const VOIS_R = [19, 4, 21, 2, 25];
-
-    const ZERO_L = [15, 32, 0];
-    const ZERO_R = [26, 3, 35, 12];
-
-    const SECTIONS_CONFIG = [
-        { name: "TIER LEFT", list: TIER_L, key: "tierLeft", elementId: "tier-left" },
-        { name: "TIER RIGHT", list: TIER_R, key: "tierRight", elementId: "tier-right" },
-        { name: "ORPHILINE LEFT", list: ORPH_L, key: "orphLeft", elementId: "orph-left" },
-        { name: "ORPHILINE RIGHT", list: ORPH_R, key: "orphRight", elementId: "orph-right" },
-        { name: "VOISION LEFT", list: VOIS_L, key: "voisLeft", elementId: "vois-left" },
-        { name: "VOISION RIGHT", list: VOIS_R, key: "voisRight", elementId: "vois-right" },
-        { name: "ZERO LEFT", list: ZERO_L, key: "zeroLeft", elementId: "zero-left" },
-        { name: "ZERO RIGHT", list: ZERO_R, key: "zeroRight", elementId: "zero-right" }
-    ];
+    // Exact physical wheel sectors mapped dynamically into left and right zones
+    const LEFT_ZONE = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23];
+    const RIGHT_ZONE = [10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
 
     const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
     let spinResults = [];
     let occurrenceMap = {};
     let activeTargets = [];
-    let currentPredictions = {};
+    
+    let leftSidePredictions = [];
+    let rightSidePredictions = [];
     
     let lossStreak = 0;
     let currentUnits = 1;
@@ -430,7 +389,7 @@
         });
 
         recalculateOccurrences();
-        logToConsole(`Imported configuration synced. All 8 positions active.`);
+        logToConsole(`Imported configuration initialized. Rolling 70 spin lookback tracking active.`);
         calculateNextBets();
         updateUI();
     }
@@ -452,22 +411,22 @@
                 winCount++;
                 let oldUnits = currentUnits;
                 
-                // Rule: If win happens on any side decrease 2 units
+                // Progression: On win on any side, decrease 2 units
                 currentUnits = Math.max(1, currentUnits - 2); 
                 lossStreak = 0; 
                 
-                logToConsole(`<span style="color:#06d6a0; font-weight:bold;">[WIN] ${num} Hit! Bet decreased from ${oldUnits} to ${currentUnits} Units.</span>`);
+                logToConsole(`<span style="color:#06d6a0; font-weight:bold;">[WIN] ${num} Hit! Sizing reduced from ${oldUnits} to ${currentUnits} Units.</span>`);
                 showStatusBadge(true, num);
             } else {
                 lossStreak++;
                 let oldUnits = currentUnits;
                 
-                // Rule: On 2 consecutive losses increase by 2 units
+                // Progression: On 2 consecutive losses on any side, increase by 2 units
                 if (lossStreak > 0 && lossStreak % 2 === 0) {
                     currentUnits += 2;
-                    logToConsole(`<span style="color:#ff1a1a; font-weight:bold;">[LOSS STREAK: ${lossStreak}] 2 Consecutive Losses Hit. Bet increased by +2 Units (Now ${currentUnits}).</span>`);
+                    logToConsole(`<span style="color:#ff1a1a; font-weight:bold;">[LOSS STREAK: ${lossStreak}] 2 Consecutive Losses. Sizing increased by +2 Units (Now ${currentUnits}).</span>`);
                 } else {
-                    logToConsole(`<span style="color:#ff9999;">[LOSS] ${num} Missed. Consecutive counter: ${lossStreak}. Bet sits at ${currentUnits} Units.</span>`);
+                    logToConsole(`<span style="color:#ff9999;">[LOSS] ${num} Missed. Streak counter: ${lossStreak}. Bet remaining at ${currentUnits} Units.</span>`);
                 }
                 
                 showStatusBadge(false, num);
@@ -478,33 +437,26 @@
         updateUI();
     }
 
-    function getColdestSingle(list) {
-        let mapped = list.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
+    function getColdestFromZone(zoneList, targetCount) {
+        let mapped = zoneList.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
         mapped.sort((a, b) => a.count - b.count);
-        return mapped[0].number;
+        return mapped.slice(0, targetCount).map(item => item.number);
     }
 
     function calculateNextBets() {
         activeTargets = [];
-        currentPredictions = {};
+        
+        // Pick top 4 coldest direct targets from both wheel zones explicitly
+        leftSidePredictions = getColdestFromZone(LEFT_ZONE, 4);
+        rightSidePredictions = getColdestFromZone(RIGHT_ZONE, 4);
 
-        // All 8 configurations remain continuously active regardless of win/loss status
-        SECTIONS_CONFIG.forEach(sec => {
-            const pick = getColdestSingle(sec.list);
-            currentPredictions[sec.key] = pick;
-            activeTargets.push(pick);
-        });
+        // All 8 target positions stay fully operational across conditions
+        activeTargets = [...leftSidePredictions, ...rightSidePredictions];
     }
 
     function updateUI() {
-        SECTIONS_CONFIG.forEach(sec => {
-            const displayBox = document.getElementById(sec.elementId);
-            if (currentPredictions[sec.key] !== undefined) {
-                displayBox.innerText = currentPredictions[sec.key];
-            } else {
-                displayBox.innerText = "-";
-            }
-        });
+        document.getElementById('left-targets-box').innerText = leftSidePredictions.length > 0 ? leftSidePredictions.join(', ') : "-";
+        document.getElementById('right-targets-box').innerText = rightSidePredictions.length > 0 ? rightSidePredictions.join(', ') : "-";
 
         document.getElementById('currentBetUnits').innerText = currentUnits;
         document.getElementById('statLossStreak').innerText = lossStreak;
@@ -519,12 +471,14 @@
 
         const tableBody = document.getElementById('sectionsTableBody');
         tableBody.innerHTML = '';
-        SECTIONS_CONFIG.forEach(sec => {
-            let sectionData = sec.list.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
-            let coldSorted = [...sectionData].sort((a, b) => a.count - b.count).map(item => `${item.number}(${item.count})`).join(', ');
-
+        
+        // Render statistics based on the full structural zones
+        [[ "LEFT HALF TRACK (0-23)", LEFT_ZONE], ["RIGHT HALF TRACK (10-26)", RIGHT_ZONE]].forEach(item => {
+            let sortedData = item[1].map(num => ({ number: num, count: occurrenceMap[num] || 0 }))
+                                   .sort((a, b) => a.count - b.count)
+                                   .map(i => `${i.number}(${i.count})`).join(', ');
             const row = document.createElement('tr');
-            row.innerHTML = `<td><strong>${sec.name}</strong></td><td style="color:#ffd166;">${coldSorted}</td>`;
+            row.innerHTML = `<td><strong>${item[0]}</strong></td><td style="color:#ffd166;">${sortedData}</td>`;
             tableBody.appendChild(row);
         });
 
@@ -535,9 +489,9 @@
     function showStatusBadge(isWin, num) {
         const targetDiv = document.getElementById('winLossIndicator');
         if (isWin) {
-            targetDiv.innerHTML = `<span class="badge win">HIT WIN ON ${num}! UNITS DECREASED BY 2</span>`;
+            targetDiv.innerHTML = `<span class="badge win">HIT WIN ON ${num}! UNITS REDUCED BY 2</span>`;
         } else {
-            targetDiv.innerHTML = `<span class="badge loss">MISS ON ${num}! CONSECUTIVE LOSSES: ${lossStreak}</span>`;
+            targetDiv.innerHTML = `<span class="badge loss">MISS ON ${num}! STREAK AT: ${lossStreak}</span>`;
         }
     }
 
