@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Isolated Reference Dealer Signature Tracker</title>
+    <title>Simplified Pocket Distance Tracker</title>
     <style>
         :root { --bg: #0b0f19; --panel: #161e2d; --accent: #38bdf8; --green: #10b981; --red: #ef4444; --black: #1e293b; --text: #f1f5f9; }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
@@ -31,12 +31,6 @@
         .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 12px 0; overflow-x: auto; padding: 5px 0; }
         .nb-cell { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); }
         .nb-center { border: 2px solid #fbbf24; transform: scale(1.15); box-shadow: 0 0 10px rgba(251,191,36,0.4); }
-        
-        /* Direction Controls */
-        .direction-panel { display: flex; gap: 10px; margin-bottom: 15px; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid #334155; justify-content: space-between; align-items: center;}
-        .dir-btn { flex: 1; padding: 8px; border: 1px solid #475569; background: #1e293b; color: white; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.8rem;}
-        .dir-btn.active { background: #fbbf24; color: #0b0f19; border-color: #fbbf24; }
-        .next-indicator { font-size: 0.75rem; color: #94a3b8; font-weight: bold; text-transform: uppercase;}
 
         /* Streak Badges */
         .streak-container { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
@@ -45,7 +39,7 @@
         .badge-loss { background: var(--red); }
         .badge-empty { background: #334155; opacity: 0.4; }
 
-        .log-wrap { height: 350px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0b0f19; }
+        .log-wrap { height: 415px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0b0f19; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background: #1e293b; padding: 12px; position: sticky; top: 0; text-align: center; }
         td { padding: 10px; text-align: center; border-bottom: 1px solid #2d3748; }
@@ -56,9 +50,6 @@
         
         .bulk-area { width: 100%; height: 60px; background: #0b0f19; color: var(--accent); border: 1px solid #475569; border-radius: 6px; padding: 10px; box-sizing: border-box; }
         .trend-val { color: var(--accent); font-weight: bold; }
-        .dual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; background: #0f172a; padding: 10px; border-radius: 6px; }
-        .dg-title { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px; }
-        .dg-val { font-size: 1.1rem; font-weight: bold; color: #fff; }
     </style>
 </head>
 <body>
@@ -74,11 +65,11 @@
         </div>
 
         <div class="panel" style="margin-top: 20px;">
-            <h2 style="margin:0; font-size: 1rem;">SESSION LOG (LATEST ON TOP)</h2>
+            <h2 style="margin:0; font-size: 1rem;">SESSION LOG (LATEST ENTRIES AT TOP)</h2>
             <div class="log-wrap">
                 <table>
                     <thead>
-                        <tr><th>Spin #</th><th>Result</th><th>Spin Direction</th><th>Isolated Travel Distance</th><th>Sector Verdict</th></tr>
+                        <tr><th>Spin #</th><th>Result</th><th>Pocket Distance (Steps)</th><th>Sector Verdict</th></tr>
                     </thead>
                     <tbody id="logTable"></tbody>
                 </table>
@@ -87,48 +78,33 @@
     </div>
 
     <div>
-        <div class="direction-panel">
-            <span class="next-indicator">Next Spin Direction:</span>
-            <div style="display:flex; gap: 5px; width: 65%;">
-                <button id="btn-cw" class="dir-btn active" onclick="setInitialDirection('CW')">CLOCKWISE ↻</button>
-                <button id="btn-ccw" class="dir-btn" onclick="setInitialDirection('CCW')">C-CLOCKWISE ↺</button>
-            </div>
-        </div>
-
         <div class="prediction-hero">
             <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">PROJECTED TARGET SECTOR (7+1+7)</div>
             <div id="target-display">--</div>
             
             <div class="neighbors-box" id="neighbors-output"></div>
 
-            <div style="font-size: 0.82rem; opacity: 0.8;">Active Target Mode: <span id="status-trend" class="trend-val">None</span></div>
+            <div style="font-size: 0.85rem; opacity: 0.8;">Calculated Move Average: <span id="status-trend" class="trend-val">0.00</span></div>
             
             <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px;">LAST 8 SPINS STREAK</div>
             <div class="streak-container" id="streak-output"></div>
         </div>
 
         <div class="panel">
-            <h2 style="margin:0; font-size: 1rem;">ISOLATED SIGNATURE ANALYTICS</h2>
+            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS</h2>
             
-            <div class="dual-grid">
-                <div>
-                    <div class="dg-title">↻ CW Average</div>
-                    <div class="dg-val" id="cw-avg-val">0.00</div>
-                    <div style="font-size:0.65rem; color:#64748b;">Spins: <span id="cw-count-val">0</span></div>
+            <div style="margin: 15px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span>Average Travel Distance:</span>
+                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
                 </div>
-                <div>
-                    <div class="dg-title">↺ CCW Average</div>
-                    <div class="dg-val" id="ccw-avg-val">0.00</div>
-                    <div style="font-size:0.65rem; color:#64748b;">Spins: <span id="ccw-count-val">0</span></div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Total Spins Collected:</span>
+                    <span id="count-val" style="font-weight:bold;">0</span>
                 </div>
             </div>
-
-            <div style="margin: 15px 0; font-size: 13px; display: flex; justify-content: space-between; border-top: 1px solid #2d3748; padding-top: 10px;">
-                <span>Total Combined Spins:</span>
-                <span id="count-val" style="font-weight: bold;">0</span>
-            </div>
             
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste historical numbers from oldest to newest (e.g. 32, 15, 19, 4)"></textarea>
+            <textarea id="bulkData" class="bulk-area" placeholder="Paste history text: Top row latest (e.g. 4, 19, 15, 32)"></textarea>
             <button class="btn btn-primary" onclick="importHistory()">IMPORT DATA</button>
             <button class="btn btn-danger" onclick="resetSession()">RESET ALL</button>
         </div>
@@ -140,18 +116,9 @@
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     
     let history = [];
-    let spinDirections = []; 
-    let computedDistances = []; 
+    let dists = [];
     let predictedSectorsLog = []; 
     let outcomesLog = []; 
-
-    let cwDists = [];
-    let ccwDists = [];
-    
-    let lastCwNum = null;
-    let lastCcwNum = null;
-
-    let currentDirection = 'CW'; 
 
     function buildBoard() {
         const grid = document.getElementById('boardGrid');
@@ -172,16 +139,6 @@
         });
     }
 
-    function setInitialDirection(dir) {
-        currentDirection = dir;
-        updateDirectionUI();
-    }
-
-    function updateDirectionUI() {
-        document.getElementById('btn-cw').classList.toggle('active', currentDirection === 'CW');
-        document.getElementById('btn-ccw').classList.toggle('active', currentDirection === 'CCW');
-    }
-
     function get7Neighbors(centerNumber) {
         if(centerNumber === null || centerNumber === undefined) return [];
         let idx = wheelOrder.indexOf(centerNumber);
@@ -194,102 +151,68 @@
     }
 
     function track(num) {
-        let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[predictedSectorsLog.length - 1] : [];
+        let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[0] : [];
 
         if (currentActivePredictionSector.length > 0) {
             if (currentActivePredictionSector.includes(num)) {
-                outcomesLog.push("W");
+                outcomesLog.unshift("W");
             } else {
-                outcomesLog.push("L");
+                outcomesLog.unshift("L");
             }
         } else {
-            outcomesLog.push(null); 
+            outcomesLog.unshift(null); 
         }
 
-        spinDirections.push(currentDirection);
-        let travel = "-";
-
-        const idxCurrent = wheelOrder.indexOf(num);
-
-        if (currentDirection === 'CW') {
-            if (lastCwNum !== null) {
-                const idxLastCw = wheelOrder.indexOf(lastCwNum);
-                travel = (idxCurrent - idxLastCw + 37) % 37;
-                cwDists.push(travel);
-            }
-            lastCwNum = num; 
-        } else {
-            if (lastCcwNum !== null) {
-                const idxLastCcw = wheelOrder.indexOf(lastCcwNum);
-                travel = (idxLastCcw - idxCurrent + 37) % 37;
-                ccwDists.push(travel);
-            }
-            lastCcwNum = num; 
+        if (history.length > 0) {
+            const lastNum = history[0]; // Previous top row entry
+            const idxCurrent = wheelOrder.indexOf(num);
+            const idxLast = wheelOrder.indexOf(lastNum);
+            
+            // Linear mathematical wheel offset tracking
+            let travel = (idxCurrent - idxLast + 37) % 37;
+            dists.unshift(travel);
         }
         
-        computedDistances.push(travel);
-        history.push(num);
-
-        currentDirection = currentDirection === 'CW' ? 'CCW' : 'CW';
-        updateDirectionUI();
-
+        history.unshift(num); // Always add to the top of our timeline array
         process();
     }
 
     function importHistory() {
         const raw = document.getElementById('bulkData').value;
-        // Parses left-to-right (bottom-to-top timeline)
+        // Text is split into values. Reads down from the top line.
         const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        nums.forEach(n => track(n));
+        
+        // Loop backwards starting from the bottom number up to the top row
+        for(let i = nums.length - 1; i >= 0; i--) {
+            track(nums[i]);
+        }
         document.getElementById('bulkData').value = '';
     }
 
     function process() {
-        const cwAvg = cwDists.length > 0 ? (cwDists.reduce((a, b) => a + b, 0) / cwDists.length) : 0;
-        const ccwAvg = ccwDists.length > 0 ? (ccwDists.reduce((a, b) => a + b, 0) / ccwDists.length) : 0;
-
-        const lastIdx = wheelOrder.indexOf(history[history.length - 1]);
-        
-        let predIdx = 0;
-        let activeAvgUsed = 0;
-        let validPredictionPossible = false;
-
-        if (currentDirection === 'CW') {
-            if (cwDists.length > 0) {
-                activeAvgUsed = cwAvg;
-                let roundedAvgShift = Math.round(cwAvg);
-                predIdx = (lastIdx + roundedAvgShift + 37) % 37;
-                validPredictionPossible = true;
-            }
-        } else {
-            if (ccwDists.length > 0) {
-                activeAvgUsed = ccwAvg;
-                let roundedAvgShift = Math.round(ccwAvg);
-                predIdx = (lastIdx - roundedAvgShift + 37) % 37;
-                validPredictionPossible = true;
-            }
+        if (history.length < 2) {
+            predictedSectorsLog.unshift([]);
+            return updateUI();
         }
 
-        if (validPredictionPossible) {
-            const targetCenter = wheelOrder[predIdx];
-            const targetSector = get7Neighbors(targetCenter);
-            predictedSectorsLog.push(targetSector);
-            updateUI(targetCenter, cwAvg, ccwAvg, `${currentDirection} Mode (${activeAvgUsed.toFixed(2)})`, targetSector);
-        } else {
-            predictedSectorsLog.push([]);
-            updateUI("--", cwAvg, ccwAvg, `Need more reference ${currentDirection} spins`, []);
-        }
+        const totalTravelSum = dists.reduce((a, b) => a + b, 0);
+        const avg = totalTravelSum / dists.length;
+
+        const lastIdx = wheelOrder.indexOf(history[0]); // Current top number
+        let roundedAvgShift = Math.round(avg);
+        let predIdx = (lastIdx + roundedAvgShift + 37) % 37;
+
+        const targetCenter = wheelOrder[predIdx];
+        const targetSector = get7Neighbors(targetCenter);
+        predictedSectorsLog.unshift(targetSector);
+
+        updateUI(targetCenter, avg, targetSector);
     }
 
-    function updateUI(prediction = "--", cwAvg = 0, ccwAvg = 0, statusMode = "None", targetSector = []) {
+    function updateUI(prediction = "--", avg = 0, targetSector = []) {
         document.getElementById('target-display').innerText = prediction;
-        document.getElementById('cw-avg-val').innerText = cwAvg.toFixed(2);
-        document.getElementById('ccw-avg-val').innerText = ccwAvg.toFixed(2);
-        
-        document.getElementById('cw-count-val').innerText = cwDists.length;
-        document.getElementById('ccw-count-val').innerText = ccwDists.length;
-        
-        document.getElementById('status-trend').innerText = statusMode;
+        document.getElementById('avg-val').innerText = avg.toFixed(2);
+        document.getElementById('status-trend').innerText = avg.toFixed(2);
         document.getElementById('count-val').innerText = history.length;
 
         const neighborsBox = document.getElementById('neighbors-output');
@@ -305,11 +228,11 @@
         const streakBox = document.getElementById('streak-output');
         streakBox.innerHTML = '';
         const validOutcomes = outcomesLog.filter(o => o !== null);
-        const lastEight = validOutcomes.slice(-8);
+        const recentStreak = validOutcomes.slice(0, 8).reverse(); // Keep chronological order left-to-right
         
         for (let i = 0; i < 8; i++) {
-            if (i < lastEight.length) {
-                const outcome = lastEight[i];
+            if (i < recentStreak.length) {
+                const outcome = recentStreak[i];
                 const badgeClass = outcome === 'W' ? 'badge-win' : 'badge-loss';
                 streakBox.innerHTML += `<div class="streak-badge ${badgeClass}">${outcome}</div>`;
             } else {
@@ -320,23 +243,22 @@
         const tbody = document.getElementById('logTable');
         tbody.innerHTML = '';
         
-        // Render historical tables showing the newest entry directly on top
-        history.slice().reverse().forEach((n, i) => {
-            const actualIdx = history.length - 1 - i;
-            const distance = computedDistances[actualIdx] ?? "-";
-            const loggedDirection = spinDirections[actualIdx] || "-";
+        // Output rows mapping directly down from top layout array
+        history.forEach((n, idx) => {
+            const distance = dists[idx] ?? "-";
             
             let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
-            if (outcomesLog[actualIdx] !== null && outcomesLog[actualIdx] !== undefined) {
-                outcomeVerdict = outcomesLog[actualIdx] === 'W' 
+            if (outcomesLog[idx] !== null && outcomesLog[idx] !== undefined) {
+                outcomeVerdict = outcomesLog[idx] === 'W' 
                     ? '<span style="color:#4ade80; font-weight:bold;">HIT (WIN)</span>' 
                     : '<span style="color:#f87171;">MISS (LOSS)</span>';
             }
 
+            const spinDisplayNum = history.length - idx;
+
             tbody.innerHTML += `<tr>
-                <td>${actualIdx + 1}</td>
+                <td>${spinDisplayNum}</td>
                 <td><b>${n}</b></td>
-                <td><span style="font-size:0.8rem; font-weight:bold; color:#94a3b8">${loggedDirection}</span></td>
                 <td><b>${distance}</b></td>
                 <td>${outcomeVerdict}</td>
             </tr>`;
@@ -345,16 +267,9 @@
 
     function resetSession() {
         history = []; 
-        spinDirections = [];
-        computedDistances = [];
+        dists = [];
         predictedSectorsLog = [];
         outcomesLog = [];
-        cwDists = [];
-        ccwDists = [];
-        lastCwNum = null;
-        lastCcwNum = null;
-        currentDirection = 'CW';
-        updateDirectionUI();
         updateUI();
     }
 
