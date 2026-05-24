@@ -3,277 +3,535 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simplified Pocket Distance Tracker</title>
+    <title>European Roulette Advanced Section Tracker</title>
     <style>
-        :root { --bg: #0b0f19; --panel: #161e2d; --accent: #38bdf8; --green: #10b981; --red: #ef4444; --black: #1e293b; --text: #f1f5f9; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .dashboard { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
-        
-        /* ROULETTE TABLE INPUT */
-        .table-section { background: #064e3b; padding: 20px; border-radius: 15px; border: 4px solid #065f46; position: relative; overflow-x: auto; }
-        .roulette-board { display: flex; align-items: stretch; min-width: 800px; }
-        
-        .zero-container { width: 70px; background: var(--green); border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: bold; cursor: pointer; border-top-left-radius: 40px; border-bottom-left-radius: 40px; margin-right: 5px; }
-        
-        .numbers-grid { display: grid; grid-template-columns: repeat(12, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; flex-grow: 1; }
-        .cell { height: 60px; border: 1px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.1s; border-radius: 2px; }
-        .cell:hover { filter: brightness(1.3); border-color: white; }
-        .cell:active { transform: scale(0.95); }
-        .r { background: var(--red); }
-        .b { background: var(--black); }
+        :root {
+            --bg-color: #1a1a1a;
+            --card-color: #2a2a2a;
+            --text-color: #ffffff;
+            --roulette-green: #008751;
+            --roulette-red: #d62828;
+            --roulette-black: #111111;
+            --accent-yellow: #ffd166;
+            --accent-blue: #06d6a0;
+        }
 
-        /* Panels */
-        .panel { background: var(--panel); border-radius: 12px; padding: 20px; border: 1px solid #2d3748; }
-        .prediction-hero { text-align: center; background: #0f172a; border: 2px solid var(--accent); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        #target-display { font-size: 3rem; font-weight: 800; color: #fbbf24; line-height: 1.1; margin: 10px 0; }
-        
-        /* Neighbors Visualizer */
-        .neighbors-box { display: flex; justify-content: center; gap: 4px; margin: 12px 0; overflow-x: auto; padding: 5px 0; }
-        .nb-cell { width: 32px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 13px; border: 1px solid rgba(255,255,255,0.2); }
-        .nb-center { border: 2px solid #fbbf24; transform: scale(1.15); box-shadow: 0 0 10px rgba(251,191,36,0.4); }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
 
-        /* Streak Badges */
-        .streak-container { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
-        .streak-badge { width: 26px; height: 26px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; color: #fff; }
-        .badge-win { background: var(--green); }
-        .badge-loss { background: var(--red); }
-        .badge-empty { background: #334155; opacity: 0.4; }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
 
-        .log-wrap { height: 415px; overflow-y: auto; margin-top: 15px; border-radius: 8px; background: #0b0f19; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #1e293b; padding: 12px; position: sticky; top: 0; text-align: center; }
-        td { padding: 10px; text-align: center; border-bottom: 1px solid #2d3748; }
+        h1, h3 {
+            text-align: center;
+            color: #f1f1f1;
+            margin-top: 0;
+        }
 
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-primary { background: var(--accent); color: #0b0f19; }
-        .btn-danger { background: #7f1d1d; color: white; }
-        
-        .bulk-area { width: 100%; height: 60px; background: #0b0f19; color: var(--accent); border: 1px solid #475569; border-radius: 6px; padding: 10px; box-sizing: border-box; }
-        .trend-val { color: var(--accent); font-weight: bold; }
+        .panel {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 10px;
+            box-sizing: border-box;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--roulette-green);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            filter: brightness(1.2);
+        }
+
+        .roulette-table-wrapper {
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .roulette-table {
+            display: grid;
+            grid-template-columns: 60px repeat(12, 1fr);
+            grid-template-rows: repeat(3, 50px);
+            gap: 4px;
+            min-width: 900px;
+            margin: 15px 0;
+            user-select: none;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .cell:hover {
+            transform: scale(1.03);
+            filter: brightness(1.3);
+        }
+
+        .cell.green { background-color: var(--roulette-green); }
+        .cell.red { background-color: var(--roulette-red); }
+        .cell.black { background-color: var(--roulette-black); color: white;}
+        .cell.zero { grid-column: 1; grid-row: 1 / span 3; font-size: 24px; }
+
+        .cell.bet-target {
+            border: 2px dashed var(--accent-yellow);
+            box-shadow: 0 0 8px var(--accent-yellow);
+        }
+        .cell.neighbor-target {
+            background-image: linear-gradient(rgba(255,209,102,0.15), rgba(255,209,102,0.15));
+            border: 2px dotted #fff;
+        }
+
+        .predictions-panel {
+            background: #112a1f;
+            border: 2px solid var(--roulette-green);
+        }
+
+        .pred-horizontal-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: stretch;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .section-card {
+            flex: 1;
+            background: rgba(0,0,0,0.4);
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-yellow);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .numbers-inline {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-yellow);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .neighbors-inline {
+            font-size: 11px;
+            color: #bbb;
+            margin-top: 3px;
+        }
+
+        .dashboard-split {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 950px) {
+            .dashboard-split { grid-template-columns: 1fr; }
+            .pred-horizontal-container { flex-direction: column; }
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .stats-table th, .stats-table td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+            font-size: 13px;
+        }
+        .stats-table th { background-color: rgba(0,0,0,0.2); }
+
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        .perf-item {
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .badge.win { background-color: var(--roulette-green); color: white; }
+        .badge.loss { background-color: var(--roulette-red); color: white; }
+
+        .log-box {
+            max-height: 140px;
+            overflow-y: auto;
+            background: #111;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry { margin-bottom: 3px; border-bottom: 1px solid #222; padding-bottom: 2px;}
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <div>
-        <div class="table-section">
-            <h2 style="margin:0 0 15px 0; font-size: 1rem; opacity: 0.8;">ROULETTE TRACKER INPUTBOARD</h2>
-            <div class="roulette-board">
-                <div class="zero-container" onclick="track(0)">0</div>
-                <div class="numbers-grid" id="boardGrid"></div>
-            </div>
-        </div>
+<div class="container">
+    
+    <div class="panel">
+        <h3 style="margin-bottom: 10px;">1. Paste Initial Dataset (Top Number = Latest Spin)</h3>
+        <textarea id="initialNumbers" placeholder="Paste data row string list..."></textarea>
+        <button onclick="processInitialSpins()">Initialize Matrix</button>
+    </div>
 
-        <div class="panel" style="margin-top: 20px;">
-            <h2 style="margin:0; font-size: 1rem;">SESSION LOG (LATEST ENTRIES AT TOP)</h2>
-            <div class="log-wrap">
-                <table>
-                    <thead>
-                        <tr><th>Spin #</th><th>Result</th><th>Pocket Distance (Steps)</th><th>Sector Verdict</th></tr>
-                    </thead>
-                    <tbody id="logTable"></tbody>
-                </table>
+    <div class="panel predictions-panel">
+        <h3 style="margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 1px;">⚡ ACTIVE TARGET BET DASHBOARD ⚡</h3>
+        <div class="pred-horizontal-container">
+            <div class="section-card">
+                <div class="section-title">Track A (0 to 23 Segment)</div>
+                <div class="numbers-inline" id="box-num-0">-</div>
+                <div class="neighbors-inline" id="box-nei-0">Left/Right: -</div>
+            </div>
+            <div class="section-card">
+                <div class="section-title">Track B (10 to 26 Segment)</div>
+                <div class="numbers-inline" id="box-num-1">-</div>
+                <div class="neighbors-inline" id="box-nei-1">Left/Right: -</div>
             </div>
         </div>
     </div>
 
-    <div>
-        <div class="prediction-hero">
-            <div style="font-size: 0.75rem; letter-spacing: 1px; opacity: 0.6;">PROJECTED TARGET SECTOR (7+1+7)</div>
-            <div id="target-display">--</div>
-            
-            <div class="neighbors-box" id="neighbors-output"></div>
+    <div class="panel" style="padding-top:10px; padding-bottom:10px;">
+        <div class="roulette-table-wrapper">
+            <div class="roulette-table" id="rouletteBoard"></div>
+        </div>
+    </div>
 
-            <div style="font-size: 0.85rem; opacity: 0.8;">Calculated Move Average: <span id="status-trend" class="trend-val">0.00</span></div>
-            
-            <div style="font-size: 0.7rem; opacity: 0.5; margin-top: 10px; border-top: 1px solid #334155; padding-top: 8px;">LAST 8 SPINS STREAK</div>
-            <div class="streak-container" id="streak-output"></div>
+    <div class="dashboard-split">
+        
+        <div class="panel">
+            <h3>Wheel Tracks Analytics (Max 70 Spins Window)</h3>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Section Segment</th>
+                        <th>Cold Numbers (Least → Most)</th>
+                        <th>Hot Numbers (Most → Least)</th>
+                    </tr>
+                </thead>
+                <tbody id="sectionsTableBody"></tbody>
+            </table>
         </div>
 
-        <div class="panel">
-            <h2 style="margin:0; font-size: 1rem;">SIGNATURE ANALYTICS</h2>
-            
-            <div style="margin: 15px 0;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                    <span>Average Travel Distance:</span>
-                    <span id="avg-val" style="color:var(--accent); font-weight:bold;">0.00</span>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Total Spins Collected:</span>
-                    <span id="count-val" style="font-weight:bold;">0</span>
+        <div>
+            <div class="panel" style="padding-bottom:15px;">
+                <h3>Performance Status</h3>
+                <div id="winLossIndicator" style="margin-bottom:10px;"></div>
+                <div class="performance-grid">
+                    <div class="perf-item"><div style="font-size:11px; color:#aaa;">SPINS</div><strong id="statTotalSpins" style="font-size:18px;">0</strong></div>
+                    <div class="perf-item"><div style="font-size:11px; color:#aaa;">WINS</div><strong id="statWins" style="font-size:18px; color:var(--accent-blue);">0</strong></div>
+                    <div class="perf-item"><div style="font-size:11px; color:#aaa;">NEIGHBORS RETAINED</div><strong id="statLevel" style="font-size:18px; color:var(--accent-yellow);">1</strong></div>
                 </div>
             </div>
-            
-            <textarea id="bulkData" class="bulk-area" placeholder="Paste history text: Top row latest (e.g. 4, 19, 15, 32)"></textarea>
-            <button class="btn btn-primary" onclick="importHistory()">IMPORT DATA</button>
-            <button class="btn btn-danger" onclick="resetSession()">RESET ALL</button>
+
+            <div class="panel" style="margin-bottom:0;">
+                <h3 style="text-align: left; font-size:14px; margin-bottom:5px;">Activity Logs</h3>
+                <div class="log-box" id="consoleLogs"></div>
+            </div>
         </div>
+
     </div>
 </div>
 
 <script>
-    const wheelOrder = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    const WHEEL_ORDER = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     
-    let history = [];
-    let dists = [];
-    let predictedSectorsLog = []; 
-    let outcomesLog = []; 
+    // Segment 1: From 0 to 23
+    const TRACK_A = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23];
+    // Segment 2: From 10 to 26
+    const TRACK_B = [10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    
+    const SECTIONS = [TRACK_A, TRACK_B];
+    const SECTION_NAMES = ["TRACK A (0-23)", "TRACK B (10-26)"];
+    const RED_NUMBERS = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+    
+    let spinResults = [];
+    let occurrenceMap = {};
+    let currentPredictionsBySection = [[], []];
+    let currentWinningNumbersZone = [];
+    let retainNeighbors = true; // Flips to false on loss to remove 1 neighbor entry path
+    let winCount = 0;
+    let liveSpinsCount = 0;
 
-    function buildBoard() {
-        const grid = document.getElementById('boardGrid');
-        const rows = [
-            [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
-            [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
-            [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
-        ];
+    const tableLayout = [
+        [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+        [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+        [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+    ];
 
-        rows.forEach(rowArr => {
-            rowArr.forEach(n => {
+    window.onload = function() {
+        buildRouletteTableUI();
+        resetOccurrenceMap();
+        updateUI();
+    };
+
+    function resetOccurrenceMap() {
+        occurrenceMap = {};
+        for(let i = 0; i <= 36; i++) occurrenceMap[i] = 0;
+    }
+
+    function buildRouletteTableUI() {
+        const board = document.getElementById('rouletteBoard');
+        board.innerHTML = '';
+        const zeroCell = document.createElement('div');
+        zeroCell.className = 'cell green zero';
+        zeroCell.innerText = '0';
+        zeroCell.onclick = () => recordSpin(0);
+        zeroCell.setAttribute('data-number', '0');
+        board.appendChild(zeroCell);
+
+        for(let col = 0; col < 12; col++) {
+            for(let row = 0; row < 3; row++) {
+                const num = tableLayout[row][col];
                 const cell = document.createElement('div');
-                cell.className = `cell ${reds.includes(n) ? 'r' : 'b'}`;
-                cell.innerText = n;
-                cell.onclick = () => track(n);
-                grid.appendChild(cell);
-            });
+                const isRed = RED_NUMBERS.includes(num);
+                cell.className = `cell ${isRed ? 'red' : 'black'}`;
+                cell.innerText = num;
+                cell.onclick = () => recordSpin(num);
+                cell.setAttribute('data-number', num);
+                cell.style.gridColumn = col + 2;
+                cell.style.gridRow = row + 1;
+                board.appendChild(cell);
+            }
+        }
+    }
+
+    function getWheelNeighbors(num) {
+        const index = WHEEL_ORDER.indexOf(num);
+        if (index === -1) return [];
+        const leftNeighbor = WHEEL_ORDER[(index - 1 + WHEEL_ORDER.length) % WHEEL_ORDER.length];
+        const rightNeighbor = WHEEL_ORDER[(index + 1) % WHEEL_ORDER.length];
+        return [leftNeighbor, rightNeighbor];
+    }
+
+    function processInitialSpins() {
+        const inputString = document.getElementById('initialNumbers').value.trim();
+        if(!inputString) return alert("Please paste database elements first!");
+
+        resetOccurrenceMap();
+        spinResults = [];
+        retainNeighbors = true;
+        
+        let rawParts = inputString.split(/[\n,;\s]+/);
+        let parsedNumbers = [];
+
+        rawParts.forEach(part => {
+            if(part.trim() !== "") {
+                const num = parseInt(part.trim(), 10);
+                if(!isNaN(num) && num >= 0 && num <= 36) parsedNumbers.push(num);
+            }
         });
-    }
 
-    function get7Neighbors(centerNumber) {
-        if(centerNumber === null || centerNumber === undefined) return [];
-        let idx = wheelOrder.indexOf(centerNumber);
-        let sector = [];
-        for (let i = -7; i <= 7; i++) {
-            let targetIdx = (idx + i + 37) % 37;
-            sector.push(wheelOrder[targetIdx]);
-        }
-        return sector;
-    }
-
-    function track(num) {
-        let currentActivePredictionSector = predictedSectorsLog.length > 0 ? predictedSectorsLog[0] : [];
-
-        if (currentActivePredictionSector.length > 0) {
-            if (currentActivePredictionSector.includes(num)) {
-                outcomesLog.unshift("W");
-            } else {
-                outcomesLog.unshift("L");
-            }
-        } else {
-            outcomesLog.unshift(null); 
-        }
-
-        if (history.length > 0) {
-            const lastNum = history[0]; // Previous top row entry
-            const idxCurrent = wheelOrder.indexOf(num);
-            const idxLast = wheelOrder.indexOf(lastNum);
-            
-            // Linear mathematical wheel offset tracking
-            let travel = (idxCurrent - idxLast + 37) % 37;
-            dists.unshift(travel);
-        }
+        if(parsedNumbers.length === 0) return alert("No valid roulette numbers parsed.");
         
-        history.unshift(num); // Always add to the top of our timeline array
-        process();
-    }
+        // Data read from bottom to top as top is latest
+        parsedNumbers.reverse();
 
-    function importHistory() {
-        const raw = document.getElementById('bulkData').value;
-        // Text is split into values. Reads down from the top line.
-        const nums = raw.split(/[\s,]+/).map(Number).filter(n => !isNaN(n) && n >= 0 && n <= 36);
-        
-        // Loop backwards starting from the bottom number up to the top row
-        for(let i = nums.length - 1; i >= 0; i--) {
-            track(nums[i]);
-        }
-        document.getElementById('bulkData').value = '';
-    }
-
-    function process() {
-        if (history.length < 2) {
-            predictedSectorsLog.unshift([]);
-            return updateUI();
+        // Enforce 70 spins limit threshold condition rule
+        if(parsedNumbers.length > 70) {
+            parsedNumbers = parsedNumbers.slice(-70);
         }
 
-        const totalTravelSum = dists.reduce((a, b) => a + b, 0);
-        const avg = totalTravelSum / dists.length;
-
-        const lastIdx = wheelOrder.indexOf(history[0]); // Current top number
-        let roundedAvgShift = Math.round(avg);
-        let predIdx = (lastIdx + roundedAvgShift + 37) % 37;
-
-        const targetCenter = wheelOrder[predIdx];
-        const targetSector = get7Neighbors(targetCenter);
-        predictedSectorsLog.unshift(targetSector);
-
-        updateUI(targetCenter, avg, targetSector);
-    }
-
-    function updateUI(prediction = "--", avg = 0, targetSector = []) {
-        document.getElementById('target-display').innerText = prediction;
-        document.getElementById('avg-val').innerText = avg.toFixed(2);
-        document.getElementById('status-trend').innerText = avg.toFixed(2);
-        document.getElementById('count-val').innerText = history.length;
-
-        const neighborsBox = document.getElementById('neighbors-output');
-        neighborsBox.innerHTML = '';
-        if (targetSector.length > 0) {
-            targetSector.forEach((num, index) => {
-                const colorClass = num === 0 ? 'var(--green)' : (reds.includes(num) ? 'var(--red)' : 'var(--black)');
-                const isCenter = index === 7 ? 'nb-center' : '';
-                neighborsBox.innerHTML += `<div class="nb-cell ${isCenter}" style="background: ${colorClass};">${num}</div>`;
-            });
-        }
-
-        const streakBox = document.getElementById('streak-output');
-        streakBox.innerHTML = '';
-        const validOutcomes = outcomesLog.filter(o => o !== null);
-        const recentStreak = validOutcomes.slice(0, 8).reverse(); // Keep chronological order left-to-right
-        
-        for (let i = 0; i < 8; i++) {
-            if (i < recentStreak.length) {
-                const outcome = recentStreak[i];
-                const badgeClass = outcome === 'W' ? 'badge-win' : 'badge-loss';
-                streakBox.innerHTML += `<div class="streak-badge ${badgeClass}">${outcome}</div>`;
-            } else {
-                streakBox.innerHTML += `<div class="streak-badge badge-empty">-</div>`;
-            }
-        }
-
-        const tbody = document.getElementById('logTable');
-        tbody.innerHTML = '';
-        
-        // Output rows mapping directly down from top layout array
-        history.forEach((n, idx) => {
-            const distance = dists[idx] ?? "-";
-            
-            let outcomeVerdict = '<span style="opacity: 0.4;">-</span>';
-            if (outcomesLog[idx] !== null && outcomesLog[idx] !== undefined) {
-                outcomeVerdict = outcomesLog[idx] === 'W' 
-                    ? '<span style="color:#4ade80; font-weight:bold;">HIT (WIN)</span>' 
-                    : '<span style="color:#f87171;">MISS (LOSS)</span>';
-            }
-
-            const spinDisplayNum = history.length - idx;
-
-            tbody.innerHTML += `<tr>
-                <td>${spinDisplayNum}</td>
-                <td><b>${n}</b></td>
-                <td><b>${distance}</b></td>
-                <td>${outcomeVerdict}</td>
-            </tr>`;
+        parsedNumbers.forEach(num => {
+            spinResults.push(num);
         });
-    }
 
-    function resetSession() {
-        history = []; 
-        dists = [];
-        predictedSectorsLog = [];
-        outcomesLog = [];
+        recalculateOccurrencesFromHistory();
+        logToConsole(`Imported dataset down-selected to ${parsedNumbers.length} working window items.`);
+        calculateNextBets();
         updateUI();
     }
 
-    buildBoard();
+    function recalculateOccurrencesFromHistory() {
+        resetOccurrenceMap();
+        // Limit historical lookup parameters to last 70 items max
+        let workingData = spinResults.slice(-70);
+        workingData.forEach(num => {
+            occurrenceMap[num] = (occurrenceMap[num] || 0) + 1;
+        });
+    }
+
+    function recordSpin(num) {
+        liveSpinsCount++;
+        spinResults.push(num);
+        
+        recalculateOccurrencesFromHistory();
+
+        let totalZonePredictions = [...currentWinningNumbersZone];
+        
+        if (totalZonePredictions.length > 0) {
+            if (totalZonePredictions.includes(num)) {
+                winCount++;
+                logToConsole(`<span style="color:#06d6a0; font-weight:bold;">[WIN] ${num} Hit! Neighbors restored.</span>`);
+                showStatusBadge(true, num);
+                retainNeighbors = true; 
+            } else {
+                retainNeighbors = false; // On loss, don't add on and remove 1 neighbor path directly
+                logToConsole(`<span style="color:#ff4d4d;">[LOSS] ${num} Miss. Dropping 1 neighbor prediction zone node.</span>`);
+                showStatusBadge(false, num);
+            }
+        }
+
+        calculateNextBets();
+        updateUI();
+    }
+
+    function calculateNextBets() {
+        currentPredictionsBySection = [[], []];
+        currentWinningNumbersZone = [];
+
+        for (let i = 0; i < SECTIONS.length; i++) {
+            const section = SECTIONS[i];
+            let sectionData = section.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
+            // Get coldest item
+            sectionData.sort((a, b) => a.count - b.count);
+
+            if(sectionData.length > 0) {
+                let targetNum = sectionData[0].number;
+                currentPredictionsBySection[i].push(targetNum);
+                
+                if (!currentWinningNumbersZone.includes(targetNum)) {
+                    currentWinningNumbersZone.push(targetNum);
+                }
+                
+                let neighbors = getWheelNeighbors(targetNum);
+                if (neighbors.length >= 2) {
+                    if (retainNeighbors) {
+                        // Regular flow: Add both left and right side target numbers
+                        if (!currentWinningNumbersZone.includes(neighbors[0])) currentWinningNumbersZone.push(neighbors[0]);
+                        if (!currentWinningNumbersZone.includes(neighbors[1])) currentWinningNumbersZone.push(neighbors[1]);
+                    } else {
+                        // Loss Rule execution: Remove 1 neighbor directly (Retain only Left Side neighbor)
+                        if (!currentWinningNumbersZone.includes(neighbors[0])) currentWinningNumbersZone.push(neighbors[0]);
+                    }
+                }
+            }
+        }
+    }
+
+    function updateUI() {
+        for(let i = 0; i < 2; i++) {
+            const numBox = document.getElementById(`box-num-${i}`);
+            const neiBox = document.getElementById(`box-nei-${i}`);
+            
+            if(currentPredictionsBySection[i].length > 0) {
+                let primaryTarget = currentPredictionsBySection[i][0];
+                numBox.innerText = primaryTarget;
+                
+                let neighbors = getWheelNeighbors(primaryTarget);
+                if(retainNeighbors) {
+                    neiBox.innerText = `Left/Right Neighbors: ${neighbors[0]}, ${neighbors[1]}`;
+                } else {
+                    neiBox.innerText = `Modified (Left Only): ${neighbors[0]}`;
+                }
+            } else {
+                numBox.innerText = "-";
+                neiBox.innerText = "Left/Right: -";
+            }
+        }
+
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.classList.remove('bet-target', 'neighbor-target');
+            const cellNum = parseInt(cell.getAttribute('data-number'), 10);
+            
+            if (currentPredictionsBySection.flat().includes(cellNum)) {
+                cell.classList.add('bet-target');
+            } else if (currentWinningNumbersZone.includes(cellNum)) {
+                cell.classList.add('neighbor-target');
+            }
+        });
+
+        const tableBody = document.getElementById('sectionsTableBody');
+        tableBody.innerHTML = '';
+        for (let i = 0; i < SECTIONS.length; i++) {
+            const section = SECTIONS[i];
+            let sectionData = section.map(num => ({ number: num, count: occurrenceMap[num] || 0 }));
+            let coldSorted = [...sectionData].sort((a, b) => a.count - b.count).map(item => `${item.number}(${item.count})`).join(', ');
+            let hotSorted = [...sectionData].sort((a, b) => b.count - a.count).map(item => `${item.number}(${item.count})`).join(', ');
+
+            const row = document.createElement('tr');
+            row.innerHTML = `<td><strong>${SECTION_NAMES[i]}</strong></td><td style="color:#ffd166;">${coldSorted}</td><td style="color:#4ea8de;">${hotSorted}</td>`;
+            tableBody.appendChild(row);
+        }
+
+        document.getElementById('statTotalSpins').innerText = spinResults.length;
+        document.getElementById('statWins').innerText = winCount;
+        document.getElementById('statLevel').innerText = retainNeighbors ? "Both Sides (Full)" : "1 Side Only (Reduced)";
+    }
+
+    function showStatusBadge(isWin, num) {
+        const targetDiv = document.getElementById('winLossIndicator');
+        targetDiv.innerHTML = isWin ? 
+            `<span class="badge win">HIT WIN ON ${num}!</span>` : 
+            `<span class="badge loss">MISS ON ${num} (Dropped 1 Neighbor)</span>`;
+    }
+
+    function logToConsole(message) {
+        const consoleLog = document.getElementById('consoleLogs');
+        consoleLog.innerHTML = `<div class="log-entry">[${new Date().toLocaleTimeString()}] ${message}</div>` + consoleLog.innerHTML;
+    }
 </script>
 </body>
 </html>
