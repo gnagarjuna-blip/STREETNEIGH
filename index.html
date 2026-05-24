@@ -463,8 +463,8 @@
                 
                 // Progression: On 2 consecutive losses on any side increase by 2 units
                 if (lossStreak > 0 && lossStreak % 2 === 0) {
-                    currentUnits += 2;
-                    logToConsole(`<span style="color:#ff1a1a; font-weight:bold;">[LOSS 2 STREAK: ${lossStreak}] 2 Consecutive Losses. Bet size increased by +2 Units (Now ${currentUnits}).</span>`);
+                    currentUnits += 1;
+                    logToConsole(`<span style="color:#ff1a1a; font-weight:bold;">[LOSS 2 STREAK: ${lossStreak}] 2 Consecutive Losses. Bet size increased by +1 Units (Now ${currentUnits}).</span>`);
                 } else {
                     logToConsole(`<span style="color:#ff9999;">[LOSS] ${num} Missed. Consecutive counter: ${lossStreak}. Bet remains at ${currentUnits} Units.</span>`);
                 }
