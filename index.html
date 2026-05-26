@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - Advanced Operator Tracking Matrix</title>
+    <title>BIET - Isolated Predictive Operator Matrix</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 1000px; }
@@ -12,7 +12,6 @@
         .card { background: #111; padding: 20px; border-radius: 12px; border: 1px solid #222; border-top: 5px solid #e74c3c; transition: border-color 0.3s; }
         .card.active { border-top-color: #2ecc71; }
         
-        /* Updated Grid to hold operator stats + historical subtrackers */
         .freq-box { background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px solid #444; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .freq-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px; background: #151515; border: 1px solid #222; }
         .freq-leader { border: 1px solid #2ecc71; background: rgba(46, 204, 113, 0.05); }
@@ -20,7 +19,6 @@
         .freq-lbl { font-size: 14px; color: #aaa; font-weight: bold; width: 40px; }
         .freq-val { font-size: 14px; font-weight: bold; color: #f1c40f; }
         
-        /* Inline Operator History Badges */
         .op-track-row { display: flex; gap: 4px; width: 70%; justify-content: flex-end; }
         .wl-badge { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; font-family: monospace; }
         .wl-w { background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; }
@@ -132,13 +130,14 @@
 
     let history = [], stateHistory = [];
     
-    // Initializing isolated win/loss streak metrics arrays inside memory architecture
     let fin = { 
         pl: 0, 
         stake: 0, 
         activeNumbers: [], 
         displayBlocks: [],
-        opStreaks: { "+10":[], "-10":[], "+1":[], "-1":[], "+2":[], "-2":[], "+3":[], "-3":[] }
+        opStreaks: { "+10":[], "-10":[], "+1":[], "-1":[], "+2":[], "-2":[], "+3":[], "-3":[] },
+        // Tracks whether an operator is currently active and following its own prediction path
+        opFollowingStream: { "+10":false, "-10":false, "+1":false, "-1":false, "+2":false, "-2":false, "+3":false, "-3":false }
     };
 
     const g = document.getElementById('grid');
@@ -170,7 +169,6 @@
         return val + parseInt(opStr);
     }
 
-    // Function to calculate exact theoretical valid covered targets of an operator at any given position
     function getOperatorTargets(op, referenceNumber) {
         let targetSet = new Set();
         let imaginaryNo = parseOp(op, referenceNumber);
@@ -191,7 +189,7 @@
         
         if(fin.stake === 0) fin.stake = base;
 
-        // 1. Process standard unit stake variations first
+        // 1. Process Main Betting Currency Stake parameters (Always matches high frequency trend leader)
         if (fin.activeNumbers.length > 0) {
             if (fin.activeNumbers.includes(n)) {
                 fin.pl += (fin.stake * 36) - (fin.activeNumbers.length * fin.stake);
@@ -202,21 +200,40 @@
             }
         }
 
-        // 2. Performance Tracking Matrix across individual operators
+        // 2. Evaluate Dynamic Win/Loss Streams for ALL individual Operators
         if (history.length >= 1) {
             const previousSpinReference = history[history.length - 1];
+            const prePreviousSpinReference = history[history.length - 2];
             
             operators.forEach(op => {
-                // Generate targets based on what this specific operator WOULD have predicted using the previous number
                 let targetCoverage = getOperatorTargets(op, previousSpinReference);
                 
-                if (targetCoverage.length > 0) {
+                // First, find out if a background pattern hit naturally happened on this operator
+                let hitBackgroundPattern = false;
+                if (history.length >= 2) {
+                    hitBackgroundPattern = checkMapping(parseOp(op, prePreviousSpinReference), previousSpinReference);
+                }
+
+                if (fin.opFollowingStream[op]) {
+                    // This operator was already active in its prediction stream. Evaluate its outcome.
                     if (targetCoverage.includes(n)) {
                         fin.opStreaks[op].push('W');
+                        // Continues tracking on next spin since it won
                     } else {
                         fin.opStreaks[op].push('L');
+                        fin.opFollowingStream[op] = false; // Drops out on loss
+                    }
+                } else if (hitBackgroundPattern) {
+                    // The operator wasn't running, but a matrix trigger just fired! Evaluates first prediction spin.
+                    if (targetCoverage.includes(n)) {
+                        fin.opStreaks[op].push('W');
+                        fin.opFollowingStream[op] = true; // Locks into predictive loop stream tracking
+                    } else {
+                        fin.opStreaks[op].push('L');
+                        // Fails to enter the predictive stream loop
                     }
                 }
+                // If it is neither active nor triggered, its data string holds state perfectly untouched
             });
         }
 
@@ -315,7 +332,6 @@
             .map(b => `<div class="p-block ${b.isImaginary ? 'imaginary' : ''}">${b.text}</div>`)
             .join('');
 
-        // Render individual localized win/loss tracker queues across all 8 keys
         operators.forEach(op => {
             let subHistory = fin.opStreaks[op].slice(-8);
             while(subHistory.length < 8) { subHistory.unshift(''); }
