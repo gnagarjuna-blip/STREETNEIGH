@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - Complete Multi-Operator Predictor Engine</title>
+    <title>BIET - Adaptive Neighbor Matrix Engine</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 1000px; }
@@ -168,18 +168,29 @@
         return val + parseInt(opStr);
     }
 
-    function getOperatorTargets(op, referenceNumber) {
+    // Advanced dynamic layout compilation architecture
+    function getOperatorTargetsData(op, referenceNumber) {
         let targetSet = new Set();
+        let displayBlocks = [];
         let imaginaryNo = parseOp(op, referenceNumber);
+        
         if (imaginaryNo >= 0 && imaginaryNo <= 36) {
+            // Imaginary target is always evaluated at n1 (1 neighbor)
             getWheelNeighbors(imaginaryNo, 1).forEach(n => targetSet.add(n));
+            displayBlocks.push({ text: `${imaginaryNo}n1`, isImaginary: true });
+            
             if (termMap[imaginaryNo]) {
-                termMap[imaginaryNo].forEach(termNum => {
-                    getWheelNeighbors(termNum, 3).forEach(n => targetSet.add(n));
+                let terminals = termMap[imaginaryNo];
+                // Scales up to n5 if 2 or fewer terminal links exist, otherwise stays n2
+                let neighborCount = (terminals.length > 2) ? 2 : 5;
+                
+                terminals.forEach(termNum => {
+                    getWheelNeighbors(termNum, neighborCount).forEach(n => targetSet.add(n));
+                    displayBlocks.push({ text: `${termNum}n${neighborCount}`, isImaginary: false });
                 });
             }
         }
-        return Array.from(targetSet);
+        return { numbers: Array.from(targetSet), blocks: displayBlocks };
     }
 
     function inputNum(n) {
@@ -188,7 +199,7 @@
         
         if(fin.stake === 0) fin.stake = base;
 
-        // 1. Process Main Bet Metrics (Tied to high frequency system)
+        // 1. Process Main Betting Currency Stake parameters
         if (fin.activeNumbers.length > 0) {
             if (fin.activeNumbers.includes(n)) {
                 fin.pl += (fin.stake * 36) - (fin.activeNumbers.length * fin.stake);
@@ -199,29 +210,26 @@
             }
         }
 
-        // 2. Comprehensive Scan Across All Operators 
+        // 2. Scan All Operators Using Adaptive Terminal Scaling Rule
         if (history.length >= 1) {
             const previousSpinReference = history[history.length - 1];
             
             operators.forEach(op => {
-                let targetCoverage = getOperatorTargets(op, previousSpinReference);
+                let coverageData = getOperatorTargetsData(op, previousSpinReference);
+                let fullFootprintCoverage = coverageData.numbers;
                 
                 if (fin.opFollowingStream[op]) {
-                    // Operator was already running in predictive mode. Evaluate result.
-                    if (targetCoverage.includes(n)) {
+                    if (fullFootprintCoverage.includes(n)) {
                         fin.opStreaks[op].push('W');
-                        // Stays active in predictive mode
                     } else {
                         fin.opStreaks[op].push('L');
-                        fin.opFollowingStream[op] = false; // Disables predictive mode on loss
+                        fin.opFollowingStream[op] = false;
                     }
                 } else {
-                    // Operator was inactive. Check if the newly entered number belongs to this operator's mathematical setup.
-                    if (targetCoverage.includes(n)) {
-                        fin.opStreaks[op].push('W');       // Mark as a Win
-                        fin.opFollowingStream[op] = true;  // Instantly trigger predictive mode for next spin
+                    if (fullFootprintCoverage.includes(n)) {
+                        fin.opStreaks[op].push('W');
+                        fin.opFollowingStream[op] = true;
                     }
-                    // If it doesn't match and wasn't running, it remains untouched (holds state)
                 }
             });
         }
@@ -267,7 +275,6 @@
         const prev = history[history.length-2];
         document.getElementById('lastNum').innerText = last;
         
-        let predictionSet = new Set();
         fin.displayBlocks = [];
         const card = document.getElementById('mainCard');
         const status = document.getElementById('pStatus');
@@ -282,21 +289,11 @@
         let moveFollowedFreq = checkMapping(parseOp(topOp, prev), last);
 
         if (moveFollowedFreq) {
+            let config = getOperatorTargetsData(topOp, last);
+            fin.activeNumbers = config.numbers.sort((a,b) => a-b);
+            fin.displayBlocks = config.blocks;
+            
             let imaginaryNo = parseOp(topOp, last);
-
-            if (imaginaryNo >= 0 && imaginaryNo <= 36) {
-                getWheelNeighbors(imaginaryNo, 1).forEach(num => predictionSet.add(num));
-                fin.displayBlocks.push({ text: `${imaginaryNo}n1`, isImaginary: true });
-                
-                if (termMap[imaginaryNo]) {
-                    termMap[imaginaryNo].forEach(terminalNum => {
-                        getWheelNeighbors(terminalNum, 3).forEach(num => predictionSet.add(num));
-                        fin.displayBlocks.push({ text: `${terminalNum}n3`, isImaginary: false });
-                    });
-                }
-            }
-
-            fin.activeNumbers = Array.from(predictionSet).sort((a,b) => a-b);
             status.innerText = `MATCH DETECTED: IMAGINARY (${imaginaryNo}) ACTIVE`;
             status.style.color = "#2ecc71";
             card.classList.add('active');
