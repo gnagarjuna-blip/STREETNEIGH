@@ -2,33 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - Pure Bet Tracker Pro</title>
+    <title>BIET - Advanced Operator Tracking Matrix</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 950px; }
+        .container { width: 100%; max-width: 1000px; }
         .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .header { background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-items: center; }
+        .header { background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-items: center; }
         .config-group { display: flex; flex-direction: column; gap: 5px; }
         .card { background: #111; padding: 20px; border-radius: 12px; border: 1px solid #222; border-top: 5px solid #e74c3c; transition: border-color 0.3s; }
         .card.active { border-top-color: #2ecc71; }
         
-        .freq-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #444; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .freq-item { text-align: center; padding: 8px; border-radius: 6px; background: #151515; border: 1px solid #222; }
-        .freq-leader { border: 1px solid #2ecc71; background: rgba(46, 204, 113, 0.1); }
-        .freq-val { font-size: 16px; font-weight: bold; color: #f1c40f; display: block; }
-        .freq-lbl { font-size: 10px; color: #777; font-weight: bold; }
+        /* Updated Grid to hold operator stats + historical subtrackers */
+        .freq-box { background: #1a1a1a; padding: 12px; border-radius: 8px; border: 1px solid #444; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .freq-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-radius: 6px; background: #151515; border: 1px solid #222; }
+        .freq-leader { border: 1px solid #2ecc71; background: rgba(46, 204, 113, 0.05); }
+        .op-meta { display: flex; align-items: center; gap: 10px; width: 30%; }
+        .freq-lbl { font-size: 14px; color: #aaa; font-weight: bold; width: 40px; }
+        .freq-val { font-size: 14px; font-weight: bold; color: #f1c40f; }
         
+        /* Inline Operator History Badges */
+        .op-track-row { display: flex; gap: 4px; width: 70%; justify-content: flex-end; }
+        .wl-badge { width: 20px; height: 20px; border-radius: 3px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 11px; font-family: monospace; }
+        .wl-w { background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; }
+        .wl-l { background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; color: #e74c3c; }
+        .wl-none { background: #222; border: 1px dashed #333; color: transparent; }
+
         .fin-row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 5px; }
         .label { font-size: 10px; color: #777; text-transform: uppercase; letter-spacing: 1px; }
         .val { font-family: monospace; font-weight: bold; font-size: 18px; }
         .win { color: #2ecc71; } .loss { color: #e74c3c; }
         
-        .wl-container { display: flex; gap: 6px; margin-top: 5px; }
-        .wl-badge { width: 24px; height: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; font-family: monospace; }
-        .wl-w { background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; color: #2ecc71; }
-        .wl-l { background: rgba(231, 76, 60, 0.2); border: 1px solid #e74c3c; color: #e74c3c; }
-        .wl-none { background: #222; border: 1px solid #444; color: #777; }
-
         .notation-area { background: #000; padding: 15px; border-radius: 8px; margin-top: 15px; min-height: 60px; border: 1px inset #222; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-content: center; }
         .p-block { padding: 8px 16px; border-radius: 6px; font-size: 20px; font-weight: bold; border: 2px solid #3498db; color: #3498db; background: rgba(52, 152, 219, 0.1); text-align: center; }
         .p-block.imaginary { border-color: #e67e22; color: #e67e22; background: rgba(230, 126, 34, 0.1); }
@@ -54,10 +57,6 @@
                 <span class="label">Last Number</span>
                 <div id="lastNum" style="font-size:28px; font-weight:bold; color:#f1c40f">--</div>
             </div>
-            <div class="config-group">
-                <span class="label">Actual Bets Performance (Last 8)</span>
-                <div class="wl-container" id="wlTrack"></div>
-            </div>
             <div class="config-group" style="text-align:right">
                 <span class="label">Total Net P/L</span>
                 <span id="netTotal" class="val">0.00</span>
@@ -67,14 +66,38 @@
         </div>
 
         <div class="freq-box">
-            <div id="box+10" class="freq-item"><span class="freq-lbl">+10</span><span id="f+10" class="freq-val">0</span></div>
-            <div id="box-10" class="freq-item"><span class="freq-lbl">-10</span><span id="f-10" class="freq-val">0</span></div>
-            <div id="box+1" class="freq-item"><span class="freq-lbl">+1</span><span id="f+1" class="freq-val">0</span></div>
-            <div id="box-1" class="freq-item"><span class="freq-lbl">-1</span><span id="f-1" class="freq-val">0</span></div>
-            <div id="box+2" class="freq-item"><span class="freq-lbl">+2</span><span id="f+2" class="freq-val">0</span></div>
-            <div id="box-2" class="freq-item"><span class="freq-lbl">-2</span><span id="f-2" class="freq-val">0</span></div>
-            <div id="box+3" class="freq-item"><span class="freq-lbl">+3</span><span id="f+3" class="freq-val">0</span></div>
-            <div id="box-3" class="freq-item"><span class="freq-lbl">-3</span><span id="f-3" class="freq-val">0</span></div>
+            <div id="box+10" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">+10</span><span id="f+10" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track+10"></div>
+            </div>
+            <div id="box-10" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">-10</span><span id="f-10" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track-10"></div>
+            </div>
+            <div id="box+1" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">+1</span><span id="f+1" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track+1"></div>
+            </div>
+            <div id="box-1" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">-1</span><span id="f-1" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track-1"></div>
+            </div>
+            <div id="box+2" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">+2</span><span id="f+2" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track+2"></div>
+            </div>
+            <div id="box-2" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">-2</span><span id="f-2" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track-2"></div>
+            </div>
+            <div id="box+3" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">+3</span><span id="f+3" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track+3"></div>
+            </div>
+            <div id="box-3" class="freq-item">
+                <div class="op-meta"><span class="freq-lbl">-3</span><span id="f-3" class="freq-val">0</span></div>
+                <div class="op-track-row" id="track-3"></div>
+            </div>
         </div>
 
         <div class="card" id="mainCard">
@@ -108,7 +131,15 @@
     const operators = ["+10", "-10", "+1", "-1", "+2", "-2", "+3", "-3"];
 
     let history = [], stateHistory = [];
-    let fin = { pl: 0, stake: 0, activeNumbers: [], displayBlocks: [], wlStreak: [] };
+    
+    // Initializing isolated win/loss streak metrics arrays inside memory architecture
+    let fin = { 
+        pl: 0, 
+        stake: 0, 
+        activeNumbers: [], 
+        displayBlocks: [],
+        opStreaks: { "+10":[], "-10":[], "+1":[], "-1":[], "+2":[], "-2":[], "+3":[], "-3":[] }
+    };
 
     const g = document.getElementById('grid');
     const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
@@ -139,25 +170,55 @@
         return val + parseInt(opStr);
     }
 
+    // Function to calculate exact theoretical valid covered targets of an operator at any given position
+    function getOperatorTargets(op, referenceNumber) {
+        let targetSet = new Set();
+        let imaginaryNo = parseOp(op, referenceNumber);
+        if (imaginaryNo >= 0 && imaginaryNo <= 36) {
+            getWheelNeighbors(imaginaryNo, 1).forEach(n => targetSet.add(n));
+            if (termMap[imaginaryNo]) {
+                termMap[imaginaryNo].forEach(termNum => {
+                    getWheelNeighbors(termNum, 3).forEach(n => targetSet.add(n));
+                });
+            }
+        }
+        return Array.from(targetSet);
+    }
+
     function inputNum(n) {
         stateHistory.push(JSON.stringify({history, fin}));
         const base = parseInt(document.getElementById('pBase').value);
         
         if(fin.stake === 0) fin.stake = base;
 
-        // CRITICAL UPDATE: Only track Win/Loss histories if active numbers were processed
+        // 1. Process standard unit stake variations first
         if (fin.activeNumbers.length > 0) {
             if (fin.activeNumbers.includes(n)) {
                 fin.pl += (fin.stake * 36) - (fin.activeNumbers.length * fin.stake);
-                fin.wlStreak.push('W'); // Real active bet win
                 fin.stake = Math.max(base, fin.stake - base);
             } else {
                 fin.pl -= (fin.activeNumbers.length * fin.stake);
-                fin.wlStreak.push('L'); // Real active bet loss
                 fin.stake += base;
             }
         }
-        // Silent rounds are completely ignored by the wlStreak array now
+
+        // 2. Performance Tracking Matrix across individual operators
+        if (history.length >= 1) {
+            const previousSpinReference = history[history.length - 1];
+            
+            operators.forEach(op => {
+                // Generate targets based on what this specific operator WOULD have predicted using the previous number
+                let targetCoverage = getOperatorTargets(op, previousSpinReference);
+                
+                if (targetCoverage.length > 0) {
+                    if (targetCoverage.includes(n)) {
+                        fin.opStreaks[op].push('W');
+                    } else {
+                        fin.opStreaks[op].push('L');
+                    }
+                }
+            });
+        }
 
         history.push(n);
         let topOp = calculateFreq();
@@ -254,15 +315,17 @@
             .map(b => `<div class="p-block ${b.isImaginary ? 'imaginary' : ''}">${b.text}</div>`)
             .join('');
 
-        // Visual layout render for the active bets tracker matrix
-        let last8 = fin.wlStreak.slice(-8);
-        while(last8.length < 8) { last8.unshift(''); }
+        // Render individual localized win/loss tracker queues across all 8 keys
+        operators.forEach(op => {
+            let subHistory = fin.opStreaks[op].slice(-8);
+            while(subHistory.length < 8) { subHistory.unshift(''); }
 
-        document.getElementById('wlTrack').innerHTML = last8.map(res => {
-            if(res === 'W') return `<div class="wl-badge wl-w">W</div>`;
-            if(res === 'L') return `<div class="wl-badge wl-l">L</div>`;
-            return `<div class="wl-badge wl-none" style="border: 1px dashed #333">&nbsp;</div>`;
-        }).join('');
+            document.getElementById('track' + op).innerHTML = subHistory.map(res => {
+                if(res === 'W') return `<div class="wl-badge wl-w">W</div>`;
+                if(res === 'L') return `<div class="wl-badge wl-l">L</div>`;
+                return `<div class="wl-badge wl-none">&nbsp;</div>`;
+            }).join('');
+        });
     }
 
     function undo() {
