@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - Adaptive Neighbor Matrix Engine</title>
+    <title>BIET - Verified Neighbor Matrix Engine</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 1000px; }
@@ -124,6 +124,7 @@
 </div>
 
 <script>
+    // European Single-Zero layout wheel sequencing sequence map
     const euWheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const termMap = { 1:[8], 2:[7,9], 3:[8], 4:[11], 5:[10,12], 6:[11], 7:[2,9], 8:[1,3,13,15], 9:[2,14], 10:[5,17], 11:[4,6,16,18], 12:[5,17], 13:[8,20], 14:[7,9,19,21], 15:[8,20], 16:[11,23], 17:[10,12,22,24], 18:[11,23], 19:[14,26], 20:[13,15,25,27], 21:[14,26], 22:[17,29], 23:[16,18,28,30], 24:[17,29], 25:[20,32], 26:[19,21,31,33], 27:[20,32], 28:[23,35], 29:[22,24,34,36], 30:[23,35], 31:[26], 32:[25,27], 33:[26], 34:[29], 35:[28,30], 36:[29] };
     const operators = ["+10", "-10", "+1", "-1", "+2", "-2", "+3", "-3"];
@@ -168,20 +169,20 @@
         return val + parseInt(opStr);
     }
 
-    // Advanced dynamic layout compilation architecture
+    // Mathematical blueprint footprint assembler
     function getOperatorTargetsData(op, referenceNumber) {
         let targetSet = new Set();
         let displayBlocks = [];
         let imaginaryNo = parseOp(op, referenceNumber);
         
         if (imaginaryNo >= 0 && imaginaryNo <= 36) {
-            // Imaginary target is always evaluated at n1 (1 neighbor)
+            // Imaginary target is permanently isolated to a radius of 1 neighbor (n1)
             getWheelNeighbors(imaginaryNo, 1).forEach(n => targetSet.add(n));
             displayBlocks.push({ text: `${imaginaryNo}n1`, isImaginary: true });
             
             if (termMap[imaginaryNo]) {
                 let terminals = termMap[imaginaryNo];
-                // Scales up to n5 if 2 or fewer terminal links exist, otherwise stays n2
+                // Scaled adaptive profile mapping configuration rule
                 let neighborCount = (terminals.length > 2) ? 2 : 5;
                 
                 terminals.forEach(termNum => {
@@ -199,7 +200,7 @@
         
         if(fin.stake === 0) fin.stake = base;
 
-        // 1. Process Main Betting Currency Stake parameters
+        // 1. Process Main Bet Ledger Parameters
         if (fin.activeNumbers.length > 0) {
             if (fin.activeNumbers.includes(n)) {
                 fin.pl += (fin.stake * 36) - (fin.activeNumbers.length * fin.stake);
@@ -210,7 +211,7 @@
             }
         }
 
-        // 2. Scan All Operators Using Adaptive Terminal Scaling Rule
+        // 2. Global Matrix Scan executing scaled wheel neighbor footprint matching
         if (history.length >= 1) {
             const previousSpinReference = history[history.length - 1];
             
