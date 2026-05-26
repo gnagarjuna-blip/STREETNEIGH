@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - Extended European Operator Track</title>
+    <title>BIET - Family Notation Tracker</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 950px; }
@@ -12,7 +12,6 @@
         .card { background: #111; padding: 20px; border-radius: 12px; border: 1px solid #222; border-top: 5px solid #e74c3c; transition: border-color 0.3s; }
         .card.active { border-top-color: #2ecc71; }
         
-        /* Updated to fit 8 operators gracefully */
         .freq-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #444; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .freq-item { text-align: center; padding: 8px; border-radius: 6px; background: #151515; border: 1px solid #222; }
         .freq-leader { border: 1px solid #2ecc71; background: rgba(46, 204, 113, 0.1); }
@@ -24,10 +23,10 @@
         .val { font-family: monospace; font-weight: bold; font-size: 18px; }
         .win { color: #2ecc71; } .loss { color: #e74c3c; }
         
-        .notation-area { background: #000; padding: 15px; border-radius: 8px; margin-top: 15px; min-height: 60px; border: 1px inset #222; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-content: center; }
-        .p-block { padding: 6px 12px; border-radius: 4px; font-size: 18px; font-weight: bold; border: 2px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); text-align: center; min-width: 25px; }
+        .notation-area { background: #000; padding: 15px; border-radius: 8px; margin-top: 15px; min-height: 60px; border: 1px inset #222; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; align-content: center; }
+        .p-block { padding: 8px 16px; border-radius: 6px; font-size: 20px; font-weight: bold; border: 2px solid #3498db; color: #3498db; background: rgba(52, 152, 219, 0.1); text-align: center; }
+        .p-block.imaginary { border-color: #e67e22; color: #e67e22; background: rgba(230, 126, 34, 0.1); }
         
-        /* Real European Grid Layout */
         .table-wrapper { background: #052c14; padding: 15px; border-radius: 8px; border: 3px solid #b38f46; display: flex; overflow-x: auto; }
         .num-grid { display: grid; grid-template-rows: repeat(3, 50px); grid-auto-flow: column; gap: 4px; }
         .zero-container { display: flex; margin-right: 4px; }
@@ -68,7 +67,7 @@
         </div>
 
         <div class="card" id="mainCard">
-            <span class="label">Triggered Multi-Neighbor Prediction (European Wheel Rules)</span>
+            <span class="label">Triggered Family Notation Targets</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top:10px;">
                 <div><span class="label">Base Unit</span><br><input type="number" id="pBase" value="10" style="width:80%"></div>
                 <div><span class="label">Step (+)</span><br><input type="number" id="pStep" value="10" style="width:80%"></div>
@@ -83,8 +82,7 @@
             <div class="zero-container">
                 <button class="z-btn" onclick="inputNum(0)">0</button>
             </div>
-            <div class="num-grid" id="grid">
-                </div>
+            <div class="num-grid" id="grid"></div>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -96,25 +94,17 @@
 
 <script>
     const euWheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    
     const termMap = { 1:[8], 2:[7,9], 3:[8], 4:[11], 5:[10,12], 6:[11], 7:[2,9], 8:[1,3,13,15], 9:[2,14], 10:[5,17], 11:[4,6,16,18], 12:[5,17], 13:[8,20], 14:[7,9,19,21], 15:[8,20], 16:[11,23], 17:[10,12,22,24], 18:[11,23], 19:[14,26], 20:[13,15,25,27], 21:[14,26], 22:[17,29], 23:[16,18,28,30], 24:[17,29], 25:[20,32], 26:[19,21,31,33], 27:[20,32], 28:[23,35], 29:[22,24,34,36], 30:[23,35], 31:[26], 32:[25,27], 33:[26], 34:[29], 35:[28,30], 36:[29] };
-    
-    // Explicit lists of operators handled
     const operators = ["+10", "-10", "+1", "-1", "+2", "-2", "+3", "-3"];
 
     let history = [], stateHistory = [];
-    let fin = { pl: 0, stake: 0, streak: 0, activeNumbers: [] };
+    let fin = { pl: 0, stake: 0, streak: 0, activeNumbers: [], displayBlocks: [] };
 
-    // Draw the European table precisely matching real world layouts 
-    // Top Row: 3->36, Middle Row: 2->35, Bottom Row: 1->34
     const g = document.getElementById('grid');
     const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
     
     for (let col = 1; col <= 12; col++) {
-        let n1 = col * 3;
-        let n2 = n1 - 1;
-        let n3 = n1 - 2;
-        
+        let n1 = col * 3; let n2 = n1 - 1; let n3 = n1 - 2;
         [n1, n2, n3].forEach(num => {
             let b = document.createElement('button');
             b.innerText = num;
@@ -136,8 +126,7 @@
     }
 
     function parseOp(opStr, val) {
-        let num = parseInt(opStr);
-        return val + num;
+        return val + parseInt(opStr);
     }
 
     function inputNum(n) {
@@ -200,6 +189,7 @@
         document.getElementById('lastNum').innerText = last;
         
         let predictionSet = new Set();
+        fin.displayBlocks = []; // Clear visual tokens
         const card = document.getElementById('mainCard');
         const status = document.getElementById('pStatus');
 
@@ -210,26 +200,28 @@
             updateUI(); return;
         }
 
-        // Validate if the move matches the leading operator among all 8 configurations
         let moveFollowedFreq = checkMapping(parseOp(topOp, prev), last);
 
         if (moveFollowedFreq) {
             let imaginaryNo = parseOp(topOp, last);
 
             if (imaginaryNo >= 0 && imaginaryNo <= 36) {
-                // Fetch 1 neighbor on each side for imaginary number
+                // Add to secret mechanical bet set
                 getWheelNeighbors(imaginaryNo, 1).forEach(num => predictionSet.add(num));
+                // Store cleaner UI string chunk
+                fin.displayBlocks.push({ text: `${imaginaryNo}n1`, isImaginary: true });
                 
-                // Fetch 3 neighbors on each side for each of its mapped terminals
                 if (termMap[imaginaryNo]) {
                     termMap[imaginaryNo].forEach(terminalNum => {
                         getWheelNeighbors(terminalNum, 3).forEach(num => predictionSet.add(num));
+                        // Store terminal chunks
+                        fin.displayBlocks.push({ text: `${terminalNum}n3`, isImaginary: false });
                     });
                 }
             }
 
             fin.activeNumbers = Array.from(predictionSet).sort((a,b) => a-b);
-            status.innerText = `MATCH DETECTED: IMAGINARY (${imaginaryNo}) + MAP TERMINALS via ${topOp}`;
+            status.innerText = `MATCH DETECTED: IMAGINARY (${imaginaryNo}) ACTIVE`;
             status.style.color = "#2ecc71";
             card.classList.add('active');
         } else {
@@ -246,8 +238,11 @@
         document.getElementById('netTotal').innerText = fin.pl.toFixed(2);
         document.getElementById('netTotal').className = `val ${fin.pl >= 0 ? 'win' : 'loss'}`;
         document.getElementById('pStakeDisp').innerText = fin.stake;
-        document.getElementById('pNot').innerHTML = fin.activeNumbers
-            .map(n => `<div class="p-block">${n}</div>`).join('');
+        
+        // Render block representations cleanly as strings instead of the large expanded number lists
+        document.getElementById('pNot').innerHTML = fin.displayBlocks
+            .map(b => `<div class="p-block ${b.isImaginary ? 'imaginary' : ''}">${b.text}</div>`)
+            .join('');
     }
 
     function undo() {
