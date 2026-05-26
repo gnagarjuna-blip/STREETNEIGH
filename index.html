@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - Isolated Predictive Operator Matrix</title>
+    <title>BIET - Complete Multi-Operator Predictor Engine</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
         .container { width: 100%; max-width: 1000px; }
@@ -136,7 +136,6 @@
         activeNumbers: [], 
         displayBlocks: [],
         opStreaks: { "+10":[], "-10":[], "+1":[], "-1":[], "+2":[], "-2":[], "+3":[], "-3":[] },
-        // Tracks whether an operator is currently active and following its own prediction path
         opFollowingStream: { "+10":false, "-10":false, "+1":false, "-1":false, "+2":false, "-2":false, "+3":false, "-3":false }
     };
 
@@ -189,7 +188,7 @@
         
         if(fin.stake === 0) fin.stake = base;
 
-        // 1. Process Main Betting Currency Stake parameters (Always matches high frequency trend leader)
+        // 1. Process Main Bet Metrics (Tied to high frequency system)
         if (fin.activeNumbers.length > 0) {
             if (fin.activeNumbers.includes(n)) {
                 fin.pl += (fin.stake * 36) - (fin.activeNumbers.length * fin.stake);
@@ -200,40 +199,30 @@
             }
         }
 
-        // 2. Evaluate Dynamic Win/Loss Streams for ALL individual Operators
+        // 2. Comprehensive Scan Across All Operators 
         if (history.length >= 1) {
             const previousSpinReference = history[history.length - 1];
-            const prePreviousSpinReference = history[history.length - 2];
             
             operators.forEach(op => {
                 let targetCoverage = getOperatorTargets(op, previousSpinReference);
                 
-                // First, find out if a background pattern hit naturally happened on this operator
-                let hitBackgroundPattern = false;
-                if (history.length >= 2) {
-                    hitBackgroundPattern = checkMapping(parseOp(op, prePreviousSpinReference), previousSpinReference);
-                }
-
                 if (fin.opFollowingStream[op]) {
-                    // This operator was already active in its prediction stream. Evaluate its outcome.
+                    // Operator was already running in predictive mode. Evaluate result.
                     if (targetCoverage.includes(n)) {
                         fin.opStreaks[op].push('W');
-                        // Continues tracking on next spin since it won
+                        // Stays active in predictive mode
                     } else {
                         fin.opStreaks[op].push('L');
-                        fin.opFollowingStream[op] = false; // Drops out on loss
+                        fin.opFollowingStream[op] = false; // Disables predictive mode on loss
                     }
-                } else if (hitBackgroundPattern) {
-                    // The operator wasn't running, but a matrix trigger just fired! Evaluates first prediction spin.
+                } else {
+                    // Operator was inactive. Check if the newly entered number belongs to this operator's mathematical setup.
                     if (targetCoverage.includes(n)) {
-                        fin.opStreaks[op].push('W');
-                        fin.opFollowingStream[op] = true; // Locks into predictive loop stream tracking
-                    } else {
-                        fin.opStreaks[op].push('L');
-                        // Fails to enter the predictive stream loop
+                        fin.opStreaks[op].push('W');       // Mark as a Win
+                        fin.opFollowingStream[op] = true;  // Instantly trigger predictive mode for next spin
                     }
+                    // If it doesn't match and wasn't running, it remains untouched (holds state)
                 }
-                // If it is neither active nor triggered, its data string holds state perfectly untouched
             });
         }
 
