@@ -2,29 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>BIET - High Freq Terminal Trigger</title>
+    <title>BIET - Extended European Operator Track</title>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #080808; color: #eee; padding: 20px; margin: 0; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 800px; }
+        .container { width: 100%; max-width: 950px; }
         .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
         .header { background: #1a1a1a; padding: 15px; border-radius: 12px; border: 1px solid #333; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; align-items: center; }
         .config-group { display: flex; flex-direction: column; gap: 5px; }
         .card { background: #111; padding: 20px; border-radius: 12px; border: 1px solid #222; border-top: 5px solid #e74c3c; transition: border-color 0.3s; }
         .card.active { border-top-color: #2ecc71; }
-        .freq-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #444; display: flex; justify-content: space-around; }
-        .freq-item { text-align: center; padding: 5px 15px; border-radius: 6px; }
+        
+        /* Updated to fit 8 operators gracefully */
+        .freq-box { background: #1a1a1a; padding: 10px; border-radius: 8px; border: 1px solid #444; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .freq-item { text-align: center; padding: 8px; border-radius: 6px; background: #151515; border: 1px solid #222; }
         .freq-leader { border: 1px solid #2ecc71; background: rgba(46, 204, 113, 0.1); }
-        .freq-val { font-size: 18px; font-weight: bold; color: #f1c40f; display: block; }
-        .freq-lbl { font-size: 9px; color: #777; text-transform: uppercase; }
+        .freq-val { font-size: 16px; font-weight: bold; color: #f1c40f; display: block; }
+        .freq-lbl { font-size: 10px; color: #777; font-weight: bold; }
+        
         .fin-row { display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid #222; padding-bottom: 5px; }
         .label { font-size: 10px; color: #777; text-transform: uppercase; letter-spacing: 1px; }
         .val { font-family: monospace; font-weight: bold; font-size: 18px; }
         .win { color: #2ecc71; } .loss { color: #e74c3c; }
-        .notation-area { background: #000; padding: 15px; border-radius: 8px; margin-top: 15px; min-height: 60px; border: 1px inset #222; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;}
-        .p-block { padding: 10px 20px; border-radius: 4px; font-size: 24px; font-weight: bold; border: 2px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
-        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; margin: 15px 0; }
-        .n-btn { padding: 12px 0; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; }
-        .red { background: #c0392b; } .black { background: #2c3e50; } .green { background: #27ae60; grid-row: span 3; }
+        
+        .notation-area { background: #000; padding: 15px; border-radius: 8px; margin-top: 15px; min-height: 60px; border: 1px inset #222; display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-content: center; }
+        .p-block { padding: 6px 12px; border-radius: 4px; font-size: 18px; font-weight: bold; border: 2px solid #2ecc71; color: #2ecc71; background: rgba(46, 204, 113, 0.1); text-align: center; min-width: 25px; }
+        
+        /* Real European Grid Layout */
+        .table-wrapper { background: #052c14; padding: 15px; border-radius: 8px; border: 3px solid #b38f46; display: flex; overflow-x: auto; }
+        .num-grid { display: grid; grid-template-rows: repeat(3, 50px); grid-auto-flow: column; gap: 4px; }
+        .zero-container { display: flex; margin-right: 4px; }
+        .z-btn { width: 55px; height: 158px; border: 1px solid #fff; border-radius: 4px 0 0 4px; font-weight: bold; cursor: pointer; color: white; font-size: 18px; background: #27ae60; }
+        .n-btn { width: 55px; height: 50px; border: 1px solid #fff; border-radius: 2px; font-weight: bold; cursor: pointer; color: white; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        
+        .red { background: #c0392b; } .black { background: #1c2833; }
         input { background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px; }
         .status-msg { font-size: 11px; text-align: center; color: #777; margin-top: 8px; font-weight: bold; }
     </style>
@@ -51,10 +61,14 @@
             <div id="box-10" class="freq-item"><span class="freq-lbl">-10</span><span id="f-10" class="freq-val">0</span></div>
             <div id="box+1" class="freq-item"><span class="freq-lbl">+1</span><span id="f+1" class="freq-val">0</span></div>
             <div id="box-1" class="freq-item"><span class="freq-lbl">-1</span><span id="f-1" class="freq-val">0</span></div>
+            <div id="box+2" class="freq-item"><span class="freq-lbl">+2</span><span id="f+2" class="freq-val">0</span></div>
+            <div id="box-2" class="freq-item"><span class="freq-lbl">-2</span><span id="f-2" class="freq-val">0</span></div>
+            <div id="box+3" class="freq-item"><span class="freq-lbl">+3</span><span id="f+3" class="freq-val">0</span></div>
+            <div id="box-3" class="freq-item"><span class="freq-lbl">-3</span><span id="f-3" class="freq-val">0</span></div>
         </div>
 
         <div class="card" id="mainCard">
-            <span class="label">Triggered Terminal Prediction</span>
+            <span class="label">Triggered Multi-Neighbor Prediction (European Wheel Rules)</span>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top:10px;">
                 <div><span class="label">Base Unit</span><br><input type="number" id="pBase" value="10" style="width:80%"></div>
                 <div><span class="label">Step (+)</span><br><input type="number" id="pStep" value="10" style="width:80%"></div>
@@ -65,8 +79,12 @@
             <div id="pStatus" class="status-msg">WAITING FOR FREQUENCY MATCH...</div>
         </div>
 
-        <div class="num-grid" id="grid">
-            <button class="n-btn green" onclick="inputNum(0)">0</button>
+        <div class="table-wrapper">
+            <div class="zero-container">
+                <button class="z-btn" onclick="inputNum(0)">0</button>
+            </div>
+            <div class="num-grid" id="grid">
+                </div>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -77,16 +95,49 @@
 </div>
 
 <script>
+    const euWheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    
     const termMap = { 1:[8], 2:[7,9], 3:[8], 4:[11], 5:[10,12], 6:[11], 7:[2,9], 8:[1,3,13,15], 9:[2,14], 10:[5,17], 11:[4,6,16,18], 12:[5,17], 13:[8,20], 14:[7,9,19,21], 15:[8,20], 16:[11,23], 17:[10,12,22,24], 18:[11,23], 19:[14,26], 20:[13,15,25,27], 21:[14,26], 22:[17,29], 23:[16,18,28,30], 24:[17,29], 25:[20,32], 26:[19,21,31,33], 27:[20,32], 28:[23,35], 29:[22,24,34,36], 30:[23,35], 31:[26], 32:[25,27], 33:[26], 34:[29], 35:[28,30], 36:[29] };
     
+    // Explicit lists of operators handled
+    const operators = ["+10", "-10", "+1", "-1", "+2", "-2", "+3", "-3"];
+
     let history = [], stateHistory = [];
     let fin = { pl: 0, stake: 0, streak: 0, activeNumbers: [] };
 
+    // Draw the European table precisely matching real world layouts 
+    // Top Row: 3->36, Middle Row: 2->35, Bottom Row: 1->34
     const g = document.getElementById('grid');
-    for(let i=1; i<=36; i++) {
-        let b = document.createElement('button');
-        b.innerText = i; b.className = `n-btn ${[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(i)?'red':'black'}`;
-        b.onclick = () => inputNum(i); g.appendChild(b);
+    const redNumbers = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+    
+    for (let col = 1; col <= 12; col++) {
+        let n1 = col * 3;
+        let n2 = n1 - 1;
+        let n3 = n1 - 2;
+        
+        [n1, n2, n3].forEach(num => {
+            let b = document.createElement('button');
+            b.innerText = num;
+            b.className = `n-btn ${redNumbers.includes(num) ? 'red' : 'black'}`;
+            b.onclick = () => inputNum(num);
+            g.appendChild(b);
+        });
+    }
+
+    function getWheelNeighbors(num, count) {
+        let results = [];
+        let idx = euWheel.indexOf(num);
+        if (idx === -1) return [];
+        for (let i = -count; i <= count; i++) {
+            let neighborIdx = (idx + i + 37) % 37;
+            results.push(euWheel[neighborIdx]);
+        }
+        return results;
+    }
+
+    function parseOp(opStr, val) {
+        let num = parseInt(opStr);
+        return val + num;
     }
 
     function inputNum(n) {
@@ -113,23 +164,22 @@
     }
 
     function calculateFreq() {
-        let ops = {"+10":0, "-10":0, "+1":0, "-1":0};
+        let ops = {"+10":0, "-10":0, "+1":0, "-1":0, "+2":0, "-2":0, "+3":0, "-3":0};
         let start = Math.max(0, history.length - 20);
         
         for(let i = start; i < history.length - 1; i++) {
             let prev = history[i], curr = history[i+1];
-            if (checkMapping(prev + 10, curr)) ops["+10"]++;
-            if (checkMapping(prev - 10, curr)) ops["-10"]++;
-            if (checkMapping(prev + 1, curr)) ops["+1"]++;
-            if (checkMapping(prev - 1, curr)) ops["-1"]++;
+            operators.forEach(op => {
+                if (checkMapping(parseOp(op, prev), curr)) ops[op]++;
+            });
         }
 
         let maxVal = -1, topOp = null;
-        for(let op in ops) {
+        operators.forEach(op => {
             document.getElementById('f'+op).innerText = ops[op];
             document.getElementById('box'+op).classList.remove('freq-leader');
             if(ops[op] > maxVal) { maxVal = ops[op]; topOp = op; }
-        }
+        });
         
         if(maxVal > 0) {
             document.getElementById('box'+topOp).classList.add('freq-leader');
@@ -148,41 +198,45 @@
         const last = history[history.length-1];
         const prev = history[history.length-2];
         document.getElementById('lastNum').innerText = last;
-        fin.activeNumbers = [];
+        
+        let predictionSet = new Set();
         const card = document.getElementById('mainCard');
         const status = document.getElementById('pStatus');
 
         if (history.length < 2 || !topOp) {
             status.innerText = "COLLECTING DATA...";
             card.classList.remove('active');
+            fin.activeNumbers = [];
             updateUI(); return;
         }
 
-        // STRICT CHECK: Did the move (prev -> last) follow the High Freq Operator?
-        let moveFollowedFreq = false;
-        if(topOp === "+10" && checkMapping(prev + 10, last)) moveFollowedFreq = true;
-        if(topOp === "-10" && checkMapping(prev - 10, last)) moveFollowedFreq = true;
-        if(topOp === "+1" && checkMapping(prev + 1, last)) moveFollowedFreq = true;
-        if(topOp === "-1" && checkMapping(prev - 1, last)) moveFollowedFreq = true;
+        // Validate if the move matches the leading operator among all 8 configurations
+        let moveFollowedFreq = checkMapping(parseOp(topOp, prev), last);
 
         if (moveFollowedFreq) {
-            // Predict the terminals of the NEXT step using the High Freq Op
-            let baseTarget;
-            if(topOp === "+10") baseTarget = last + 10;
-            else if(topOp === "-10") baseTarget = last - 10;
-            else if(topOp === "+1") baseTarget = last + 1;
-            else if(topOp === "-1") baseTarget = last - 1;
+            let imaginaryNo = parseOp(topOp, last);
 
-            if (termMap[baseTarget]) {
-                fin.activeNumbers = termMap[baseTarget];
-                status.innerText = `HOT PATTERN: ${topOp} DETECTED!`;
-                status.style.color = "#2ecc71";
-                card.classList.add('active');
+            if (imaginaryNo >= 0 && imaginaryNo <= 36) {
+                // Fetch 1 neighbor on each side for imaginary number
+                getWheelNeighbors(imaginaryNo, 1).forEach(num => predictionSet.add(num));
+                
+                // Fetch 3 neighbors on each side for each of its mapped terminals
+                if (termMap[imaginaryNo]) {
+                    termMap[imaginaryNo].forEach(terminalNum => {
+                        getWheelNeighbors(terminalNum, 3).forEach(num => predictionSet.add(num));
+                    });
+                }
             }
+
+            fin.activeNumbers = Array.from(predictionSet).sort((a,b) => a-b);
+            status.innerText = `MATCH DETECTED: IMAGINARY (${imaginaryNo}) + MAP TERMINALS via ${topOp}`;
+            status.style.color = "#2ecc71";
+            card.classList.add('active');
         } else {
             status.innerText = `WAITING FOR ${topOp} TERMINAL HIT...`;
             status.style.color = "#777";
             card.classList.remove('active');
+            fin.activeNumbers = [];
         }
         
         updateUI();
